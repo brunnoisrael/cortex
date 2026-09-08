@@ -122,24 +122,38 @@ class DistillationEngine:
         return report
 
     def _extract(self, events: list[dict], report: DistillationReport) -> list:
+        if not events:
+            return []
+            
         candidates: list = []
-        candidates += extract_decisions(events)
-        candidates += extract_intentions(events)
-        candidates += extract_negative_knowledge(events)
-        candidates += extract_fixes(events)
+        try:
+            candidates += extract_decisions(events)
+            candidates += extract_intentions(events)
+            candidates += extract_negative_knowledge(events)
+            candidates += extract_fixes(events)
+        except Exception as e:
+            # Log error but continue with partial results
+            import logging
+            logging.warning(f"Error during heuristic extraction: {e}")
+        
         # Optional LLM pass supplements heuristics; never replaces explicit
         # statements (PRD §8.3) and never breaks the session (§42).
         if self.llm_mode in ("ollama", "auto"):
-            from cortex.distillation.llm import OllamaDistiller, llm_candidates
-            url = self.ollama_url
-            distiller = OllamaDistiller(url=url) if url else OllamaDistiller()
-            if self.llm_mode == "auto" and not distiller.available():
-                distiller = None
-            if distiller is not None:
-                raw = distiller.extract(events)
-                if raw is not None:
-                    report.llm_used = True
-                    candidates += llm_candidates(raw, events)
+            try:
+                from cortex.distillation.llm import OllamaDistiller, llm_candidates
+                url = self.ollama_url
+                distiller = OllamaDistiller(url=url) if url else OllamaDistiller()
+                if self.llm_mode == "auto" and not distiller.available():
+                    distiller = None
+                if distiller is not None:
+                    raw = distiller.extract(events)
+                    if raw is not None:
+                        report.llm_used = True
+                        candidates += llm_candidates(raw, events)
+            except Exception as e:
+                # LLM errors should not break the pipeline
+                import logging
+                logging.warning(f"LLM extraction failed, falling back to heuristics: {e}")
         return candidates
 
     # ---- dedup ----
@@ -150,10 +164,20 @@ class DistillationEngine:
         # material of Correndas) — merge only near-identical re-observations.
         threshold = (FIX_DEDUP_SIMILARITY if cand.etype == ArtifactType.FIX
                      else DEDUP_SIMILARITY)
+        
+        # Cache for similarity calculations to avoid redundant computation
+        similarity_cache = {}
+        
         for ent in existing:
             if ent.type != cand.etype:
                 continue
-            if statement_similarity(cand.statement, ent.statement) >= threshold:
+            
+            # Use cached similarity if available
+            cache_key = (cand.statement.lower(), ent.statement.lower())
+            if cache_key not in similarity_cache:
+                similarity_cache[cache_key] = statement_similarity(cand.statement, ent.statement)
+            
+            if similarity_cache[cache_key] >= threshold:
                 return ent
         return None
 
