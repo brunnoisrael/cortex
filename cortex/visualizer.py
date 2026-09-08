@@ -1,0 +1,112 @@
+"""Cortex Visualizer (Onda 9) — standalone visual provenance graph generator."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from cortex.storage.store import KnowledgeStore
+
+
+def generate_provenance_graph_html(store: KnowledgeStore, focus_id: str | None = None) -> str:
+    """Generate standalone HTML string displaying provenance graph nodes and edges (Onda 9)."""
+    entities = store.all_entities()
+    nodes = []
+    links = []
+    
+    for e in entities:
+        is_focused = (e.id == focus_id)
+        nodes.append({
+            "id": e.id,
+            "statement": e.statement,
+            "type": e.type.value,
+            "authority": e.authority.value,
+            "status": e.status.value,
+            "confidence": e.confidence,
+            "focused": is_focused,
+            "scope": e.scope,
+        })
+        
+        rel_in = store.related(e.id, direction="in")
+        for rel_type, source_ent in rel_in:
+            links.append({
+                "source": source_ent.id,
+                "target": e.id,
+                "label": rel_type,
+            })
+
+    nodes_json = json.dumps(nodes, ensure_ascii=False).replace("</script>", "<\\/script>")
+    links_json = json.dumps(links, ensure_ascii=False).replace("</script>", "<\\/script>")
+    
+    html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cortex Provenance & Confidence Graph</title>
+    <style>
+        body {{ font-family: system-ui, -apple-system, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }}
+        h1 {{ color: #38bdf8; font-size: 1.5rem; border-bottom: 1px solid #334155; padding-bottom: 10px; }}
+        .subtitle {{ color: #94a3b8; font-size: 0.9rem; margin-bottom: 20px; }}
+        .container {{ display: flex; flex-direction: column; gap: 15px; }}
+        .card {{ background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 15px; margin-bottom: 10px; }}
+        .card.focused {{ border-color: #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.3); }}
+        .badge {{ display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; margin-right: 5px; }}
+        .badge-adr {{ background: #0284c7; color: white; }}
+        .badge-correnda {{ background: #e11d48; color: white; }}
+        .badge-fix {{ background: #16a34a; color: white; }}
+        .badge-intention {{ background: #9333ea; color: white; }}
+        .badge-negative {{ background: #ea580c; color: white; }}
+        .meta {{ font-size: 0.85rem; color: #cbd5e1; margin-top: 5px; }}
+        .links-list {{ font-size: 0.85rem; color: #38bdf8; margin-top: 8px; padding-left: 15px; }}
+    </style>
+</head>
+<body>
+    <h1>Cortex Knowledge Provenance Graph</h1>
+    <div class="subtitle">Visualizing provenance, authority, and evidence chains (PRD §49 & §50)</div>
+    
+    <div class="container">
+        <div id="graph-list"></div>
+    </div>
+
+    <script>
+        const nodes = {nodes_json};
+        const links = {links_json};
+        
+        const container = document.getElementById('graph-list');
+        nodes.forEach(node => {{
+            const card = document.createElement('div');
+            card.className = 'card' + (node.focused ? ' focused' : '');
+            
+            const badgeKey = node.type.replace('_knowledge', '');
+            const badgeClass = 'badge badge-' + badgeKey;
+            const relatedLinks = links.filter(l => l.target === node.id || l.source === node.id);
+            
+            let linksHtml = '';
+            if (relatedLinks.length > 0) {{
+                linksHtml = '<ul class="links-list">' + relatedLinks.map(l => 
+                    `<li>${{l.source}} &rarr; [${{l.label}}] &rarr; ${{l.target}}</li>`
+                ).join('') + '</ul>';
+            }}
+            
+            card.innerHTML = `
+                <div>
+                    <span class="${{badgeClass}}">${{node.type}}</span>
+                    <strong>${{node.id}}</strong>
+                </div>
+                <div class="meta" style="margin-top: 8px;">${{node.statement}}</div>
+                <div class="meta">Authority: <strong>${{node.authority}}</strong> | Confidence: <strong>${{node.confidence}}</strong> | Status: <strong>${{node.status}}</strong></div>
+                ${{linksHtml}}
+            `;
+            container.appendChild(card);
+        }});
+    </script>
+</body>
+</html>"""
+    return html_content
+
+
+def export_provenance_graph_file(store: KnowledgeStore, output_path: Path, focus_id: str | None = None) -> Path:
+    content = generate_provenance_graph_html(store, focus_id)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(content, encoding="utf-8")
+    return output_path

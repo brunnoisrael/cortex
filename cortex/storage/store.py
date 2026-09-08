@@ -1,0 +1,451 @@
+"""SQLite knowledge store with WAL and FTS5 (PRD §23).
+
+Implements the KnowledgeStore contract:
+upsert / get / search / related / history.
+"""
+
+from __future__ import annotations
+
+import json
+import sqlite3
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
+from typing import Any
+
+from cortex.knowledge.models import (
+    ArtifactType,
+    Authority,
+    Entity,
+    Status,
+    _utcnow,
+)
+
+SCHEMA = """
+CREATE TABLE IF NOT EXISTS sessions (
+    id TEXT PRIMARY KEY,
+    host TEXT,
+    started_at TEXT,
+    ended_at TEXT,
+    phase TEXT,
+    branch TEXT,
+    agent TEXT
+);
+CREATE TABLE IF NOT EXISTS events (
+    id TEXT PRIMARY KEY,
+    type TEXT NOT NULL,
+    session_id TEXT,
+    ts TEXT NOT NULL,
+    content TEXT,
+    files TEXT,
+    branch TEXT,
+    meta TEXT,
+    distilled INTEGER DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_events_session ON events(session_id);
+CREATE INDEX IF NOT EXISTS idx_events_type ON events(type);
+CREATE TABLE IF NOT EXISTS entities (
+    id TEXT PRIMARY KEY,
+    type TEXT NOT NULL,
+    status TEXT NOT NULL,
+    authority TEXT NOT NULL,
+    confidence REAL NOT NULL,
+    statement TEXT NOT NULL,
+    details TEXT NOT NULL,
+    scope TEXT NOT NULL,
+    phase TEXT,
+    session_id TEXT,
+    provenance TEXT NOT NULL,
+    freshness TEXT NOT NULL,
+    superseded_by TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_entities_type ON entities(type);
+CREATE TABLE IF NOT EXISTS edges (
+    src TEXT NOT NULL,
+    rel TEXT NOT NULL,
+    dst TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    PRIMARY KEY (src, rel, dst)
+);
+CREATE TABLE IF NOT EXISTS entity_seq (
+    prefix TEXT PRIMARY KEY,
+    last INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS distill_runs (
+    ts TEXT NOT NULL,
+    session TEXT,
+    summary TEXT NOT NULL
+);
+CREATE VIRTUAL TABLE IF NOT EXISTS entities_fts USING fts5(
+    id UNINDEXED, text
+);
+"""
+
+
+class KnowledgeStore:
+    def __init__(self, db_path: Path):
+        self.db_path = Path(db_path)
+        self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        self.conn = sqlite3.connect(str(self.db_path))
+        self.conn.row_factory = sqlite3.Row
+        self.conn.execute("PRAGMA journal_mode=WAL")
+        self.conn.execute("PRAGMA foreign_keys=ON")
+        self.conn.executescript(SCHEMA)
+        self.conn.commit()
+
+    def close(self) -> None:
+        self.conn.close()
+
+    # ---- sessions ----
+
+    def ensure_session(self, session_id: str, host: str, branch: str | None = None,
+                       agent: str | None = None, phase: str | None = None) -> None:
+        self.conn.execute(
+            "INSERT OR IGNORE INTO sessions (id, host, started_at, phase, branch, agent) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            (session_id, host, _utcnow(), phase, branch, agent),
+        )
+        self.conn.commit()
+
+    def end_session(self, session_id: str) -> None:
+        self.conn.execute(
+            "UPDATE sessions SET ended_at = ? WHERE id = ?", (_utcnow(), session_id)
+        )
+        self.conn.commit()
+
+    def get_session(self, session_id: str) -> dict[str, Any] | None:
+        row = self.conn.execute("SELECT * FROM sessions WHERE id = ?", (session_id,)).fetchone()
+        return dict(row) if row else None
+
+    # ---- raw events ----
+
+    def add_event(self, event: dict[str, Any]) -> str:
+        eid = event.get("id") or f"evt-{self._next_int('evt')}"
+        self.conn.execute(
+            "INSERT INTO events (id, type, session_id, ts, content, files, branch, meta)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                eid,
+                event["type"],
+                event.get("session_id"),
+                event.get("ts") or _utcnow(),
+                event.get("content"),
+                json.dumps(event.get("files") or []),
+                event.get("branch"),
+                json.dumps(event.get("meta") or {}),
+            ),
+        )
+        self.conn.commit()
+        return eid
+
+    def undistilled_events(self, session_id: str | None = None) -> list[dict[str, Any]]:
+        sql = "SELECT * FROM events WHERE distilled = 0"
+        params: tuple = ()
+        if session_id:
+            sql += " AND session_id = ?"
+            params = (session_id,)
+        sql += " ORDER BY ts"
+        rows = self.conn.execute(sql, params).fetchall()
+        events = []
+        for r in rows:
+            e = dict(r)
+            e["files"] = json.loads(e["files"] or "[]")
+            e["meta"] = json.loads(e["meta"] or "{}")
+            events.append(e)
+        return events
+
+    def all_events(self, session_id: str | None = None) -> list[dict[str, Any]]:
+        """All events (distilled or not) — used by reviews and trace."""
+        sql = "SELECT * FROM events"
+        params: tuple = ()
+        if session_id:
+            sql += " WHERE session_id = ?"
+            params = (session_id,)
+        sql += " ORDER BY ts"
+        rows = self.conn.execute(sql, params).fetchall()
+        events = []
+        for r in rows:
+            e = dict(r)
+            e["files"] = json.loads(e["files"] or "[]")
+            e["meta"] = json.loads(e["meta"] or "{}")
+            events.append(e)
+        return events
+
+    def mark_distilled(self, event_ids: list[str]) -> None:
+        self.conn.executemany(
+            "UPDATE events SET distilled = 1 WHERE id = ?", [(i,) for i in event_ids]
+        )
+        self.conn.commit()
+
+    def purge_old_events(self, days: int, only_distilled: bool = True) -> int:
+        """Raw events are evidence, not permanent memory (PRD §7.2). By default
+        only events already distilled are purged, so no candidate knowledge is
+        lost; provenance keeps its id references (granularity reduces)."""
+        cutoff = (datetime.now(UTC) - timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        sql = "DELETE FROM events WHERE ts < ?"
+        if only_distilled:
+            sql += " AND distilled = 1"
+        cur = self.conn.execute(sql, (cutoff,))
+        self.conn.commit()
+        return cur.rowcount
+
+    # ---- entities ----
+
+    def upsert(self, entity: Entity) -> None:
+        self.conn.execute(
+            "INSERT OR REPLACE INTO entities "
+            "(id, type, status, authority, confidence, statement, details, scope, phase,"
+            " session_id, provenance, freshness, superseded_by, created_at, updated_at)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                entity.id,
+                entity.type.value,
+                entity.status.value,
+                entity.authority.value,
+                entity.confidence,
+                entity.statement,
+                json.dumps(entity.details, ensure_ascii=False),
+                json.dumps(entity.scope, ensure_ascii=False),
+                entity.phase,
+                entity.session_id,
+                entity.provenance.model_dump_json(),
+                entity.freshness.model_dump_json(),
+                entity.superseded_by,
+                entity.created_at,
+                entity.updated_at,
+            ),
+        )
+        text = self._fts_text(entity)
+        self.conn.execute("DELETE FROM entities_fts WHERE id = ?", (entity.id,))
+        self.conn.execute("INSERT INTO entities_fts (id, text) VALUES (?, ?)", (entity.id, text))
+        self.conn.commit()
+
+    @staticmethod
+    def _fts_text(entity: Entity) -> str:
+        parts = [entity.statement]
+        for v in entity.details.values():
+            if isinstance(v, str):
+                parts.append(v)
+            elif isinstance(v, list):
+                parts.extend(str(x) for x in v)
+        parts.extend(entity.scope)
+        return " \n ".join(p for p in parts if p)
+
+    def get(self, entity_id: str) -> Entity | None:
+        row = self.conn.execute("SELECT * FROM entities WHERE id = ?", (entity_id,)).fetchone()
+        return self._row_to_entity(row) if row else None
+
+    def list_by_type(self, etype: ArtifactType, include_noncurrent: bool = True) -> list[Entity]:
+        rows = self.conn.execute(
+            "SELECT * FROM entities WHERE type = ? ORDER BY created_at", (etype.value,)
+        ).fetchall()
+        entities = [self._row_to_entity(r) for r in rows]
+        if not include_noncurrent:
+            entities = [e for e in entities if e.is_current]
+        return entities
+
+    def all_entities(self) -> list[Entity]:
+        rows = self.conn.execute("SELECT * FROM entities ORDER BY created_at").fetchall()
+        return [self._row_to_entity(r) for r in rows]
+
+    def search(self, query: str, limit: int = 20) -> list[tuple[Entity, float]]:
+        """FTS5-backed search returning (entity, score) where higher is better.
+
+        The raw query is sanitized into quoted OR-terms so punctuation and
+        user input can never break the MATCH syntax."""
+        import re as _re
+        tokens = _re.findall(r"[a-zA-Z0-9á-úà-ùâ-ûã-õçÁ-Ú_]+", query)
+        fts_query = " OR ".join(f'"{t}"' for t in tokens[:12])
+        if not fts_query:
+            return []
+        try:
+            rows = self.conn.execute(
+                "SELECT id, bm25(entities_fts) AS rank FROM entities_fts "
+                "WHERE entities_fts MATCH ? ORDER BY rank LIMIT ?",
+                (fts_query, limit),
+            ).fetchall()
+        except sqlite3.OperationalError:
+            rows = []
+        out: list[tuple[Entity, float]] = []
+        for r in rows:
+            ent = self.get(r["id"])
+            if ent:
+                out.append((ent, max(0.0, -r["rank"])))  # bm25: more negative = better
+        return out
+
+    def related(self, entity_id: str, rel: str | None = None,
+                direction: str = "out") -> list[tuple[str, Entity]]:
+        if direction == "out":
+            sql, params = "SELECT rel, dst FROM edges WHERE src = ?", (entity_id,)
+        elif direction == "in":
+            sql, params = "SELECT rel, src FROM edges WHERE dst = ?", (entity_id,)
+        else:
+            sql, params = (
+                "SELECT rel, dst FROM edges WHERE src = ? OR dst = ?", (entity_id, entity_id),
+            )
+        if rel:
+            sql += " AND rel = ?"
+            params += (rel,)
+        out = []
+        for r in self.conn.execute(sql, params).fetchall():
+            target = r["dst"] if direction != "in" else r["src"]
+            ent = self.get(target)
+            if ent:
+                out.append((r["rel"], ent))
+        return out
+
+    def add_edge(self, src: str, rel: str, dst: str) -> None:
+        self.conn.execute(
+            "INSERT OR IGNORE INTO edges (src, rel, dst, created_at) VALUES (?, ?, ?, ?)",
+            (src, rel, dst, _utcnow()),
+        )
+        self.conn.commit()
+
+    def edges_of(self, src: str | None = None, rel: str | None = None) -> list[dict[str, str]]:
+        sql, params = "SELECT * FROM edges WHERE 1=1", []
+        if src:
+            sql += " AND src = ?"
+            params.append(src)
+        if rel:
+            sql += " AND rel = ?"
+            params.append(rel)
+        return [dict(r) for r in self.conn.execute(sql, params).fetchall()]
+
+    def node_degree(self, entity_id: str) -> int:
+        """Returns total edge count (incoming + outgoing) for Knowledge Graph Density calculation."""
+        row = self.conn.execute(
+            "SELECT COUNT(*) as deg FROM edges WHERE src = ? OR dst = ?",
+            (entity_id, entity_id),
+        ).fetchone()
+        return row["deg"] if row else 0
+
+
+    def history(self, entity_id: str) -> list[dict[str, str]]:
+        """Status transitions recorded as edges on the entity itself."""
+        return self.edges_of(src=entity_id, rel="STATUS")
+
+    def record_status_change(self, entity_id: str, from_status: str, to_status: str) -> None:
+        self.add_edge(entity_id, "STATUS", f"{from_status}->{to_status}")
+
+    # ---- governance helpers ----
+
+    def set_status(self, entity_id: str, status: Status,
+                   authority: Authority | None = None) -> Entity | None:
+        ent = self.get(entity_id)
+        if not ent:
+            return None
+        self.record_status_change(entity_id, ent.status.value, status.value)
+        ent.status = status
+        if authority is not None:
+            ent.authority = authority
+        if status == Status.ACTIVE:
+            ent.freshness.last_verified_at = _utcnow()
+            ent.freshness.stale = False
+        ent.updated_at = _utcnow()
+        self.upsert(ent)
+        return ent
+
+    def supersede(self, old_id: str, new_id: str) -> bool:
+        old, new = self.get(old_id), self.get(new_id)
+        if not old or not new:
+            return False
+        self.add_edge(new_id, "SUPERSEDES", old_id)
+        self.set_status(old_id, Status.SUPERSEDED)
+        old = self.get(old_id)
+        old.superseded_by = new_id
+        old.authority = Authority.SUPERSEDED
+        self.upsert(old)
+        # Negative knowledge survives supersession (PRD §44.4): rejected
+        # alternatives of the old decision stay visible in the new one unless
+        # explicitly contradicted.
+        old_alts = old.details.get("alternatives_rejected") or []
+        if old_alts:
+            new_alts = list(dict.fromkeys(
+                (new.details.get("alternatives_rejected") or []) + old_alts))
+            new.details["alternatives_rejected"] = new_alts
+            self.upsert(new)
+        if new.status in (Status.CANDIDATE, Status.PROPOSED):
+            self.set_status(new_id, Status.ACTIVE)
+        return True
+
+    # ---- stats ----
+
+    def stats(self) -> dict[str, Any]:
+        entities = self.all_entities()
+        by_type: dict[str, int] = {}
+        for e in entities:
+            by_type[e.type.value] = by_type.get(e.type.value, 0) + 1
+        ev = self.conn.execute("SELECT COUNT(*) c FROM events").fetchone()["c"]
+        sess = self.conn.execute("SELECT COUNT(*) c FROM sessions").fetchone()["c"]
+        return {"entities": by_type, "total_entities": len(entities),
+                "raw_events": ev, "sessions": sess}
+
+    # ---- distillation runs (observability, PRD §41) ----
+
+    def record_distill_run(self, session_id: str | None, summary: str) -> None:
+        self.conn.execute(
+            "INSERT INTO distill_runs (ts, session, summary) VALUES (?, ?, ?)",
+            (_utcnow(), session_id, summary),
+        )
+        self.conn.commit()
+
+    def last_distill_runs(self, n: int = 3) -> list[dict[str, str]]:
+        rows = self.conn.execute(
+            "SELECT * FROM distill_runs ORDER BY ts DESC LIMIT ?", (n,)
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    # ---- internals ----
+
+    def _next_int(self, prefix: str) -> int:
+        row = self.conn.execute(
+            "SELECT last FROM entity_seq WHERE prefix = ?", (prefix,)
+        ).fetchone()
+        last = row["last"] if row else 0
+        nxt = last + 1
+        self.conn.execute(
+            "INSERT OR REPLACE INTO entity_seq (prefix, last) VALUES (?, ?)", (prefix, nxt)
+        )
+        return nxt
+
+    def reserve_entity_id(self, etype: ArtifactType) -> str:
+        prefix = etype.value
+        row = self.conn.execute(
+            "SELECT last FROM entity_seq WHERE prefix = ?", (prefix,)
+        ).fetchone()
+        nxt = (row["last"] if row else 0) + 1
+        self.conn.execute(
+            "INSERT OR REPLACE INTO entity_seq (prefix, last) VALUES (?, ?)", (prefix, nxt)
+        )
+        name = {
+            ArtifactType.INTENTION: "int",
+            ArtifactType.ADR: "adr",
+            ArtifactType.FIX: "fix",
+            ArtifactType.CORRENDA: "cor",
+            ArtifactType.REVIEW: "rev",
+            ArtifactType.NEGATIVE_KNOWLEDGE: "nk",
+            ArtifactType.IDEA: "idea",
+        }[etype]
+        return f"{name}-{nxt:04d}"
+
+    @staticmethod
+    def _row_to_entity(row: sqlite3.Row) -> Entity:
+        from cortex.knowledge.models import Freshness, Provenance
+        return Entity(
+            id=row["id"],
+            type=ArtifactType(row["type"]),
+            statement=row["statement"],
+            status=Status(row["status"]),
+            authority=Authority(row["authority"]),
+            confidence=row["confidence"],
+            scope=json.loads(row["scope"] or "[]"),
+            phase=row["phase"],
+            session_id=row["session_id"],
+            details=json.loads(row["details"] or "{}"),
+            provenance=Provenance.model_validate_json(row["provenance"] or "{}"),
+            freshness=Freshness.model_validate_json(row["freshness"] or "{}"),
+            superseded_by=row["superseded_by"],
+            created_at=row["created_at"],
+            updated_at=row["updated_at"],
+        )

@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Cortex
+        run: pip install -e ".[dev]"
+
+      - name: Ruff lint
+        run: ruff check .
+
+      - name: Run tests
+        run: python -m pytest tests/ -v
+
+      # NOTE: `cortex benchmark --dogfood` is intentionally not wired into CI
+      # yet — dogfooding against this repo itself is a small, self-referential
+      # sample (see AUDITORIA_EXTERNA_2026-09-07.md, Onda 16). Add it here
+      # once it runs against a real external repository in a scheduled job,
+      # not on every PR, so a bad benchmark day doesn't block unrelated PRs.

@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.cortex/
+
+# Lint cache
+.ruff_cache/
+
+# Documentos internos de processo/implementação — não fazem parte do produto
+REFINAMENTO.md
+CORTEX_SUPER_EVOLUCAO.md
+AUDITORIA_EXTERNA_2026-09-07.md
