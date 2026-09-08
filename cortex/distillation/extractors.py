@@ -288,9 +288,15 @@ def statement_similarity(a: str, b: str) -> float:
 
 def dense_semantic_similarity(a: str, b: str) -> float:
     """Character n-gram (3-gram & 4-gram) subword TF-IDF cosine similarity
-    plus token similarity providing dense semantic matching for paraphrases local-first."""
+    plus token similarity providing dense semantic matching for paraphrases local-first.
+    
+    Optimized to avoid redundant calculations and early exit for edge cases."""
     if not a.strip() or not b.strip():
         return 0.0
+    
+    # Early exit for identical strings
+    if a.strip().lower() == b.strip().lower():
+        return 1.0
     
     toks_a = statement_tokens(a)
     toks_b = statement_tokens(b)
@@ -311,6 +317,9 @@ def dense_semantic_similarity(a: str, b: str) -> float:
         return token_sim
 
     common_keys = set(vec_a.keys()) & set(vec_b.keys())
+    if not common_keys:
+        return token_sim
+    
     dot_product = sum(vec_a[k] * vec_b[k] for k in common_keys)
     norm_a = (sum(v * v for v in vec_a.values())) ** 0.5
     norm_b = (sum(v * v for v in vec_b.values())) ** 0.5
@@ -329,7 +338,9 @@ AFFIRMATIVE_TERMS = {
 }
 
 def detect_negation_conflict(text_a: str, text_b: str) -> bool:
-    """Detect polar contradiction between two technical statements or decisions."""
+    """Detect polar contradiction between two technical statements or decisions.
+    
+    Optimized to avoid redundant checks and early exit for obvious non-conflicts."""
     toks_a = statement_tokens(text_a)
     toks_b = statement_tokens(text_b)
     if not toks_a or not toks_b:
@@ -343,15 +354,16 @@ def detect_negation_conflict(text_a: str, text_b: str) -> bool:
     if overlap_ratio < 0.35:
         return False
 
-    has_neg_a = bool(toks_a & NEGATION_TERMS or any(n in text_a.lower() for n in NEGATION_TERMS))
-    has_neg_b = bool(toks_b & NEGATION_TERMS or any(n in text_b.lower() for n in NEGATION_TERMS))
+    # Check negation and affirmative terms in one pass
+    text_a_lower = text_a.lower()
+    text_b_lower = text_b.lower()
+    
+    has_neg_a = bool(toks_a & NEGATION_TERMS or any(n in text_a_lower for n in NEGATION_TERMS))
+    has_neg_b = bool(toks_b & NEGATION_TERMS or any(n in text_b_lower for n in NEGATION_TERMS))
 
-    has_aff_a = bool(toks_a & AFFIRMATIVE_TERMS or any(a in text_a.lower() for a in AFFIRMATIVE_TERMS))
-    has_aff_b = bool(toks_b & AFFIRMATIVE_TERMS or any(a in text_b.lower() for a in AFFIRMATIVE_TERMS))
+    has_aff_a = bool(toks_a & AFFIRMATIVE_TERMS or any(a in text_a_lower for a in AFFIRMATIVE_TERMS))
+    has_aff_b = bool(toks_b & AFFIRMATIVE_TERMS or any(a in text_b_lower for a in AFFIRMATIVE_TERMS))
 
     # One is affirmative and one is negative on the same core subject
-    if (has_neg_a and not has_neg_b and has_aff_b) or (has_neg_b and not has_neg_a and has_aff_a):
-        return True
-
-    return False
+    return (has_neg_a and not has_neg_b and has_aff_b) or (has_neg_b and not has_neg_a and has_aff_a)
 
