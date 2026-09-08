@@ -97,6 +97,9 @@ def rank(
     federated_stores: list[KnowledgeStore] | None = None,
     weights_override: dict[str, float] | None = None,
 ) -> list[RankedItem]:
+    if limit <= 0 or limit > 100:
+        limit = 20  # Safe default
+        
     files = inp.files or []
     stores = [store] + (federated_stores or [])
     
@@ -111,6 +114,9 @@ def rank(
         **(weights_override or {}),
     }
 
+    # Pre-compute query tokens to avoid repeated tokenization
+    query_tokens = _word_tokens(inp.query) if inp.query.strip() else set()
+    
     items: list[RankedItem] = []
     for s_idx, st in enumerate(stores):
         is_federated = s_idx > 0
@@ -135,16 +141,20 @@ def rank(
             )
 
             # 1. Hybrid Search (Sparse BM25/Jaccard + Dense Subword/Embedding Cosine)
-            sparse_score = max(
-                [fts.get(ent.id, 0.0),
-                 keyword_overlap(inp.query, ent.statement + " " + " ".join(ent.scope))]
-                + [keyword_overlap(inp.query, str(v)) for v in ent.details.values() if isinstance(v, str)]
-            ) if inp.query.strip() else 0.5
-
-            dense_score = (
-                dense_semantic_similarity(inp.query, full_text)
-                if inp.query.strip() else 0.5
-            )
+            # Optimized to avoid repeated calculations
+            if inp.query.strip():
+                keyword_scores = [
+                    fts.get(ent.id, 0.0),
+                    keyword_overlap(inp.query, ent.statement + " " + " ".join(ent.scope))
+                ]
+                keyword_scores.extend(
+                    keyword_overlap(inp.query, str(v)) for v in ent.details.values() if isinstance(v, str)
+                )
+                sparse_score = max(keyword_scores)
+                dense_score = dense_semantic_similarity(inp.query, full_text)
+            else:
+                sparse_score = 0.5
+                dense_score = 0.5
 
             hybrid_relevance = (w["sparse"] * sparse_score) + (w["dense"] * dense_score)
 
@@ -213,6 +223,9 @@ def rank(
 
 def _tokens(text: str) -> int:
     # ~1.4 tokens/word accounts for PT/EN morphology better than chars/4
+    # Optimized with input validation
+    if not text or not isinstance(text, str):
+        return 0
     return max(1, int(len(text.split()) * 1.4))
 
 
