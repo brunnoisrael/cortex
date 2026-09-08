@@ -113,9 +113,6 @@ def rank(
         "density": 0.25,
         **(weights_override or {}),
     }
-
-    # Pre-compute query tokens to avoid repeated tokenization
-    query_tokens = _word_tokens(inp.query) if inp.query.strip() else set()
     
     items: list[RankedItem] = []
     for s_idx, st in enumerate(stores):
