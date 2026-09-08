@@ -43,6 +43,8 @@ CREATE TABLE IF NOT EXISTS events (
 );
 CREATE INDEX IF NOT EXISTS idx_events_session ON events(session_id);
 CREATE INDEX IF NOT EXISTS idx_events_type ON events(type);
+CREATE INDEX IF NOT EXISTS idx_events_distilled ON events(distilled);
+CREATE INDEX IF NOT EXISTS idx_events_ts ON events(ts);
 CREATE TABLE IF NOT EXISTS entities (
     id TEXT PRIMARY KEY,
     type TEXT NOT NULL,
@@ -61,6 +63,9 @@ CREATE TABLE IF NOT EXISTS entities (
     updated_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_entities_type ON entities(type);
+CREATE INDEX IF NOT EXISTS idx_entities_status ON entities(status);
+CREATE INDEX IF NOT EXISTS idx_entities_session ON entities(session_id);
+CREATE INDEX IF NOT EXISTS idx_entities_created_at ON entities(created_at);
 CREATE TABLE IF NOT EXISTS edges (
     src TEXT NOT NULL,
     rel TEXT NOT NULL,
@@ -68,6 +73,9 @@ CREATE TABLE IF NOT EXISTS edges (
     created_at TEXT NOT NULL,
     PRIMARY KEY (src, rel, dst)
 );
+CREATE INDEX IF NOT EXISTS idx_edges_src ON edges(src);
+CREATE INDEX IF NOT EXISTS idx_edges_dst ON edges(dst);
+CREATE INDEX IF NOT EXISTS idx_edges_rel ON edges(rel);
 CREATE TABLE IF NOT EXISTS entity_seq (
     prefix TEXT PRIMARY KEY,
     last INTEGER NOT NULL
@@ -77,6 +85,7 @@ CREATE TABLE IF NOT EXISTS distill_runs (
     session TEXT,
     summary TEXT NOT NULL
 );
+CREATE INDEX IF NOT EXISTS idx_distill_runs_ts ON distill_runs(ts);
 CREATE VIRTUAL TABLE IF NOT EXISTS entities_fts USING fts5(
     id UNINDEXED, text
 );
@@ -121,6 +130,11 @@ class KnowledgeStore:
     # ---- raw events ----
 
     def add_event(self, event: dict[str, Any]) -> str:
+        if not event or not isinstance(event, dict):
+            raise ValueError("Event must be a non-empty dictionary")
+        if "type" not in event:
+            raise ValueError("Event must have a 'type' field")
+            
         eid = event.get("id") or f"evt-{self._next_int('evt')}"
         self.conn.execute(
             "INSERT INTO events (id, type, session_id, ts, content, files, branch, meta)"
@@ -193,6 +207,9 @@ class KnowledgeStore:
     # ---- entities ----
 
     def upsert(self, entity: Entity) -> None:
+        if not entity or not hasattr(entity, 'id'):
+            raise ValueError("Entity must be a valid Entity object with an id")
+            
         self.conn.execute(
             "INSERT OR REPLACE INTO entities "
             "(id, type, status, authority, confidence, statement, details, scope, phase,"
@@ -233,6 +250,8 @@ class KnowledgeStore:
         return " \n ".join(p for p in parts if p)
 
     def get(self, entity_id: str) -> Entity | None:
+        if not entity_id or not isinstance(entity_id, str):
+            return None
         row = self.conn.execute("SELECT * FROM entities WHERE id = ?", (entity_id,)).fetchone()
         return self._row_to_entity(row) if row else None
 
@@ -253,7 +272,15 @@ class KnowledgeStore:
         """FTS5-backed search returning (entity, score) where higher is better.
 
         The raw query is sanitized into quoted OR-terms so punctuation and
-        user input can never break the MATCH syntax."""
+        user input can never break the MATCH syntax.
+        
+        Optimized with input validation and better error handling."""
+        if not query or not isinstance(query, str):
+            return []
+        
+        if limit <= 0 or limit > 100:
+            limit = 20  # Safe default
+            
         import re as _re
         tokens = _re.findall(r"[a-zA-Z0-9á-úà-ùâ-ûã-õçÁ-Ú_]+", query)
         fts_query = " OR ".join(f'"{t}"' for t in tokens[:12])
@@ -296,6 +323,8 @@ class KnowledgeStore:
         return out
 
     def add_edge(self, src: str, rel: str, dst: str) -> None:
+        if not all([src, rel, dst]) or not all(isinstance(x, str) for x in [src, rel, dst]):
+            raise ValueError("Edge parameters (src, rel, dst) must be non-empty strings")
         self.conn.execute(
             "INSERT OR IGNORE INTO edges (src, rel, dst, created_at) VALUES (?, ?, ?, ?)",
             (src, rel, dst, _utcnow()),
