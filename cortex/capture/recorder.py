@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from cortex.privacy.redaction import redact
@@ -14,11 +15,17 @@ EVENT_TYPES = (
 )
 
 
-def capture_event(store: KnowledgeStore, event: dict[str, Any]) -> str:
-    """Persist one raw event after redaction. Never raises to the caller's session."""
-    content = redact(event.get("content"))
-    files = [redact(f) for f in (event.get("files") or [])]
-    return store.add_event({**event, "content": content, "files": files})
+def capture_event(store: KnowledgeStore, event: dict[str, Any]) -> str | None:
+    """Persist one raw event after redaction. Never raises to the caller's
+    session (PRD §42); returns the event id, or None when the event was not
+    stored (invalid shape, or duplicate id already captured)."""
+    try:
+        content = redact(event.get("content"))
+        files = [redact(f) for f in (event.get("files") or [])]
+        return store.add_event({**event, "content": content, "files": files})
+    except Exception:
+        logging.getLogger("cortex.capture").warning("capture failed", exc_info=True)
+        return None
 
 
 def session_event(store: KnowledgeStore, host: str, session_id: str, kind: str,
@@ -47,11 +54,13 @@ def capture_commits(store: KnowledgeStore, root, limit: int = 20,
         if len(parts) < 2 or not parts[1].strip():
             continue
         message = (parts[1] + " " + (parts[2] if len(parts) > 2 else "")).strip()
-        ids.append(capture_event(store, {
+        eid = capture_event(store, {
             "type": "commit",
             "session_id": sid,
             "content": message[:500],
             "branch": None,
             "meta": {"hash": parts[0]},
-        }))
+        })
+        if eid is not None:
+            ids.append(eid)
     return ids
