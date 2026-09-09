@@ -136,6 +136,15 @@ def doctor() -> None:
             store = KnowledgeStore(ws.db_path)
             integrity = store.conn.execute("PRAGMA integrity_check").fetchone()[0]
             checks["store integrity"] = integrity == "ok"
+            checks["schema version"] = store.schema_version > 0
+            store.all_entities()  # hydrate every row: malformed ones get counted
+            if store.malformed_rows:
+                checks["entity rows readable"] = False
+                typer.secho(
+                    f"! {store.malformed_rows} entity rows are malformed and were"
+                    " skipped (ids logged). Run `cortex doctor --fix` to quarantine them.",
+                    fg=typer.colors.YELLOW,
+                )
             store.close()
         except Exception as exc:  # corrupted store -> safe mode (PRD §42)
             checks["store integrity"] = False
@@ -241,6 +250,8 @@ def distill(
         retention_days=cfg.raw_retention_days,
         llm=cfg.llm,
         ollama_url=cfg.ollama_url,
+        llm_model=cfg.llm_model,
+        llm_timeout_s=cfg.llm_timeout_s,
     )
     if dry_run:
         events = store.undistilled_events(session)
@@ -251,6 +262,8 @@ def distill(
     report = engine.distill_session(session) if session else engine.distill_all()
     typer.secho("distillation complete", fg=typer.colors.GREEN)
     typer.echo(f"  {report.summary()}")
+    for w in report.warnings:
+        typer.secho(f"  ! {w}", fg=typer.colors.YELLOW)
     if report.new_ids:
         typer.echo(f"  new artifacts: {', '.join(report.new_ids)}")
     store.close()
@@ -603,6 +616,10 @@ def hook(
         return
     result = handle_hook_payload(payload, Path.cwd())
     typer.echo(json.dumps(result, ensure_ascii=False))
+    if not result.get("ok", False):
+        # Failure signal for the host; the JSON stdout contract stays intact
+        # and the agent is never blocked (PRD §42).
+        raise typer.Exit(1)
 
 
 
