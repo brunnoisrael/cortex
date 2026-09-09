@@ -2,12 +2,20 @@
 
 Implements the KnowledgeStore contract:
 upsert / get / search / related / history.
+
+Migration rules (PRD: never destroy history):
+- migrations are additive and idempotent, never destructive;
+- each step is a callable keyed by the schema version it upgrades TO;
+- legacy stores (created before versioning) are treated as version 1.
 """
 
 from __future__ import annotations
 
 import json
+import logging
 import sqlite3
+from collections.abc import Callable
+from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -19,6 +27,32 @@ from cortex.knowledge.models import (
     Status,
     _utcnow,
 )
+
+SCHEMA_VERSION = 2
+
+# Maps ArtifactType -> short id prefix used by reserve_entity_id.
+_PREFIX_BY_TYPE: dict[ArtifactType, str] = {
+    ArtifactType.INTENTION: "int",
+    ArtifactType.ADR: "adr",
+    ArtifactType.FIX: "fix",
+    ArtifactType.CORRENDA: "cor",
+    ArtifactType.REVIEW: "rev",
+    ArtifactType.NEGATIVE_KNOWLEDGE: "nk",
+    ArtifactType.IDEA: "idea",
+}
+
+
+def _migration_002_events_host(conn: sqlite3.Connection) -> None:
+    """002 (additive): events gain a `host` column for hook-adapter context.
+    Legacy rows keep NULL; idempotent — skips when the column already exists."""
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(events)")}
+    if "host" not in cols:
+        conn.execute("ALTER TABLE events ADD COLUMN host TEXT")
+
+
+MIGRATIONS: dict[int, Callable[[sqlite3.Connection], None]] = {
+    2: _migration_002_events_host,
+}
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS sessions (
@@ -39,6 +73,7 @@ CREATE TABLE IF NOT EXISTS events (
     files TEXT,
     branch TEXT,
     meta TEXT,
+    host TEXT,
     distilled INTEGER DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS idx_events_session ON events(session_id);
@@ -93,15 +128,67 @@ CREATE VIRTUAL TABLE IF NOT EXISTS entities_fts USING fts5(
 
 
 class KnowledgeStore:
+    MAX_SEARCH_LIMIT = 500
+
     def __init__(self, db_path: Path):
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        self.conn = sqlite3.connect(str(self.db_path))
+        # Three processes write concurrently (CLI + MCP + hook subprocess):
+        # a busy timeout prevents spurious "database is locked"; autocommit
+        # isolation makes the explicit BEGIN IMMEDIATE in _mint_seq safe.
+        self.conn = sqlite3.connect(str(self.db_path), timeout=30.0,
+                                    isolation_level=None)
         self.conn.row_factory = sqlite3.Row
-        self.conn.execute("PRAGMA journal_mode=WAL")
+        self.conn.execute("PRAGMA busy_timeout=30000")
+        res = self.conn.execute("PRAGMA journal_mode=WAL").fetchone()
+        if res is None or str(res[0]).lower() != "wal":
+            logging.getLogger("cortex.store").warning(
+                "WAL mode not active (%s); concurrent access may fail", res)
         self.conn.execute("PRAGMA foreign_keys=ON")
+        # Count of entity rows skipped for being malformed (surfaced by doctor).
+        self.malformed_rows: int = 0
+        self.schema_version: int = SCHEMA_VERSION
         self.conn.executescript(SCHEMA)
-        self.conn.commit()
+        self._migrate()
+
+    def __enter__(self) -> "KnowledgeStore":
+        return self
+
+    def __exit__(self, exc_type, exc, tb) -> None:
+        self.close()
+
+    def close(self) -> None:
+        self.conn.close()  # idempotent in CPython sqlite3
+
+    @contextmanager
+    def _write_txn(self):
+        """Explicit IMMEDIATE write transaction (autocommit connection)."""
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            yield
+            self.conn.execute("COMMIT")
+        except Exception:
+            self.conn.execute("ROLLBACK")
+            raise
+
+    def _migrate(self) -> None:
+        stored = self.conn.execute("PRAGMA user_version").fetchone()[0]
+        version = stored
+        if version == 0:
+            # Fresh store (schema just created) or legacy pre-versioning store.
+            has_entities = self.conn.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='entities'"
+            ).fetchone() is not None
+            version = 1 if has_entities else SCHEMA_VERSION
+        for step in sorted(MIGRATIONS):
+            if version < step <= SCHEMA_VERSION:
+                MIGRATIONS[step](self.conn)
+                version = step
+        if stored <= SCHEMA_VERSION and version != stored:
+            # Persist the final version; never touch a store written by a
+            # newer release (stored > SCHEMA_VERSION would be a downgrade).
+            self.conn.execute(f"PRAGMA user_version = {version}")
+        self.schema_version = version
 
     def close(self) -> None:
         self.conn.close()
@@ -129,16 +216,20 @@ class KnowledgeStore:
 
     # ---- raw events ----
 
-    def add_event(self, event: dict[str, Any]) -> str:
+    def add_event(self, event: dict[str, Any]) -> str | None:
+        """Insert a raw event. Returns the event id, or None when it was not
+        stored (duplicate id) — a duplicate is evidence already captured,
+        not an error. Invalid shape still raises ValueError (programming error)."""
         if not event or not isinstance(event, dict):
             raise ValueError("Event must be a non-empty dictionary")
         if "type" not in event:
             raise ValueError("Event must have a 'type' field")
-            
-        eid = event.get("id") or f"evt-{self._next_int('evt')}"
-        self.conn.execute(
-            "INSERT INTO events (id, type, session_id, ts, content, files, branch, meta)"
-            " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+
+        eid = event.get("id") or f"evt-{self._mint_seq('evt')}"
+        cur = self.conn.execute(
+            "INSERT OR IGNORE INTO events "
+            "(id, type, session_id, ts, content, files, branch, meta, host)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 eid,
                 event["type"],
@@ -148,10 +239,10 @@ class KnowledgeStore:
                 json.dumps(event.get("files") or []),
                 event.get("branch"),
                 json.dumps(event.get("meta") or {}),
+                event.get("host"),
             ),
         )
-        self.conn.commit()
-        return eid
+        return eid if cur.rowcount > 0 else None
 
     def undistilled_events(self, session_id: str | None = None) -> list[dict[str, Any]]:
         sql = "SELECT * FROM events WHERE distilled = 0"
@@ -209,34 +300,37 @@ class KnowledgeStore:
     def upsert(self, entity: Entity) -> None:
         if not entity or not hasattr(entity, 'id'):
             raise ValueError("Entity must be a valid Entity object with an id")
-            
-        self.conn.execute(
-            "INSERT OR REPLACE INTO entities "
-            "(id, type, status, authority, confidence, statement, details, scope, phase,"
-            " session_id, provenance, freshness, superseded_by, created_at, updated_at)"
-            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (
-                entity.id,
-                entity.type.value,
-                entity.status.value,
-                entity.authority.value,
-                entity.confidence,
-                entity.statement,
-                json.dumps(entity.details, ensure_ascii=False),
-                json.dumps(entity.scope, ensure_ascii=False),
-                entity.phase,
-                entity.session_id,
-                entity.provenance.model_dump_json(),
-                entity.freshness.model_dump_json(),
-                entity.superseded_by,
-                entity.created_at,
-                entity.updated_at,
-            ),
-        )
-        text = self._fts_text(entity)
-        self.conn.execute("DELETE FROM entities_fts WHERE id = ?", (entity.id,))
-        self.conn.execute("INSERT INTO entities_fts (id, text) VALUES (?, ?)", (entity.id, text))
-        self.conn.commit()
+
+        # Entity row and FTS row must land together — a crash in between would
+        # leave the entity invisible to search.
+        with self._write_txn():
+            self.conn.execute(
+                "INSERT OR REPLACE INTO entities "
+                "(id, type, status, authority, confidence, statement, details, scope, phase,"
+                " session_id, provenance, freshness, superseded_by, created_at, updated_at)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    entity.id,
+                    entity.type.value,
+                    entity.status.value,
+                    entity.authority.value,
+                    entity.confidence,
+                    entity.statement,
+                    json.dumps(entity.details, ensure_ascii=False),
+                    json.dumps(entity.scope, ensure_ascii=False),
+                    entity.phase,
+                    entity.session_id,
+                    entity.provenance.model_dump_json(),
+                    entity.freshness.model_dump_json(),
+                    entity.superseded_by,
+                    entity.created_at,
+                    entity.updated_at,
+                ),
+            )
+            text = self._fts_text(entity)
+            self.conn.execute("DELETE FROM entities_fts WHERE id = ?", (entity.id,))
+            self.conn.execute(
+                "INSERT INTO entities_fts (id, text) VALUES (?, ?)", (entity.id, text))
 
     @staticmethod
     def _fts_text(entity: Entity) -> str:
@@ -259,27 +353,26 @@ class KnowledgeStore:
         rows = self.conn.execute(
             "SELECT * FROM entities WHERE type = ? ORDER BY created_at", (etype.value,)
         ).fetchall()
-        entities = [self._row_to_entity(r) for r in rows]
+        entities = [e for e in (self._row_to_entity(r) for r in rows) if e is not None]
         if not include_noncurrent:
             entities = [e for e in entities if e.is_current]
         return entities
 
     def all_entities(self) -> list[Entity]:
         rows = self.conn.execute("SELECT * FROM entities ORDER BY created_at").fetchall()
-        return [self._row_to_entity(r) for r in rows]
+        return [e for e in (self._row_to_entity(r) for r in rows) if e is not None]
 
     def search(self, query: str, limit: int = 20) -> list[tuple[Entity, float]]:
         """FTS5-backed search returning (entity, score) where higher is better.
 
-        The raw query is sanitized into quoted OR-terms so punctuation and
-        user input can never break the MATCH syntax.
-        
-        Optimized with input validation and better error handling."""
+        The caller's limit is authoritative (clamped to MAX_SEARCH_LIMIT);
+        the old behavior of silently rewriting limit>100 down to 20 crippled
+        hybrid recall (compiler requests 200).
+        """
         if not query or not isinstance(query, str):
             return []
-        
-        if limit <= 0 or limit > 100:
-            limit = 20  # Safe default
+
+        limit = max(1, min(int(limit), self.MAX_SEARCH_LIMIT))
             
         import re as _re
         tokens = _re.findall(r"[a-zA-Z0-9á-úà-ùâ-ûã-õçÁ-Ú_]+", query)
@@ -427,54 +520,55 @@ class KnowledgeStore:
 
     # ---- internals ----
 
+    def _mint_seq(self, prefix: str) -> int:
+        """Atomic id mint: single-statement UPSERT+RETURNING inside an
+        IMMEDIATE transaction — safe across the three concurrent writer
+        processes (CLI, MCP server, hook subprocess)."""
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            row = self.conn.execute(
+                "INSERT INTO entity_seq (prefix, last) VALUES (?, 1) "
+                "ON CONFLICT(prefix) DO UPDATE SET last = last + 1 "
+                "RETURNING last",
+                (prefix,),
+            ).fetchone()
+            nxt = int(row[0])
+            self.conn.execute("COMMIT")
+            return nxt
+        except Exception:
+            self.conn.execute("ROLLBACK")
+            raise
+
     def _next_int(self, prefix: str) -> int:
-        row = self.conn.execute(
-            "SELECT last FROM entity_seq WHERE prefix = ?", (prefix,)
-        ).fetchone()
-        last = row["last"] if row else 0
-        nxt = last + 1
-        self.conn.execute(
-            "INSERT OR REPLACE INTO entity_seq (prefix, last) VALUES (?, ?)", (prefix, nxt)
-        )
-        return nxt
+        return self._mint_seq(prefix)
 
     def reserve_entity_id(self, etype: ArtifactType) -> str:
-        prefix = etype.value
-        row = self.conn.execute(
-            "SELECT last FROM entity_seq WHERE prefix = ?", (prefix,)
-        ).fetchone()
-        nxt = (row["last"] if row else 0) + 1
-        self.conn.execute(
-            "INSERT OR REPLACE INTO entity_seq (prefix, last) VALUES (?, ?)", (prefix, nxt)
-        )
-        name = {
-            ArtifactType.INTENTION: "int",
-            ArtifactType.ADR: "adr",
-            ArtifactType.FIX: "fix",
-            ArtifactType.CORRENDA: "cor",
-            ArtifactType.REVIEW: "rev",
-            ArtifactType.NEGATIVE_KNOWLEDGE: "nk",
-            ArtifactType.IDEA: "idea",
-        }[etype]
-        return f"{name}-{nxt:04d}"
+        return f"{_PREFIX_BY_TYPE[etype]}-{self._mint_seq(etype.value):04d}"
 
-    @staticmethod
-    def _row_to_entity(row: sqlite3.Row) -> Entity:
+    def _row_to_entity(self, row: sqlite3.Row) -> Entity | None:
+        """Degrade with signal (Principle 1): one malformed row must never
+        poison every reader — skip it, count it, log the id."""
         from cortex.knowledge.models import Freshness, Provenance
-        return Entity(
-            id=row["id"],
-            type=ArtifactType(row["type"]),
-            statement=row["statement"],
-            status=Status(row["status"]),
-            authority=Authority(row["authority"]),
-            confidence=row["confidence"],
-            scope=json.loads(row["scope"] or "[]"),
-            phase=row["phase"],
-            session_id=row["session_id"],
-            details=json.loads(row["details"] or "{}"),
-            provenance=Provenance.model_validate_json(row["provenance"] or "{}"),
-            freshness=Freshness.model_validate_json(row["freshness"] or "{}"),
-            superseded_by=row["superseded_by"],
-            created_at=row["created_at"],
-            updated_at=row["updated_at"],
-        )
+        try:
+            return Entity(
+                id=row["id"],
+                type=ArtifactType(row["type"]),
+                statement=row["statement"],
+                status=Status(row["status"]),
+                authority=Authority(row["authority"]),
+                confidence=row["confidence"],
+                scope=json.loads(row["scope"] or "[]"),
+                phase=row["phase"],
+                session_id=row["session_id"],
+                details=json.loads(row["details"] or "{}"),
+                provenance=Provenance.model_validate_json(row["provenance"] or "{}"),
+                freshness=Freshness.model_validate_json(row["freshness"] or "{}"),
+                superseded_by=row["superseded_by"],
+                created_at=row["created_at"],
+                updated_at=row["updated_at"],
+            )
+        except Exception as exc:
+            self.malformed_rows += 1
+            logging.getLogger("cortex.store").error(
+                "malformed entity row skipped: id=%s err=%s", row["id"], exc)
+            return None
