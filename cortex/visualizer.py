@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import html as _html
 import json
 from pathlib import Path
 
@@ -13,12 +14,12 @@ def generate_provenance_graph_html(store: KnowledgeStore, focus_id: str | None =
     entities = store.all_entities()
     nodes = []
     links = []
-    
+
     for e in entities:
         is_focused = (e.id == focus_id)
         nodes.append({
-            "id": e.id,
-            "statement": e.statement,
+            "id": _html.escape(str(e.id or "")),
+            "statement": _html.escape(str(e.statement or "")),
             "type": e.type.value,
             "authority": e.authority.value,
             "status": e.status.value,
@@ -26,7 +27,7 @@ def generate_provenance_graph_html(store: KnowledgeStore, focus_id: str | None =
             "focused": is_focused,
             "scope": e.scope,
         })
-        
+
         rel_in = store.related(e.id, direction="in")
         for rel_type, source_ent in rel_in:
             links.append({
@@ -35,8 +36,8 @@ def generate_provenance_graph_html(store: KnowledgeStore, focus_id: str | None =
                 "label": rel_type,
             })
 
-    nodes_json = json.dumps(nodes, ensure_ascii=False).replace("</script>", "<\\/script>")
-    links_json = json.dumps(links, ensure_ascii=False).replace("</script>", "<\\/script>")
+    nodes_json = json.dumps(nodes, ensure_ascii=False).replace("</", "<\\/")
+    links_json = json.dumps(links, ensure_ascii=False).replace("</", "<\\/")
     
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
@@ -93,10 +94,15 @@ def generate_provenance_graph_html(store: KnowledgeStore, focus_id: str | None =
                     <span class="${{badgeClass}}">${{node.type}}</span>
                     <strong>${{node.id}}</strong>
                 </div>
-                <div class="meta" style="margin-top: 8px;">${{node.statement}}</div>
+                <div class="meta" style="margin-top: 8px;"></div>
                 <div class="meta">Authority: <strong>${{node.authority}}</strong> | Confidence: <strong>${{node.confidence}}</strong> | Status: <strong>${{node.status}}</strong></div>
                 ${{linksHtml}}
             `;
+            // Use textContent for statement to prevent XSS
+            const statementDiv = card.querySelector('.meta');
+            if (statementDiv) {{
+                statementDiv.textContent = node.statement;
+            }}
             container.appendChild(card);
         }});
     </script>
