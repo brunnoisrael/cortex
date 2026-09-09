@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime
 
 from cortex.capture.recorder import capture_event
 from cortex.compiler.compiler import CompileInput, _tokens, compile_context
 from cortex.distillation.engine import DistillationEngine
-from cortex.knowledge.models import ArtifactType, Authority
+from cortex.knowledge.models import ArtifactType, Authority, Entity, Freshness, Provenance, Status
 from cortex.storage.store import KnowledgeStore
 
 
@@ -263,6 +264,340 @@ def test_contradiction_handles_version_variants(store):
 def test_token_estimate_word_based():
     text = "palavra " * 100
     assert _tokens(text) == 140  # 100 words * 1.4
+
+
+# ---------- Onda 1.1: search respects requested limit ----------
+
+def test_search_respects_requested_limit(store):
+    # Create 30 ADRs directly to test search limit without relying on extraction
+    for i in range(30):
+        entity = Entity(
+            id=f"adr-{i:04d}",
+            type=ArtifactType.ADR,
+            statement=f"Decision {i}: Use PostgreSQL for module {i}",
+            status=Status.ACTIVE,
+            authority=Authority.HUMAN_CONFIRMED,
+            confidence=0.95,
+            scope=[f"src/module{i}/"],
+            details={"decision": f"Use PostgreSQL for module {i}"},
+            provenance=Provenance(
+                source_session="test",
+                source_events=[],
+                source_files=[],
+                source_commits=[],
+                source_entities=[],
+                generated_at=datetime.now(UTC).isoformat(),
+                extraction_source="test"
+            ),
+            freshness=Freshness(
+                last_verified_at=None,
+                verification_source=None,
+                stale_after_days=90,
+                stale=False
+            ),
+            superseded_by=None,
+            created_at=datetime.now(UTC).isoformat(),
+            updated_at=datetime.now(UTC).isoformat(),
+        )
+        store.upsert(entity)
+
+    hits = store.search("PostgreSQL", limit=200)
+    assert len(hits) > 20, (
+        f"search() capou o pedido de 200 para {len(hits)} — recall híbrido degradado"
+    )
+
+
+# ---------- Onda 1.2: visualizer escapes HTML ----------
+
+def test_visualizer_escapes_statement_html(tmp_path, store):
+    # Create entity with hostile payload
+    entity = Entity(
+        id="adr-0001",
+        type=ArtifactType.ADR,
+        statement="<img src=x onerror=alert(document.cookie)>",
+        status=Status.ACTIVE,
+        authority=Authority.HUMAN_CONFIRMED,
+        confidence=0.95,
+        scope=["src/test/"],
+        details={"decision": "test"},
+        provenance=Provenance(
+            source_session="test",
+            source_events=[],
+            source_files=[],
+            source_commits=[],
+            source_entities=[],
+            generated_at=datetime.now(UTC).isoformat(),
+            extraction_source="test"
+        ),
+        freshness=Freshness(
+            last_verified_at=None,
+            verification_source=None,
+            stale_after_days=90,
+            stale=False
+        ),
+        superseded_by=None,
+        created_at=datetime.now(UTC).isoformat(),
+        updated_at=datetime.now(UTC).isoformat(),
+    )
+    store.upsert(entity)
+
+    from cortex.visualizer import generate_provenance_graph_html
+    html_out = generate_provenance_graph_html(store)
+    assert "<img src=x" not in html_out
+    assert "&lt;img" in html_out  # escaped
+    assert "</script><script>" not in html_out
+
+
+# ---------- Onda 1.3: extraction failure must not mark events distilled ----------
+
+def test_distill_does_not_mark_events_on_extraction_failure(store, monkeypatch):
+    store.ensure_session("s1", "test")
+    capture_event(store, {"type": "user_instruction", "session_id": "s1",
+                          "content": "Vamos usar PostgreSQL porque precisamos de ACID"})
+    import cortex.distillation.engine as eng
+    monkeypatch.setattr(eng, "extract_decisions",
+                        lambda _e: (_ for _ in ()).throw(RuntimeError("boom")))
+    report = make_engine(store).distill_session("s1")
+    assert report.heuristics_failed is True
+    row = store.conn.execute("SELECT distilled FROM events").fetchone()
+    assert row["distilled"] == 0, "evento foi marcado distilled apesar da extração falhar"
+    assert report.warnings and "retry" in report.warnings[0]
+    # segundo distill (sem a falha) processa o evento e aí sim marca:
+    monkeypatch.undo()
+    report2 = make_engine(store).distill_session("s1")
+    assert report2.heuristics_failed is False
+    row = store.conn.execute("SELECT distilled FROM events").fetchone()
+    assert row["distilled"] == 1
+
+
+# ---------- Onda 1.4: hook communicates failure via exit code ----------
+
+def test_hook_exit_code_signals_failure(tmp_path, monkeypatch):
+    from typer.testing import CliRunner
+    from cortex.cli.app import app
+    monkeypatch.chdir(tmp_path)  # no workspace markers → hook payload fails
+    runner = CliRunner()
+    payload = json.dumps({"hook_event_name": "UserPromptSubmit", "prompt": "x"})
+    result = runner.invoke(app, ["hook"], input=payload)
+    assert result.exit_code == 1, "host precisa descobrir a falha pelo exit code"
+    out = json.loads(result.output)  # stdout JSON contract stays intact
+    assert out["ok"] is False
+
+
+def test_hook_exit_code_zero_on_success(project, monkeypatch):
+    from typer.testing import CliRunner
+    from cortex.cli.app import app
+    monkeypatch.chdir(project)
+    runner = CliRunner()
+    payload = json.dumps({
+        "session_id": "sess-cli-1", "hook_event_name": "UserPromptSubmit",
+        "prompt": "Vamos usar Redis porque precisamos de cache.",
+        "cwd": str(project),
+    })
+    result = runner.invoke(app, ["hook"], input=payload)
+    assert result.exit_code == 0
+    out = json.loads(result.output)
+    assert out["ok"] is True
+
+
+# ---------- Onda 2.1: atomic id mint across concurrent connections ----------
+
+def test_reserve_entity_id_is_atomic_across_connections(project):
+    from cortex.workspace import CORTEX_DIR
+    db = project / CORTEX_DIR / "cortex.db"
+    a = KnowledgeStore(db)
+    b = KnowledgeStore(db)
+    try:
+        ids = []
+        for s in (a, b) * 5:
+            ids.append(s.reserve_entity_id(ArtifactType.ADR))
+        assert len(set(ids)) == len(ids), f"ids duplicados: {ids}"
+        assert all(isinstance(i, str) and i.startswith("adr-") for i in ids)
+
+        # under busy_timeout, concurrent writes must not raise 'database is locked'
+        import threading
+        errors: list[Exception] = []
+
+        def hammer():
+            try:
+                s = KnowledgeStore(db)
+                try:
+                    for i in range(20):
+                        s.ensure_session(
+                            f"s-{threading.get_ident()}-{i}", "t")
+                finally:
+                    s.close()
+            except Exception as exc:  # pragma: no cover - failure evidence
+                errors.append(exc)
+
+        t1 = threading.Thread(target=hammer)
+        t2 = threading.Thread(target=hammer)
+        t1.start(); t2.start(); t1.join(); t2.join()
+        assert not errors, errors
+    finally:
+        a.close()
+        b.close()
+
+
+# ---------- Onda 2.2: one malformed row must not poison readers ----------
+
+def test_one_malformed_row_does_not_poison_reads(store):
+    store.ensure_session("s1", "test")
+    capture_event(store, {"type": "user_instruction", "session_id": "s1",
+                          "content": "Vamos usar PostgreSQL porque ACID"})
+    make_engine(store).distill_session("s1")
+    assert store.all_entities()  # store has valid content
+    # simulates a legacy/corrupted write
+    store.conn.execute(
+        "INSERT INTO entities (id, type, status, authority, confidence, statement,"
+        " details, scope, provenance, freshness, created_at, updated_at)"
+        " VALUES ('adr-9999', 'tipo_inexistente', 'active', 'observed', 0.5,"
+        " 'x', '{}', '[]', '{}', '{}', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')")
+    ents = store.all_entities()          # must NOT raise
+    assert all(e.id != "adr-9999" for e in ents)
+    assert store.malformed_rows == 1
+    assert store.search("PostgreSQL")    # search must not raise either
+    assert store.get("adr-9999") is None
+
+
+# ---------- Onda 2.3: schema versioning / legacy store upgrade ----------
+
+def test_store_upgrades_legacy_db_without_user_version(tmp_path):
+    import sqlite3
+    from cortex.storage.store import MIGRATIONS, SCHEMA, SCHEMA_VERSION
+    db = tmp_path / "c.db"
+    legacy_v1 = SCHEMA.replace("    meta TEXT,\n    host TEXT,\n", "    meta TEXT,\n")
+    assert "host TEXT" not in legacy_v1.split("CREATE TABLE IF NOT EXISTS events")[1][:400], (
+        "fixture não reproduziu o schema v1 (sem coluna host)"
+    )
+    legacy = sqlite3.connect(str(db))
+    legacy.executescript(legacy_v1)
+    legacy.commit()
+    legacy.close()
+    assert MIGRATIONS, "runner sem migrações não testa nada"
+    store = KnowledgeStore(db)
+    try:
+        version = store.conn.execute("PRAGMA user_version").fetchone()[0]
+        assert version == SCHEMA_VERSION
+        cols = {r[1] for r in store.conn.execute("PRAGMA table_info(events)")}
+        assert "host" in cols, "migração 002 não aplicou ALTER TABLE"
+        assert store.all_entities() == []
+    finally:
+        store.close()
+
+
+def test_fresh_store_is_current_schema(project):
+    from cortex.workspace import CORTEX_DIR
+    from cortex.storage.store import SCHEMA_VERSION
+    store2 = KnowledgeStore(project / CORTEX_DIR / "cortex.db")
+    try:
+        assert store2.schema_version == SCHEMA_VERSION
+        assert store2.conn.execute("PRAGMA user_version").fetchone()[0] == SCHEMA_VERSION
+    finally:
+        store2.close()
+
+
+# ---------- Onda 2.4: capture never raises (PRD §42) ----------
+
+def test_capture_event_never_raises(store):
+    store.ensure_session("s1", "test")
+    assert capture_event(store, {}) is None            # invalid shape
+    assert capture_event(store, {"type": "t"}) is not None
+    eid = capture_event(store, {"type": "t", "session_id": "s1"})
+    dup = capture_event(store, {"type": "t", "session_id": "s1", "id": eid})
+    assert dup is None, "duplicata deve ser ignorada, não exceção"
+
+
+# ---------- Onda 2.5: LLM degradation with signal + honest provenance ----------
+
+def test_llm_candidates_provenance_is_honest(store):
+    from cortex.distillation.llm import llm_candidates
+    events = [
+        {"id": "e1", "type": "user_instruction", "session_id": "s1",
+         "content": "x", "files": []},
+        {"id": "e2", "type": "agent_response", "session_id": "s1",
+         "content": "y", "files": []},
+    ]
+    raw = [
+        {"type": "adr", "statement": "Use Postgres", "scope": ["src/db"]},
+        {"type": "adr", "statement": "Use Redis", "scope": ["src/cache"],
+         "event_ids": ["e2", "e-inventado"]},
+    ]
+    cands = llm_candidates(raw, events)
+    assert cands[0].event_ids == [], (
+        "candidato LLM sem evidência vinculável deve carregar lista vazia"
+    )
+    assert cands[1].event_ids == ["e2"], "ids inválidos/inventados não podem passar"
+
+
+def test_llm_explicit_mode_probes_availability(store, monkeypatch):
+    """llm="ollama" com servidor caído: probe de 2s, sem chamada de extract."""
+    import cortex.distillation.engine as eng
+    calls = {"extract": 0}
+    monkeypatch.setattr(
+        "cortex.distillation.llm.OllamaDistiller.available", lambda self: False)
+
+    def _fail_extract(self, events):
+        calls["extract"] += 1
+        raise AssertionError("extract não deve rodar com servidor caído")
+
+    monkeypatch.setattr("cortex.distillation.llm.OllamaDistiller.extract",
+                        _fail_extract)
+    store.ensure_session("s1", "test")
+    capture_event(store, {"type": "user_instruction", "session_id": "s1",
+                          "content": "Vamos usar Redis porque precisamos de cache."})
+    report = make_engine(store, llm="ollama").distill_session("s1")
+    assert not report.llm_used
+    assert calls["extract"] == 0
+    assert report.adrs == 1  # heurística seguiu normal
+
+
+def test_engine_passes_llm_settings(store, monkeypatch):
+    captured = {}
+    monkeypatch.setattr(
+        "cortex.distillation.llm.OllamaDistiller.available", lambda self: False)
+    from cortex.distillation.llm import OllamaDistiller
+    real_init = OllamaDistiller.__init__
+
+    def spy_init(self, url="http://localhost:11434", model="qwen2.5:7b",
+                 timeout=30.0):
+        captured.update(url=url, model=model, timeout=timeout)
+        real_init(self, url=url, model=model, timeout=timeout)
+
+    monkeypatch.setattr(OllamaDistiller, "__init__", spy_init)
+    store.ensure_session("s1", "test")
+    capture_event(store, {"type": "user_instruction", "session_id": "s1",
+                          "content": "Vamos usar Redis porque cache."})
+    make_engine(store, llm="auto", ollama_url="http://localhost:9999",
+                llm_model="llama3:8b", llm_timeout_s=7.5).distill_session("s1")
+    assert captured == {"url": "http://localhost:9999",
+                        "model": "llama3:8b", "timeout": 7.5}
+
+
+def test_config_has_llm_model_and_timeout(tmp_path):
+    from cortex.config import CortexConfig
+    (tmp_path / "cortex.toml").write_text(
+        '[distillation]\nllm_model = "llama3:8b"\nllm_timeout_s = 12.5\n',
+        encoding="utf-8")
+    cfg = CortexConfig.load(tmp_path)
+    assert cfg.llm_model == "llama3:8b"
+    assert cfg.llm_timeout_s == 12.5
+
+
+def test_extractor_failure_is_isolated(store, monkeypatch):
+    """One broken extractor must not sink the others' candidates."""
+    store.ensure_session("s1", "test")
+    capture_event(store, {"type": "user_instruction", "session_id": "s1",
+                          "content": "Decidimos usar PostgreSQL em vez de MongoDB porque ACID"})
+    import cortex.distillation.engine as eng
+    monkeypatch.setattr(eng, "extract_negative_knowledge",
+                        lambda _e: (_ for _ in ()).throw(RuntimeError("boom")))
+    report = make_engine(store).distill_session("s1")
+    assert report.heuristics_failed is True
+    adrs = store.list_by_type(ArtifactType.ADR)
+    assert any("PostgreSQL" in e.statement for e in adrs), (
+        "falha isolada de um extrator apagou candidatos dos outros"
+    )
 
 
 # ---------- negative knowledge survives supersession (PRD §44.4) ----------
