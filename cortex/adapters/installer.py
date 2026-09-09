@@ -127,6 +127,10 @@ def _auto_distill(ws, cfg, session_id: str) -> str | None:
                 retention_days=cfg.raw_retention_days,
                 llm=cfg.llm,
                 ollama_url=getattr(cfg, "ollama_url", None),
+                llm_model=getattr(cfg, "llm_model", None),
+                # The Stop hook runs at the end of every user session: the LLM
+                # pass gets a capped timeout so a dead server can't hold it.
+                llm_timeout_s=min(float(getattr(cfg, "llm_timeout_s", 30.0)), 10.0),
             )
             report = engine.distill_session(session_id)
             build_session_review(store, session_id)

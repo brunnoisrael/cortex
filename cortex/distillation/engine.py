@@ -50,6 +50,9 @@ class DistillationReport:
     below_threshold: int = 0
     purged_events: int = 0
     llm_used: bool = False
+    heuristics_failed: bool = False
+    unparsed_timestamps: int = 0
+    warnings: list[str] = field(default_factory=list)
     new_ids: list[str] = field(default_factory=list)
 
     def summary(self) -> str:
@@ -60,19 +63,24 @@ class DistillationReport:
             f"contradictions={self.contradictions} deduplicated={self.deduplicated} "
             f"below_threshold={self.below_threshold} purged={self.purged_events}"
             + (" llm=on" if self.llm_used else "")
+            + (f" unparsed_timestamps={self.unparsed_timestamps}"
+               if self.unparsed_timestamps else "")
         )
 
 
 class DistillationEngine:
     def __init__(self, store: KnowledgeStore, min_confidence: float = 0.60,
                  correnda_min_evidence: int = 2, retention_days: int = 0,
-                 llm: str = "heuristic", ollama_url: str | None = None):
+                 llm: str = "heuristic", ollama_url: str | None = None,
+                 llm_model: str | None = None, llm_timeout_s: float | None = None):
         self.store = store
         self.min_confidence = min_confidence
         self.correnda_min_evidence = correnda_min_evidence
         self.retention_days = retention_days
         self.llm_mode = llm
         self.ollama_url = ollama_url
+        self.llm_model = llm_model
+        self.llm_timeout_s = llm_timeout_s
 
     # ---- public API ----
 
@@ -114,8 +122,15 @@ class DistillationEngine:
 
         self._propose_correndas(report)
         self._detect_contradictions(report)
-        self._mark_stale()
-        self.store.mark_distilled([e["id"] for e in events])
+        self._mark_stale(report)
+        if report.heuristics_failed:
+            # Evidence survives: leave events un-distilled so the next distill
+            # retries them (dedup makes reprocessing safe).
+            report.warnings.append(
+                f"{len(events)} events left UN-distilled for retry (extraction failed)"
+            )
+        else:
+            self.store.mark_distilled([e["id"] for e in events])
         if self.retention_days > 0:
             report.purged_events = self.store.purge_old_events(self.retention_days)
         self.store.record_distill_run(session_id, report.summary())
@@ -124,36 +139,55 @@ class DistillationEngine:
     def _extract(self, events: list[dict], report: DistillationReport) -> list:
         if not events:
             return []
-            
+
         candidates: list = []
-        try:
-            candidates += extract_decisions(events)
-            candidates += extract_intentions(events)
-            candidates += extract_negative_knowledge(events)
-            candidates += extract_fixes(events)
-        except Exception as e:
-            # Log error but continue with partial results
-            import logging
-            logging.warning(f"Error during heuristic extraction: {e}")
+        # One extractor at a time: an isolated failure must not sink the
+        # others' output, but any failure keeps the events un-distilled.
+        import logging
+        extractors = (extract_decisions, extract_intentions,
+                      extract_negative_knowledge, extract_fixes)
+        failures = 0
+        for extractor in extractors:
+            try:
+                candidates += extractor(events)
+            except Exception:
+                failures += 1
+                logging.getLogger("cortex.distill").warning(
+                    "heuristic extractor failed; events left for retry",
+                    exc_info=True, extra={"extractor": extractor.__name__},
+                )
+        if failures:
+            report.heuristics_failed = True
         
         # Optional LLM pass supplements heuristics; never replaces explicit
         # statements (PRD §8.3) and never breaks the session (§42).
         if self.llm_mode in ("ollama", "auto"):
             try:
+                import logging
                 from cortex.distillation.llm import OllamaDistiller, llm_candidates
-                url = self.ollama_url
-                distiller = OllamaDistiller(url=url) if url else OllamaDistiller()
-                if self.llm_mode == "auto" and not distiller.available():
+                distiller = OllamaDistiller(
+                    url=self.ollama_url or "http://localhost:11434",
+                    model=self.llm_model or "qwen2.5:7b",
+                    timeout=self.llm_timeout_s or 30.0,
+                )
+                # Probe even in explicit mode: a dead Ollama must degrade with
+                # a signal (2s probe) instead of hanging the Stop hook for the
+                # full extract timeout.
+                if not distiller.available():
+                    if self.llm_mode == "ollama":
+                        logging.getLogger("cortex.distill").info(
+                            "llm=ollama but server is down; skipping LLM pass")
                     distiller = None
                 if distiller is not None:
                     raw = distiller.extract(events)
                     if raw is not None:
                         report.llm_used = True
                         candidates += llm_candidates(raw, events)
-            except Exception as e:
+            except Exception:
                 # LLM errors should not break the pipeline
                 import logging
-                logging.warning(f"LLM extraction failed, falling back to heuristics: {e}")
+                logging.getLogger("cortex.distill").warning(
+                    "LLM extraction failed, falling back to heuristics", exc_info=True)
         return candidates
 
     # ---- dedup ----
@@ -358,13 +392,19 @@ class DistillationEngine:
                     self.store.upsert(old)
 
 
-    def _mark_stale(self) -> None:
+    def _mark_stale(self, report: DistillationReport) -> None:
         """PRD §46: stale memories stop being default-context candidates."""
         for ent in self.store.all_entities():
             if ent.freshness.stale:
                 continue
             verified = ent.freshness.last_verified_at or ent.updated_at
-            if _days_since(verified) > ent.freshness.stale_after_days:
+            age = _days_since(verified)
+            if age is None:
+                # Unparsable timestamp must not fake freshness (would mean the
+                # entity never ages); skip and surface instead.
+                report.unparsed_timestamps += 1
+                continue
+            if age > ent.freshness.stale_after_days:
                 ent.freshness.stale = True
                 self.store.upsert(ent)
 
@@ -380,10 +420,10 @@ class DistillationEngine:
             setattr(report, attr, getattr(report, attr) + 1)
 
 
-def _days_since(ts: str) -> float:
+def _days_since(ts: str) -> float | None:
     try:
         dt = datetime.strptime(ts.replace("Z", ""), "%Y-%m-%dT%H:%M:%S").replace(
             tzinfo=UTC)
         return (datetime.now(UTC) - dt).days
     except ValueError:
-        return 0.0
+        return None  # caller skips the entity and counts it — never fakes freshness

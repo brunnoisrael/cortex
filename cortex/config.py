@@ -25,6 +25,8 @@ raw_retention_days = 30
 mode = "offline"
 llm = "heuristic"            # heuristic | auto | ollama
 ollama_url = "http://localhost:11434"
+llm_model = "qwen2.5:7b"
+llm_timeout_s = 30.0         # capped to 10s inside the Stop hook
 min_confidence_for_persistence = 0.60
 correnda_min_evidence = 2
 
@@ -55,6 +57,8 @@ class CortexConfig:
     distill_mode: str = "offline"
     llm: str = "heuristic"
     ollama_url: str = "http://localhost:11434"
+    llm_model: str = "qwen2.5:7b"
+    llm_timeout_s: float = 30.0
     min_confidence_for_persistence: float = 0.60
     correnda_min_evidence: int = 2
     context_max_tokens: int = 2000
@@ -84,6 +88,8 @@ class CortexConfig:
             cfg.distill_mode = dis.get("mode", cfg.distill_mode)
             cfg.llm = dis.get("llm", cfg.llm)
             cfg.ollama_url = dis.get("ollama_url", cfg.ollama_url)
+            cfg.llm_model = dis.get("llm_model", cfg.llm_model)
+            cfg.llm_timeout_s = float(dis.get("llm_timeout_s", cfg.llm_timeout_s))
             cfg.min_confidence_for_persistence = float(
                 dis.get("min_confidence_for_persistence", cfg.min_confidence_for_persistence)
             )

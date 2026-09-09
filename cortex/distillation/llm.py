@@ -9,11 +9,14 @@ call in the default heuristic mode. Any failure falls back to heuristics
 from __future__ import annotations
 
 import json
+import logging
 import re
 import urllib.request
 from typing import Any
 
 from cortex.distillation.extractors import Candidate
+
+_log = logging.getLogger("cortex.llm")
 
 SYSTEM_PROMPT = """\
 You are a distillation engine for engineering knowledge.
@@ -42,6 +45,7 @@ class OllamaDistiller:
             urllib.request.urlopen(req, timeout=2.0)
             return True
         except Exception:
+            _log.info("ollama unavailable at %s", self.url)
             return False
 
     def extract(self, events: list[dict[str, Any]]) -> list[dict[str, Any]] | None:
@@ -75,6 +79,7 @@ class OllamaDistiller:
             items = parsed if isinstance(parsed, list) else parsed.get("candidates", [])
             return [i for i in items if isinstance(i, dict) and i.get("statement")]
         except Exception:
+            _log.warning("ollama extract failed (model=%s)", self.model, exc_info=True)
             return None
 
 
@@ -88,7 +93,7 @@ def llm_candidates(raw: list[dict[str, Any]] | None, events: list[dict[str, Any]
     if not raw:
         return []
     from cortex.knowledge.models import ArtifactType
-    event_ids = [e["id"] for e in events][:10]
+    valid_ids = {e["id"] for e in events if e.get("id")}
     out: list[Candidate] = []
     for item in raw:
         etype_name = str(item.get("type", "")).lower()
@@ -96,6 +101,12 @@ def llm_candidates(raw: list[dict[str, Any]] | None, events: list[dict[str, Any]
             continue
         details = item.get("details") or {}
         scope = [str(s) for s in (item.get("scope") or [])][:5]
+        # Honest provenance (PRD: provenance-first): an LLM candidate only
+        # carries event ids it explicitly and validly references — never the
+        # first N events of the transcript wholesale.
+        raw_refs = item.get("event_ids")
+        item_ids = ([i for i in raw_refs if i in valid_ids][:5]
+                    if isinstance(raw_refs, list) else [])
         out.append(Candidate(
             etype=ArtifactType(etype_name),
             statement=re.sub(r"\s+", " ", str(item["statement"]))[:200],
@@ -103,7 +114,7 @@ def llm_candidates(raw: list[dict[str, Any]] | None, events: list[dict[str, Any]
             scope=scope,
             source="llm_inference",
             session_id=events[0].get("session_id") if events else None,
-            event_ids=event_ids,
+            event_ids=item_ids,
             files=scope,
         ))
     return out
