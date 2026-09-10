@@ -28,6 +28,7 @@ from cortex.knowledge.models import (
     Entity,
     Provenance,
     Status,
+    _utcnow,
 )
 from cortex.storage.store import KnowledgeStore
 
@@ -214,20 +215,10 @@ class DistillationEngine:
         # material of Correndas) — merge only near-identical re-observations.
         threshold = (FIX_DEDUP_SIMILARITY if cand.etype == ArtifactType.FIX
                      else DEDUP_SIMILARITY)
-        
-        # Cache for similarity calculations to avoid redundant computation
-        similarity_cache = {}
-        
         for ent in existing:
             if ent.type != cand.etype:
                 continue
-            
-            # Use cached similarity if available
-            cache_key = (cand.statement.lower(), ent.statement.lower())
-            if cache_key not in similarity_cache:
-                similarity_cache[cache_key] = statement_similarity(cand.statement, ent.statement)
-            
-            if similarity_cache[cache_key] >= threshold:
+            if statement_similarity(cand.statement, ent.statement) >= threshold:
                 return ent
         return None
 
@@ -337,6 +328,13 @@ class DistillationEngine:
         2. ADR Decision vs ADR Decision (Direct clash in overlapping scope)
         3. Correnda Rule vs Intention / Decision (Rule violation)
         4. Polar negation / antonym conflict between statements in scope
+
+        Incremental: only entities never checked (or changed since their
+        last check, per freshness.contradiction_checked_at) are compared
+        against all current entities. Steady-state cost is O(new) per run
+        instead of O(N^2) over the whole store; pairs already carrying a
+        CONTRADICTS edge are not re-counted (the old pass re-counted every
+        stable contradiction on every run, inflating the report forever).
         """
         from cortex.distillation.extractors import (
             dense_semantic_similarity,
@@ -348,6 +346,9 @@ class DistillationEngine:
             e for e in self.store.all_entities()
             if e.status in (Status.CANDIDATE, Status.PROPOSED, Status.ACTIVE) and e.is_current
         ]
+        unchecked = [e for e in all_active if _needs_contradiction_check(e)]
+        if not unchecked:
+            return
 
         def _scope_overlaps(s1: list[str], s2: list[str]) -> bool:
             if not s1 or not s2:
@@ -360,9 +361,12 @@ class DistillationEngine:
                         return True
             return False
 
-        recorded_pairs: set[tuple[str, str]] = set()
+        recorded_pairs: set[tuple[str, str]] = {
+            tuple(sorted((e["src"], e["dst"])))
+            for e in self.store.edges_of(rel="CONTRADICTS")
+        }
 
-        for new in all_active:
+        for new in unchecked:
             for old in all_active:
                 if new.id == old.id:
                     continue
@@ -406,6 +410,10 @@ class DistillationEngine:
                     old.details["contradiction_pending"] = True
                     self.store.upsert(new)
                     self.store.upsert(old)
+            # Stamp after the full pass so the flag mutation above is included;
+            # updated_at is not bumped here, so the stamp is not self-invalidating.
+            new.freshness.contradiction_checked_at = _utcnow()
+            self.store.upsert(new)
 
 
     def _mark_stale(self, report: DistillationReport) -> None:
@@ -434,6 +442,30 @@ class DistillationEngine:
         attr = mapping.get(etype)
         if attr:
             setattr(report, attr, getattr(report, attr) + 1)
+
+
+def _needs_contradiction_check(e: Entity) -> bool:
+    """True when the entity must (re)enter the contradiction pass: never
+    checked, or created/updated after its last check. `upsert` refreshes
+    updated_at, so any later mutation re-triggers the check — including the
+    contradiction_pending flag itself, which is intentional: the next run
+    re-validates flagged pairs until a human resolves them."""
+    checked = e.freshness.contradiction_checked_at
+    if not checked:
+        return True
+    checked_dt = _parse_utc(checked)
+    updated_dt = _parse_utc(e.updated_at)
+    if checked_dt is None or updated_dt is None:
+        return True
+    return updated_dt > checked_dt
+
+
+def _parse_utc(ts: str) -> datetime | None:
+    try:
+        return datetime.strptime(ts.replace("Z", ""), "%Y-%m-%dT%H:%M:%S").replace(
+            tzinfo=UTC)
+    except ValueError:
+        return None
 
 
 def _days_since(ts: str) -> float | None:

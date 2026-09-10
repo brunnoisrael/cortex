@@ -380,6 +380,16 @@ class KnowledgeStore:
         rows = self.conn.execute("SELECT * FROM entities ORDER BY created_at").fetchall()
         return [e for e in (self._row_to_entity(r) for r in rows) if e is not None]
 
+    def entities_by_session(self, session_id: str) -> list[Entity]:
+        """Entities distilled from one session — indexed query. Callers used to
+        filter all_entities() in Python, which re-parses every row (Pydantic)
+        per session displayed."""
+        rows = self.conn.execute(
+            "SELECT * FROM entities WHERE session_id = ? ORDER BY created_at",
+            (session_id,),
+        ).fetchall()
+        return [e for e in (self._row_to_entity(r) for r in rows) if e is not None]
+
     def search(self, query: str, limit: int = 20) -> list[tuple[Entity, float]]:
         """FTS5-backed search returning (entity, score) where higher is better.
 
@@ -461,6 +471,40 @@ class KnowledgeStore:
             (entity_id, entity_id),
         ).fetchone()
         return row["deg"] if row else 0
+
+    def node_degrees(self, entity_ids: list[str]) -> dict[str, int]:
+        """Batched node_degree() for a candidate set: one grouped query instead
+        of one per entity (rank() runs on every context compile)."""
+        degrees = {eid: 0 for eid in entity_ids}
+        if not entity_ids:
+            return degrees
+        placeholders = ",".join("?" * len(entity_ids))
+        rows = self.conn.execute(
+            f"SELECT node, COUNT(*) AS deg FROM ("
+            f"  SELECT src AS node FROM edges WHERE src IN ({placeholders})"
+            f"  UNION ALL"
+            f"  SELECT dst AS node FROM edges WHERE dst IN ({placeholders})"
+            f") GROUP BY node",
+            (*entity_ids, *entity_ids),
+        ).fetchall()
+        for r in rows:
+            degrees[r["node"]] = r["deg"]
+        return degrees
+
+    def contradicted_by_active(self, entity_ids: list[str]) -> set[str]:
+        """Batched version of rank()'s contradiction revalidation: the subset of
+        `entity_ids` that has an incoming CONTRADICTS edge from a current, ACTIVE
+        entity. One SQL pass instead of related() per candidate."""
+        if not entity_ids:
+            return set()
+        placeholders = ",".join("?" * len(entity_ids))
+        rows = self.conn.execute(
+            f"SELECT DISTINCT e.dst FROM edges e JOIN entities s ON s.id = e.src "
+            f"WHERE e.rel = 'CONTRADICTS' AND e.dst IN ({placeholders}) "
+            f"AND s.status = 'active'",
+            entity_ids,
+        ).fetchall()
+        return {r["dst"] for r in rows}
 
 
     def history(self, entity_id: str) -> list[dict[str, str]]:

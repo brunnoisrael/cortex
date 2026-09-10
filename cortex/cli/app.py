@@ -685,7 +685,7 @@ def diff(
         store.close()
         return
     for r in rows:
-        ents = [e for e in store.all_entities() if e.session_id == r["id"]]
+        ents = store.entities_by_session(r["id"])
         typer.secho(f"session {r['id']} ({r['started_at']})", fg=typer.colors.CYAN)
         if not ents:
             typer.echo("  (no distilled artifacts)")

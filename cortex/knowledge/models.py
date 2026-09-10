@@ -94,6 +94,10 @@ class Freshness(BaseModel):
     verification_source: str | None = None
     stale_after_days: int = 90
     stale: bool = False
+    # Incremental contradiction pass (see DistillationEngine): stamped when
+    # the entity was last compared against the store; an entity is rechecked
+    # only when created/changed since. Additive — absent in pre-stamp rows.
+    contradiction_checked_at: str | None = None
 
 
 class Entity(BaseModel):

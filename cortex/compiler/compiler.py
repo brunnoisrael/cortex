@@ -125,6 +125,7 @@ def rank(
     items: list[RankedItem] = []
     for s_idx, st in enumerate(stores):
         is_federated = s_idx > 0
+        candidates: list[Entity] = []
         fts: dict[str, float] = {}
         if inp.query.strip():
             try:
@@ -144,6 +145,16 @@ def rank(
                 continue
             if not ent.is_current or ent.freshness.stale:
                 continue
+            candidates.append(ent)
+        if not candidates:
+            continue
+
+        # Batched graph signals: one grouped query each for the whole
+        # candidate set (was one query per entity inside the scoring loop).
+        degrees = st.node_degrees([e.id for e in candidates])
+        contradicted_ids = st.contradicted_by_active([e.id for e in candidates])
+
+        for ent in candidates:
 
             full_text = ent.statement + " " + " ".join(ent.scope) + " " + " ".join(
                 str(v) for v in ent.details.values() if isinstance(v, str)
@@ -173,7 +184,7 @@ def rank(
                     continue
 
             # 2. Knowledge Graph & Content Signal Density
-            graph_deg = st.node_degree(ent.id) if hasattr(st, "node_degree") else 0
+            graph_deg = degrees.get(ent.id, 0)
             graph_density = min(1.0, graph_deg / 4.0)
             c_density = content_density(full_text)
             density_multiplier = 1.0 + w["density"] * (0.6 * graph_density + 0.4 * c_density)
@@ -183,15 +194,12 @@ def rank(
             if getattr(ent.freshness, "verification_source", None) == "ast":
                 authority_weight *= w["ast_boost"]
 
-            # Contradiction Penalty Revalidation: check if entity is contradicted by higher/equal authority active entities
+            # Contradiction Penalty Revalidation: entity contradicted by an
+            # ACTIVE entity (pre-computed for the whole candidate set above).
             contradiction_penalty = 1.0
-            contradicted = False
-            related_edges = st.related(ent.id, rel="CONTRADICTS", direction="in")
-            for _, opp in related_edges:
-                if opp.is_current and opp.status == Status.ACTIVE:
-                    contradiction_penalty = 0.35
-                    contradicted = True
-                    break
+            contradicted = ent.id in contradicted_ids
+            if contradicted:
+                contradiction_penalty = 0.35
 
             freshness = (0.5 if ent.freshness.last_verified_at else 0.85) * w["freshness"]
             fed_mult = 0.9 if is_federated else 1.0

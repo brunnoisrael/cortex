@@ -359,7 +359,7 @@ def cortex_diff(last_n_sessions: int = 2) -> str:
     ).fetchall()
     out = {}
     for r in rows:
-        ents = [e for e in store.all_entities() if e.session_id == r["id"]]
+        ents = store.entities_by_session(r["id"])
         out[r["id"]] = {
             "started_at": r["started_at"],
             "artifacts": {e.id: e.statement[:80] for e in ents},
