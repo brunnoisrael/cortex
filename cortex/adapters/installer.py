@@ -9,6 +9,7 @@ async-safe for the host: any failure degrades to {"ok": false} (PRD §42).
 from __future__ import annotations
 
 import json
+import sys
 import time
 import uuid
 from pathlib import Path
@@ -67,20 +68,56 @@ IDLE_TIMEOUT_SECONDS = 30 * 60
 
 
 
+def _atomic_write_text(path: Path, text: str) -> None:
+    """Write-then-rename: a crash or concurrent read can never observe a
+    half-written file (item 3.3). os.replace/Path.replace is atomic on both
+    POSIX and Windows since Python 3.3."""
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(text, encoding="utf-8")
+    tmp.replace(path)
+
+
+def _deep_merge(base: dict, overlay: dict) -> dict:
+    """Recursively merge `overlay` into `base`. Dicts merge key-by-key; lists
+    are concatenated with de-duplication (so the user's existing hook entries
+    survive alongside Cortex's, instead of one replacing the other)."""
+    out = dict(base)
+    for k, v in overlay.items():
+        if isinstance(v, dict) and isinstance(out.get(k), dict):
+            out[k] = _deep_merge(out[k], v)
+        elif isinstance(v, list) and isinstance(out.get(k), list):
+            seen = {json.dumps(i, sort_keys=True) for i in out[k]}
+            out[k] = out[k] + [i for i in v if json.dumps(i, sort_keys=True) not in seen]
+        else:
+            out[k] = v
+    return out
+
+
 def _merge_json(path: Path, snippet: dict) -> Path:
+    """Merge `snippet` into the JSON file at `path`, preserving whatever the
+    user already had there (item 3.3):
+
+    - invalid existing JSON is never silently discarded — the original bytes
+      are preserved at `<path>.cortex-bak` before writing the merged result;
+    - the merge is a deep merge (nested dicts merge, lists concatenate with
+      dedup) instead of the old shallow-replace, so e.g. the user's own
+      hooks.SessionStart entries survive alongside Cortex's;
+    - the write is atomic (write to `.tmp`, then rename)."""
     data: dict[str, Any] = {}
     if path.exists():
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
+        except json.JSONDecodeError:
+            backup = path.with_name(path.name + ".cortex-bak")
+            backup.write_text(path.read_text(encoding="utf-8"), encoding="utf-8")
+            print(f"warning: {path} had invalid JSON; original preserved at {backup}",
+                  file=sys.stderr)
             data = {}
-    for key, value in snippet.items():
-        if isinstance(value, dict) and isinstance(data.get(key), dict):
-            data[key] = {**data[key], **value}
-        else:
-            data[key] = value
+        # OSError is NOT swallowed here: a disk-full/permission failure is a
+        # real error, not "treat the file as empty".
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+    merged = _deep_merge(data, snippet)
+    _atomic_write_text(path, json.dumps(merged, indent=2, ensure_ascii=False))
     return path
 
 
@@ -94,7 +131,11 @@ def install_hooks(host: str, root: Path) -> list[Path]:
 
 
 def _cursor_session_id(cortex_dir: Path) -> str:
-    """Stable session id across a Cursor session, new id after an idle gap."""
+    """Stable session id across a Cursor session, new id after an idle gap.
+
+    Writes are atomic (item 3.3): a truncate-then-write here would let two
+    concurrent hook invocations race and each mint a fresh session id,
+    splitting one Cursor session's history in two."""
     state_path = cortex_dir / "cursor_session.json"
     now = time.time()
     if state_path.exists():
@@ -102,13 +143,13 @@ def _cursor_session_id(cortex_dir: Path) -> str:
             state = json.loads(state_path.read_text(encoding="utf-8"))
             if now - state.get("last_seen", 0) < IDLE_TIMEOUT_SECONDS:
                 state["last_seen"] = now
-                state_path.write_text(json.dumps(state), encoding="utf-8")
+                _atomic_write_text(state_path, json.dumps(state))
                 return state["session_id"]
         except (json.JSONDecodeError, OSError):
             pass
     sid = f"sess-cursor-{uuid.uuid4().hex[:8]}"
     cortex_dir.mkdir(parents=True, exist_ok=True)
-    state_path.write_text(json.dumps({"session_id": sid, "last_seen": now}), encoding="utf-8")
+    _atomic_write_text(state_path, json.dumps({"session_id": sid, "last_seen": now}))
     return sid
 
 
@@ -131,6 +172,7 @@ def _auto_distill(ws, cfg, session_id: str) -> str | None:
                 # The Stop hook runs at the end of every user session: the LLM
                 # pass gets a capped timeout so a dead server can't hold it.
                 llm_timeout_s=min(float(getattr(cfg, "llm_timeout_s", 30.0)), 10.0),
+                network_calls=getattr(cfg, "network_calls", False),
             )
             report = engine.distill_session(session_id)
             build_session_review(store, session_id)
