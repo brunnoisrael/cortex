@@ -10,7 +10,6 @@ import typer
 
 from cortex.config import CortexConfig, CortexConfigError
 
-
 # ---------- 3.1: CortexConfig.load() validates instead of raising raw ----------
 
 def test_config_rejects_string_bool(tmp_path):
@@ -89,6 +88,7 @@ def test_config_missing_file_returns_defaults(tmp_path):
 
 def test_cli_status_reports_config_error_not_traceback(project, store, monkeypatch):
     from typer.testing import CliRunner
+
     from cortex.cli.app import app
     (project / "cortex.toml").write_text('[capture]\nenabled = "false"\n', encoding="utf-8")
     monkeypatch.chdir(project)
@@ -234,6 +234,7 @@ def test_llm_allowed_for_loopback_url_without_network_calls(store, monkeypatch):
 
 def test_hook_install_writes_to_workspace_root_not_subdirectory(project, monkeypatch):
     from typer.testing import CliRunner
+
     from cortex.cli.app import app
     subdir = project / "src" / "handlers"
     monkeypatch.chdir(subdir)
@@ -246,6 +247,7 @@ def test_hook_install_writes_to_workspace_root_not_subdirectory(project, monkeyp
 
 def test_hook_install_requires_a_workspace(tmp_path, monkeypatch):
     from typer.testing import CliRunner
+
     from cortex.cli.app import app
     monkeypatch.chdir(tmp_path)  # no git root, no cortex.toml, no manifest
     runner = CliRunner()
