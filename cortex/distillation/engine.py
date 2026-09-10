@@ -72,7 +72,8 @@ class DistillationEngine:
     def __init__(self, store: KnowledgeStore, min_confidence: float = 0.60,
                  correnda_min_evidence: int = 2, retention_days: int = 0,
                  llm: str = "heuristic", ollama_url: str | None = None,
-                 llm_model: str | None = None, llm_timeout_s: float | None = None):
+                 llm_model: str | None = None, llm_timeout_s: float | None = None,
+                 network_calls: bool = False):
         self.store = store
         self.min_confidence = min_confidence
         self.correnda_min_evidence = correnda_min_evidence
@@ -81,6 +82,11 @@ class DistillationEngine:
         self.ollama_url = ollama_url
         self.llm_model = llm_model
         self.llm_timeout_s = llm_timeout_s
+        # PRD/README promise: zero outbound network call by default. Ollama
+        # on loopback is a local resource, not "the network" — a non-loopback
+        # ollama_url is the one path that could actually leave the machine,
+        # so it alone is gated behind this flag (item 3.4).
+        self.network_calls = network_calls
 
     # ---- public API ----
 
@@ -164,20 +170,32 @@ class DistillationEngine:
         if self.llm_mode in ("ollama", "auto"):
             try:
                 import logging
+                from urllib.parse import urlparse
+
                 from cortex.distillation.llm import OllamaDistiller, llm_candidates
-                distiller = OllamaDistiller(
-                    url=self.ollama_url or "http://localhost:11434",
-                    model=self.llm_model or "qwen2.5:7b",
-                    timeout=self.llm_timeout_s or 30.0,
-                )
-                # Probe even in explicit mode: a dead Ollama must degrade with
-                # a signal (2s probe) instead of hanging the Stop hook for the
-                # full extract timeout.
-                if not distiller.available():
-                    if self.llm_mode == "ollama":
-                        logging.getLogger("cortex.distill").info(
-                            "llm=ollama but server is down; skipping LLM pass")
+                url = self.ollama_url or "http://localhost:11434"
+                host = urlparse(url).hostname or ""
+                is_local = host in ("localhost", "127.0.0.1", "::1")
+                distiller: OllamaDistiller | None
+                if not is_local and not self.network_calls:
+                    logging.getLogger("cortex.distill").info(
+                        "LLM skipped: ollama_url %s is remote but "
+                        "privacy.network_calls=false", host)
                     distiller = None
+                else:
+                    distiller = OllamaDistiller(
+                        url=url,
+                        model=self.llm_model or "qwen2.5:7b",
+                        timeout=self.llm_timeout_s or 30.0,
+                    )
+                    # Probe even in explicit mode: a dead Ollama must degrade
+                    # with a signal (2s probe) instead of hanging the Stop
+                    # hook for the full extract timeout.
+                    if not distiller.available():
+                        if self.llm_mode == "ollama":
+                            logging.getLogger("cortex.distill").info(
+                                "llm=ollama but server is down; skipping LLM pass")
+                        distiller = None
                 if distiller is not None:
                     raw = distiller.extract(events)
                     if raw is not None:
