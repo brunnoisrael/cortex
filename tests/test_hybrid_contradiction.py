@@ -38,6 +38,11 @@ test_negation_data = [
     ("Usar PostgreSQL em vez de MongoDB", "Não usar PostgreSQL em produção", True),
     ("Ativar cache em memória", "Desativar cache em memória", True),
     ("Usar PostgreSQL para dados", "Decidimos PostgreSQL em vez de MySQL", False),
+    # Onda 5.3 regression: "no"/"use" must match as whole words, not as a
+    # substring inside unrelated words ("node", "snapshot", "user"...).
+    ("Use snapshots because the node state is large",
+     "We prefer compressed snapshots for the node state", False),
+    ("Enable retries for the api client", "No retries for the api client", True),
 ]
 
 @pytest.mark.parametrize("text_a,text_b,expected", test_negation_data)
