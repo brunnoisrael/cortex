@@ -156,24 +156,12 @@ def _cursor_session_id(cortex_dir: Path) -> str:
 def _auto_distill(ws, cfg, session_id: str) -> str | None:
     """Offline distillation at session end (PRD §8.2, §42: best-effort)."""
     try:
-        from cortex.distillation.engine import DistillationEngine
         from cortex.distillation.review import build_session_review
+        from cortex.service import build_distillation_engine
         from cortex.storage.store import KnowledgeStore
         store = KnowledgeStore(ws.db_path)
         try:
-            engine = DistillationEngine(
-                store,
-                min_confidence=cfg.min_confidence_for_persistence,
-                correnda_min_evidence=cfg.correnda_min_evidence,
-                retention_days=cfg.raw_retention_days,
-                llm=cfg.llm,
-                ollama_url=getattr(cfg, "ollama_url", None),
-                llm_model=getattr(cfg, "llm_model", None),
-                # The Stop hook runs at the end of every user session: the LLM
-                # pass gets a capped timeout so a dead server can't hold it.
-                llm_timeout_s=min(float(getattr(cfg, "llm_timeout_s", 30.0)), 10.0),
-                network_calls=getattr(cfg, "network_calls", False),
-            )
+            engine = build_distillation_engine(store, cfg, llm_timeout_cap=10.0)
             report = engine.distill_session(session_id)
             build_session_review(store, session_id)
             return report.summary()

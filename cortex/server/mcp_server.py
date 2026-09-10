@@ -21,7 +21,6 @@ except ImportError:
 from cortex.capture.recorder import capture_event
 from cortex.compiler.compiler import CompileInput, compile_context, rank
 from cortex.config import CortexConfig, CortexConfigError
-from cortex.distillation.engine import DistillationEngine
 from cortex.distillation.review import build_session_review
 from cortex.knowledge.models import (
     ArtifactType,
@@ -30,6 +29,11 @@ from cortex.knowledge.models import (
     Provenance,
     Status,
     session_id_for,
+)
+from cortex.service import (
+    build_distillation_engine,
+    latest_open_session_id,
+    phase_health,
 )
 from cortex.storage.store import KnowledgeStore
 from cortex.workspace import Workspace, detect_workspace, ensure_cortex_dir
@@ -240,17 +244,7 @@ def cortex_capture(event_type: str, content: str, session_id: str = "",
 def cortex_distill(session_id: str = "") -> str:
     """Run distillation over captured events (session or all)."""
     _, cfg, store = _store()
-    engine = DistillationEngine(
-        store,
-        min_confidence=cfg.min_confidence_for_persistence,
-        correnda_min_evidence=cfg.correnda_min_evidence,
-        retention_days=cfg.raw_retention_days,
-        llm=cfg.llm,
-        ollama_url=cfg.ollama_url,
-        llm_model=cfg.llm_model,
-        llm_timeout_s=cfg.llm_timeout_s,
-        network_calls=cfg.network_calls,
-    )
+    engine = build_distillation_engine(store, cfg)
     report = engine.distill_session(session_id) if session_id else engine.distill_all()
     return report.summary() + (" | new: " + ", ".join(report.new_ids) if report.new_ids else "")
 
@@ -260,12 +254,9 @@ def cortex_review(session_id: str = "") -> str:
     """Generate a structured session review (produced/unresolved/risks)."""
     _, _, store = _store()
     if not session_id:
-        rows = store.conn.execute(
-            "SELECT id FROM sessions WHERE ended_at IS NULL ORDER BY started_at DESC LIMIT 1"
-        ).fetchall()
-        if not rows:
+        session_id = latest_open_session_id(store) or ""
+        if not session_id:
             return "no open session"
-        session_id = rows[0]["id"]
     rev = build_session_review(store, session_id)
     return json.dumps(rev.details, ensure_ascii=False, indent=2) if rev else f"session {session_id} not found"
 
@@ -296,18 +287,7 @@ def cortex_verify(entity_id: str) -> str:
 def cortex_phase() -> str:
     """Phase review: long-range knowledge health indicators (PRD §13.2)."""
     _, _, store = _store()
-    ents = store.all_entities()
-    adrs = [e for e in ents if e.type == ArtifactType.ADR]
-    correndas = [e for e in ents if e.type == ArtifactType.CORRENDA]
-    return json.dumps({
-        "adr_total": len(adrs),
-        "adr_candidates": len([e for e in adrs if e.status == Status.CANDIDATE]),
-        "superseded": len([e for e in ents if e.status == Status.SUPERSEDED]),
-        "correndas_active": len([c for c in correndas if c.status == Status.ACTIVE]),
-        "correndas_proposed": len([c for c in correndas if c.status == Status.PROPOSED]),
-        "stale": len([e for e in ents if e.freshness.stale]),
-        "total_entities": len(ents),
-    }, ensure_ascii=False, indent=2)
+    return json.dumps(phase_health(store), ensure_ascii=False, indent=2)
 
 
 def _list_artifacts(store: KnowledgeStore, etype: ArtifactType) -> str:

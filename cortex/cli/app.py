@@ -13,7 +13,6 @@ import typer
 from cortex.capture.recorder import capture_event
 from cortex.compiler.compiler import CompileInput, compile_context, rank
 from cortex.config import CortexConfig, CortexConfigError, write_default_config
-from cortex.distillation.engine import DistillationEngine
 from cortex.distillation.review import build_session_review
 from cortex.git.context import git_context
 from cortex.knowledge.models import (
@@ -21,6 +20,11 @@ from cortex.knowledge.models import (
     Authority,
     Status,
     session_id_for,
+)
+from cortex.service import (
+    build_distillation_engine,
+    latest_open_session_id,
+    phase_health,
 )
 from cortex.storage.store import KnowledgeStore
 from cortex.workspace import detect_workspace, ensure_cortex_dir
@@ -294,17 +298,7 @@ def distill(
         typer.secho(f"! session {session!r} not found in this store "
                     "(check for a typo?) — proceeding, but expect 0 events.",
                     fg=typer.colors.YELLOW)
-    engine = DistillationEngine(
-        store,
-        min_confidence=cfg.min_confidence_for_persistence,
-        correnda_min_evidence=cfg.correnda_min_evidence,
-        retention_days=cfg.raw_retention_days,
-        llm=cfg.llm,
-        ollama_url=cfg.ollama_url,
-        llm_model=cfg.llm_model,
-        llm_timeout_s=cfg.llm_timeout_s,
-        network_calls=cfg.network_calls,
-    )
+    engine = build_distillation_engine(store, cfg)
     if dry_run:
         events = store.undistilled_events(session)
         typer.echo(f"dry-run: {len(events)} events would be processed for "
@@ -333,14 +327,11 @@ def review(
         store.close()
         return
     if session is None:
-        rows = store.conn.execute(
-            "SELECT id FROM sessions WHERE ended_at IS NULL ORDER BY started_at DESC LIMIT 1"
-        ).fetchall()
-        if not rows:
+        session = latest_open_session_id(store)
+        if not session:
             typer.echo("no open session found.")
             store.close()
             return
-        session = rows[0]["id"]
     rev = build_session_review(store, session)
     if not rev:
         typer.echo(f"session {session} not found.")
@@ -352,21 +343,14 @@ def review(
 
 def _phase_review(store: KnowledgeStore) -> None:
     """Long-range indicators (PRD §13.2)."""
-    ents = store.all_entities()
-    adrs = [e for e in ents if e.type == ArtifactType.ADR]
-    unresolved_adrs = [e for e in adrs if e.status == Status.CANDIDATE]
-    superseded = [e for e in ents if e.status == Status.SUPERSEDED]
-    correndas = [e for e in ents if e.type == ArtifactType.CORRENDA]
-    stale = [e for e in ents if e.freshness.stale]
+    h = phase_health(store)
     typer.echo("PHASE REVIEW")
-    typer.echo(f"  adr coverage: {len(adrs)} decisions ({len(unresolved_adrs)} still candidate)")
-    typer.echo(f"  superseded artifacts: {len(superseded)}")
-    typer.echo(f"  correndas: {len(correndas)} "
-               f"({len([c for c in correndas if c.status == Status.PROPOSED])} proposed, "
-               f"{len([c for c in correndas if c.status == Status.ACTIVE])} active)")
-    typer.echo(f"  stale memories: {len(stale)}")
-    typer.echo(f"  knowledge freshness: "
-               f"{100 - (100 * len(stale) // max(1, len(ents)))}% current")
+    typer.echo(f"  adr coverage: {h['adr_total']} decisions ({h['adr_candidates']} still candidate)")
+    typer.echo(f"  superseded artifacts: {h['superseded']}")
+    typer.echo(f"  correndas: {h['correndas_total']} "
+               f"({h['correndas_proposed']} proposed, {h['correndas_active']} active)")
+    typer.echo(f"  stale memories: {h['stale']}")
+    typer.echo(f"  knowledge freshness: {h['knowledge_freshness_pct']}% current")
 
 
 def _print_review(rev) -> None:
@@ -597,11 +581,9 @@ def capture(
 
 
 def _current_session(store: KnowledgeStore) -> str:
-    row = store.conn.execute(
-        "SELECT id FROM sessions WHERE ended_at IS NULL ORDER BY started_at DESC LIMIT 1"
-    ).fetchone()
-    if row:
-        return row["id"]
+    sid = latest_open_session_id(store)
+    if sid:
+        return sid
     sid = session_id_for("cli")
     store.ensure_session(sid, host="cli")
     return sid
