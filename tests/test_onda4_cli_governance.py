@@ -13,6 +13,7 @@ file to assert on persisted state, rather than reusing the now-closed
 
 from __future__ import annotations
 
+import pytest
 from typer.testing import CliRunner
 
 from cortex.cli.app import app
@@ -182,3 +183,37 @@ def test_why_shows_provenance_for_known_entity(project, store, monkeypatch):
     assert result.exit_code == 0
     assert "Usar Redis para cache." in result.output
     assert "s1" in result.output
+
+
+# ---------- 5.1: workspace_store() closes the connection even on exceptions ----------
+
+def test_workspace_store_closes_connection_on_command_exception(project, store, monkeypatch):
+    """verify() calling a monkeypatched verify_entity that raises must still
+    leave the store connection closed, not leaked (item 5.1's acceptance
+    criterion)."""
+    _seed(store, id="fix-err", type=ArtifactType.FIX, statement="algo")
+    _patch_workspace(monkeypatch, project, store)
+    monkeypatch.setattr(
+        "cortex.verification.verify_entity",
+        lambda *a, **kw: (_ for _ in ()).throw(RuntimeError("boom")),
+    )
+
+    result = runner.invoke(app, ["verify", "fix-err"])
+
+    assert result.exit_code != 0
+    import sqlite3
+    with pytest.raises(sqlite3.ProgrammingError):
+        store.conn.execute("SELECT 1")
+
+
+def test_workspace_store_closes_connection_on_not_found(project, store, monkeypatch):
+    """The plain 'not found' -> typer.Exit(1) path must also close, not just
+    the success path."""
+    _patch_workspace(monkeypatch, project, store)
+
+    result = runner.invoke(app, ["correnda", "confirm", "does-not-exist"])
+
+    assert result.exit_code == 1
+    import sqlite3
+    with pytest.raises(sqlite3.ProgrammingError):
+        store.conn.execute("SELECT 1")

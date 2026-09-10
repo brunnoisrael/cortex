@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import sys
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 
 import typer
@@ -49,6 +51,22 @@ def _require_workspace() -> tuple[Path, CortexConfig, KnowledgeStore]:
         raise typer.Exit(1) from exc
     store = KnowledgeStore(ws.db_path)
     return ws.root, cfg, store
+
+
+@contextmanager
+def workspace_store() -> Iterator[tuple[Path, CortexConfig, KnowledgeStore]]:
+    """Same resolution as _require_workspace(), but guarantees store.close()
+    even when the command body raises (item 5.1). _require_workspace() itself
+    is left as-is deliberately: ~30 existing commands call it directly and
+    close() only on their happy path (a pre-existing pattern this plan
+    adopts incrementally, command by command, rather than in one big-bang
+    rewrite — see commons export/import and benchmark for the two commands
+    that already got this right by hand before this helper existed)."""
+    root, cfg, store = _require_workspace()
+    try:
+        yield root, cfg, store
+    finally:
+        store.close()
 
 
 # ---- lifecycle ----
@@ -337,81 +355,71 @@ def _print_review(rev) -> None:
 
 @correnda_app.command("confirm")
 def correnda_confirm(entity_id: str) -> None:
-    _, _, store = _require_workspace()
-    ent = store.set_status(entity_id, Status.ACTIVE, authority=Authority.HUMAN_CONFIRMED)
-    if not ent:
-        typer.secho(f"{entity_id} not found.", fg=typer.colors.RED)
-        store.close()
-        raise typer.Exit(1)
-    ent.details["confirmed_by_human"] = True
-    store.upsert(ent)
-    typer.secho(f"✓ {entity_id} is now ACTIVE (authority: human_confirmed).", fg=typer.colors.GREEN)
-    store.close()
+    with workspace_store() as (_, _, store):
+        ent = store.set_status(entity_id, Status.ACTIVE, authority=Authority.HUMAN_CONFIRMED)
+        if not ent:
+            typer.secho(f"{entity_id} not found.", fg=typer.colors.RED)
+            raise typer.Exit(1)
+        ent.details["confirmed_by_human"] = True
+        store.upsert(ent)
+        typer.secho(f"✓ {entity_id} is now ACTIVE (authority: human_confirmed).",
+                    fg=typer.colors.GREEN)
 
 
 @correnda_app.command("reject")
 def correnda_reject(entity_id: str) -> None:
-    _, _, store = _require_workspace()
-    ent = store.set_status(entity_id, Status.REJECTED)
-    if not ent:
-        typer.secho(f"{entity_id} not found.", fg=typer.colors.RED)
-        store.close()
-        raise typer.Exit(1)
-    typer.echo(f"{entity_id} rejected. It will not appear in compiled context.")
-    store.close()
+    with workspace_store() as (_, _, store):
+        ent = store.set_status(entity_id, Status.REJECTED)
+        if not ent:
+            typer.secho(f"{entity_id} not found.", fg=typer.colors.RED)
+            raise typer.Exit(1)
+        typer.echo(f"{entity_id} rejected. It will not appear in compiled context.")
 
 
 @adrs_app.command("accept")
 def adr_accept(entity_id: str) -> None:
-    _, _, store = _require_workspace()
-    ent = store.set_status(entity_id, Status.ACTIVE, authority=Authority.HUMAN_CONFIRMED)
-    if not ent:
-        typer.secho(f"{entity_id} not found.", fg=typer.colors.RED)
-        store.close()
-        raise typer.Exit(1)
-    typer.secho(f"✓ {entity_id} accepted.", fg=typer.colors.GREEN)
-    store.close()
+    with workspace_store() as (_, _, store):
+        ent = store.set_status(entity_id, Status.ACTIVE, authority=Authority.HUMAN_CONFIRMED)
+        if not ent:
+            typer.secho(f"{entity_id} not found.", fg=typer.colors.RED)
+            raise typer.Exit(1)
+        typer.secho(f"✓ {entity_id} accepted.", fg=typer.colors.GREEN)
 
 
 @adrs_app.command("reject")
 def adr_reject(entity_id: str) -> None:
-    _, _, store = _require_workspace()
-    ent = store.set_status(entity_id, Status.REJECTED)
-    if not ent:
-        typer.secho(f"{entity_id} not found.", fg=typer.colors.RED)
-        store.close()
-        raise typer.Exit(1)
-    typer.echo(f"{entity_id} rejected.")
-    store.close()
+    with workspace_store() as (_, _, store):
+        ent = store.set_status(entity_id, Status.REJECTED)
+        if not ent:
+            typer.secho(f"{entity_id} not found.", fg=typer.colors.RED)
+            raise typer.Exit(1)
+        typer.echo(f"{entity_id} rejected.")
 
 
 @app.command()
 def verify(entity_id: str) -> None:
     """Verify a memory against the repository: cited symbols must exist in
     scope files for repository_verified promotion (PRD §47)."""
-    ws, _, store = _require_workspace()
-    ent = store.get(entity_id)
-    if not ent:
-        typer.secho(f"{entity_id} not found.", fg=typer.colors.RED)
-        store.close()
-        raise typer.Exit(1)
-    from cortex.verification import verify_entity
-    result = verify_entity(store, ws.root, ent)
-    if result["status"] == "verified":
-        typer.secho(f"✓ {entity_id} verified ({result['detail']}).", fg=typer.colors.GREEN)
-    elif result["status"] == "stale":
-        typer.secho(f"⚠ {entity_id}: {result['detail']}. Flagged stale.", fg=typer.colors.YELLOW)
-    else:
-        typer.echo(f"· {entity_id}: {result['detail']}")
-    store.close()
+    with workspace_store() as (root, _, store):
+        ent = store.get(entity_id)
+        if not ent:
+            typer.secho(f"{entity_id} not found.", fg=typer.colors.RED)
+            raise typer.Exit(1)
+        from cortex.verification import verify_entity
+        result = verify_entity(store, root, ent)
+        if result["status"] == "verified":
+            typer.secho(f"✓ {entity_id} verified ({result['detail']}).", fg=typer.colors.GREEN)
+        elif result["status"] == "stale":
+            typer.secho(f"⚠ {entity_id}: {result['detail']}. Flagged stale.", fg=typer.colors.YELLOW)
+        else:
+            typer.echo(f"· {entity_id}: {result['detail']}")
 
 
 @app.command()
 def supersede(old_id: str, with_new: str = typer.Option(..., "--with")) -> None:
     """Mark a decision as superseded by another (PRD §17.2)."""
-    _, _, store = _require_workspace()
-    ok = store.supersede(old_id, with_new)
-    store.close()
+    with workspace_store() as (_, _, store):
+        ok = store.supersede(old_id, with_new)
     if not ok:
         typer.secho("supersede failed: check both ids.", fg=typer.colors.RED)
         raise typer.Exit(1)
@@ -450,48 +458,45 @@ def why(
     visual: bool = typer.Option(False, "--visual", "-v", help="Export visual graph HTML (Onda 9)."),
 ) -> None:
     """Trace a memory back to its evidence (PRD §15.2)."""
-    _, _, store = _require_workspace()
-    ent = store.get(entity_id)
-    if not ent:
-        typer.secho(f"{entity_id} not found.", fg=typer.colors.RED)
-        store.close()
-        raise typer.Exit(1)
-        
-    if visual:
-        from cortex.visualizer import export_provenance_graph_file
-        out_file = Path.cwd() / f"why_{entity_id}.html"
-        export_provenance_graph_file(store, out_file, focus_id=entity_id)
-        typer.secho(f"✓ Visual graph exported to {out_file}", fg=typer.colors.GREEN)
-        store.close()
-        return
+    with workspace_store() as (_, _, store):
+        ent = store.get(entity_id)
+        if not ent:
+            typer.secho(f"{entity_id} not found.", fg=typer.colors.RED)
+            raise typer.Exit(1)
 
-    p = ent.provenance
-    typer.echo(f"{ent.type.value} {ent.id}")
-    typer.echo("")
-    typer.echo("Statement:")
-    typer.echo(f"  {ent.statement}")
-    if ent.details.get("root_cause"):
-        typer.echo(f"  root cause: {ent.details['root_cause']}")
-    typer.echo("")
-    typer.echo("Evidence:")
-    for rel, target in store.related(ent.id, direction="in"):
-        typer.echo(f"  {rel} <- {target.id} ({target.type.value}): {target.statement[:100]}")
-    for rel, target in store.related(ent.id, direction="out"):
-        typer.echo(f"  {rel} -> {target.id} ({target.type.value})")
-    if p.source_events:
-        typer.echo(f"  source events: {', '.join(p.source_events)}")
-    if p.source_files:
-        typer.echo(f"  source files: {', '.join(p.source_files)}")
-    typer.echo("")
-    typer.echo(f"Sessions: {p.source_session or 'n/a'}")
-    typer.echo(f"Confidence: {ent.confidence:.2f}")
-    typer.echo(f"Authority: {ent.authority.value}")
-    typer.echo(f"Status: {ent.status.value}")
-    typer.echo(f"Human confirmation: "
-               f"{'confirmed' if ent.details.get('confirmed_by_human') else 'not confirmed'}")
-    if ent.superseded_by:
-        typer.echo(f"Superseded by: {ent.superseded_by}")
-    store.close()
+        if visual:
+            from cortex.visualizer import export_provenance_graph_file
+            out_file = Path.cwd() / f"why_{entity_id}.html"
+            export_provenance_graph_file(store, out_file, focus_id=entity_id)
+            typer.secho(f"✓ Visual graph exported to {out_file}", fg=typer.colors.GREEN)
+            return
+
+        p = ent.provenance
+        typer.echo(f"{ent.type.value} {ent.id}")
+        typer.echo("")
+        typer.echo("Statement:")
+        typer.echo(f"  {ent.statement}")
+        if ent.details.get("root_cause"):
+            typer.echo(f"  root cause: {ent.details['root_cause']}")
+        typer.echo("")
+        typer.echo("Evidence:")
+        for rel, target in store.related(ent.id, direction="in"):
+            typer.echo(f"  {rel} <- {target.id} ({target.type.value}): {target.statement[:100]}")
+        for rel, target in store.related(ent.id, direction="out"):
+            typer.echo(f"  {rel} -> {target.id} ({target.type.value})")
+        if p.source_events:
+            typer.echo(f"  source events: {', '.join(p.source_events)}")
+        if p.source_files:
+            typer.echo(f"  source files: {', '.join(p.source_files)}")
+        typer.echo("")
+        typer.echo(f"Sessions: {p.source_session or 'n/a'}")
+        typer.echo(f"Confidence: {ent.confidence:.2f}")
+        typer.echo(f"Authority: {ent.authority.value}")
+        typer.echo(f"Status: {ent.status.value}")
+        typer.echo(f"Human confirmation: "
+                   f"{'confirmed' if ent.details.get('confirmed_by_human') else 'not confirmed'}")
+        if ent.superseded_by:
+            typer.echo(f"Superseded by: {ent.superseded_by}")
 
 
 @app.command()
