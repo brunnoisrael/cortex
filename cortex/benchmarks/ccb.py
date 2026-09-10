@@ -60,6 +60,53 @@ def _seed_history(store: KnowledgeStore) -> None:
         store.set_status(correndas[0].id, Status.ACTIVE, authority=Authority.HUMAN_CONFIRMED)
 
 
+def _leak_count(store: KnowledgeStore, context_text: str) -> int:
+    """False memory = a superseded/stale artifact leaking into the compiled
+    context (id or decision text) — never acceptable (PRD §17). Shared by
+    both evaluators (fixture and dogfooding): identical rule, only the task
+    logic that decides *what* to query differs between them."""
+    leaks = 0
+    for e in store.all_entities():
+        if e.is_current and not e.freshness.stale:
+            continue
+        signals = [e.id, e.statement]
+        decision = e.details.get("decision") or ""
+        if decision:
+            signals.append(decision)
+        if context_text and any(s and s in context_text for s in signals):
+            leaks += 1
+    return leaks
+
+
+def _make_check(store: KnowledgeStore, results: dict[str, dict]):
+    def check(name: str, ok: bool, context_text: str = "") -> None:
+        results[name] = {"pass": bool(ok), "false_memories": _leak_count(store, context_text)}
+    return check
+
+
+def _score(store: KnowledgeStore, results: dict[str, dict]) -> dict:
+    """Shared final aggregation (8 task results -> pass rate, false-memory
+    rate, provenance coverage) for both evaluators."""
+    all_artifacts = [e for e in store.all_entities()
+                     if e.type in (ArtifactType.ADR, ArtifactType.FIX,
+                                   ArtifactType.CORRENDA, ArtifactType.INTENTION,
+                                   ArtifactType.NEGATIVE_KNOWLEDGE)]
+    prov_covered = [e for e in all_artifacts
+                    if e.provenance.source_events or e.provenance.source_entities
+                    or e.provenance.source_commits]
+    tasks_passed = sum(1 for r in results.values() if r["pass"])
+    total_selected = max(1, len(results))
+    return {
+        "tasks_passed": tasks_passed,
+        "tasks_total": len(results),
+        "per_task": {k: {"pass": v["pass"], "false_memories": v["false_memories"]}
+                     for k, v in results.items()},
+        "false_memory_rate": round(
+            sum(r["false_memories"] for r in results.values()) / total_selected, 3),
+        "provenance_coverage": round(len(prov_covered) / max(1, len(all_artifacts)), 3),
+    }
+
+
 def run_ccb(root: Path | None = None) -> dict:
     tmp = None
     if root is None:
@@ -86,24 +133,14 @@ def run_ccb_on_store(store: KnowledgeStore) -> dict:
 
 
 def _evaluate_dynamic(store: KnowledgeStore) -> dict:
-    """Dynamic CCB evaluation for real project stores (Onda 8 dogfooding)."""
+    """Dynamic CCB evaluation for real project stores (Onda 8 dogfooding):
+    generic task logic that adapts to whatever entities actually exist,
+    unlike _evaluate()'s fixed expectations against the synthetic fixture."""
     def ctx(query, files):
         return compile_context(store, CompileInput(query=query, files=files))
 
     results: dict[str, dict] = {}
-
-    def check(name, ok, context_text=""):
-        leaks = 0
-        for e in store.all_entities():
-            if e.is_current and not e.freshness.stale:
-                continue
-            signals = [e.id, e.statement]
-            decision = e.details.get("decision") or ""
-            if decision:
-                signals.append(decision)
-            if context_text and any(s and s in context_text for s in signals):
-                leaks += 1
-        results[name] = {"pass": bool(ok), "false_memories": leaks}
+    check = _make_check(store, results)
 
     adrs = [e for e in store.list_by_type(ArtifactType.ADR) if e.is_current]
     correndas = store.list_by_type(ArtifactType.CORRENDA)
@@ -176,46 +213,18 @@ def _evaluate_dynamic(store: KnowledgeStore) -> dict:
     else:
         check("8_locate_evidence", True, "")
 
-    all_artifacts = [e for e in store.all_entities()
-                     if e.type in (ArtifactType.ADR, ArtifactType.FIX,
-                                   ArtifactType.CORRENDA, ArtifactType.INTENTION,
-                                   ArtifactType.NEGATIVE_KNOWLEDGE)]
-    prov_covered = [e for e in all_artifacts
-                    if e.provenance.source_events or e.provenance.source_entities
-                    or e.provenance.source_commits]
-    tasks_passed = sum(1 for r in results.values() if r["pass"])
-    total_selected = max(1, len(results))
-    return {
-        "tasks_passed": tasks_passed,
-        "tasks_total": len(results),
-        "per_task": {k: {"pass": v["pass"], "false_memories": v["false_memories"]}
-                     for k, v in results.items()},
-        "false_memory_rate": round(
-            sum(r["false_memories"] for r in results.values()) / total_selected, 3),
-        "provenance_coverage": round(len(prov_covered) / max(1, len(all_artifacts)), 3),
-    }
+    return _score(store, results)
 
 
 def _evaluate(store: KnowledgeStore) -> dict:
+    """Fixed evaluation against the synthetic fixture seeded by
+    _seed_history(): fixed queries and fixed expected keywords, since the
+    fixture's content is known in advance (unlike _evaluate_dynamic)."""
     def ctx(query, files):
         return compile_context(store, CompileInput(query=query, files=files))
 
     results: dict[str, dict] = {}
-
-    def check(name, ok, context_text):
-        """False memory = a superseded/stale artifact leaking into the
-        compiled context (id or decision text) — never acceptable (PRD §17)."""
-        leaks = 0
-        for e in store.all_entities():
-            if e.is_current and not e.freshness.stale:
-                continue
-            signals = [e.id, e.statement]
-            decision = e.details.get("decision") or ""
-            if decision:
-                signals.append(decision)
-            if any(s and s in context_text for s in signals):
-                leaks += 1
-        results[name] = {"pass": bool(ok), "false_memories": leaks}
+    check = _make_check(store, results)
 
     # 1. Explain why a decision exists
     c = ctx("banco de dados transações", ["src/db/"])
@@ -253,7 +262,6 @@ def _evaluate(store: KnowledgeStore) -> dict:
     else:
         check("6_respect_superseded", False, "")
 
-
     # 7. Continue an interrupted implementation
     intentions = store.list_by_type(ArtifactType.INTENTION)
     c = ctx("continuar o trabalho de auth middleware", ["src/auth/middleware.py"])
@@ -267,24 +275,7 @@ def _evaluate(store: KnowledgeStore) -> dict:
               e.provenance.source_entities or e.provenance.source_events
               for e in correndas), "")
 
-    all_artifacts = [e for e in store.all_entities()
-                     if e.type in (ArtifactType.ADR, ArtifactType.FIX,
-                                   ArtifactType.CORRENDA, ArtifactType.INTENTION,
-                                   ArtifactType.NEGATIVE_KNOWLEDGE)]
-    prov_covered = [e for e in all_artifacts
-                    if e.provenance.source_events or e.provenance.source_entities
-                    or e.provenance.source_commits]
-    tasks_passed = sum(1 for r in results.values() if r["pass"])
-    total_selected = max(1, len(results))
-    return {
-        "tasks_passed": tasks_passed,
-        "tasks_total": len(results),
-        "per_task": {k: {"pass": v["pass"], "false_memories": v["false_memories"]}
-                     for k, v in results.items()},
-        "false_memory_rate": round(
-            sum(r["false_memories"] for r in results.values()) / total_selected, 3),
-        "provenance_coverage": round(len(prov_covered) / max(1, len(all_artifacts)), 3),
-    }
+    return _score(store, results)
 
 
 def format_report(report: dict) -> str:
