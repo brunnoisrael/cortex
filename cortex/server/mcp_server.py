@@ -345,6 +345,9 @@ def cortex_correnda() -> str:
 def cortex_diff(last_n_sessions: int = 2) -> str:
     """Summarize what changed in knowledge across the last N sessions."""
     _, _, store = _store()
+    # SQLite treats a negative LIMIT as "no limit" — clamp so a stray -1
+    # can't dump the entire session history instead of a bounded window.
+    last_n_sessions = max(1, last_n_sessions)
     rows = store.conn.execute(
         "SELECT id, started_at FROM sessions ORDER BY started_at DESC LIMIT ?",
         (last_n_sessions,),
