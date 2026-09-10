@@ -99,3 +99,34 @@ def test_version_is_single_sourced_from_pyproject():
     data = tomllib.loads(pyproject.read_text(encoding="utf-8"))
     assert re.match(r"^\d+\.\d+\.\d+", cortex.__version__)
     assert cortex.__version__ == data["project"]["version"]
+
+
+def test_distill_warns_on_unknown_session_typo(project, store, monkeypatch):
+    """app.py:251 (A.4): `cortex distill --session <typo>` used to report
+    'distillation complete' with 0 events processed, indistinguishable from
+    a legitimate session with nothing left to distill."""
+    from typer.testing import CliRunner
+
+    from cortex.cli.app import app
+    monkeypatch.chdir(project)
+    runner = CliRunner()
+
+    result = runner.invoke(app, ["distill", "--session", "sess-typo-xyz"])
+
+    assert result.exit_code == 0  # still a diagnostic warning, not a hard failure
+    assert "not found" in result.output
+    assert "sess-typo-xyz" in result.output
+
+
+def test_distill_no_warning_for_real_session(project, store, monkeypatch):
+    from typer.testing import CliRunner
+
+    from cortex.cli.app import app
+    store.ensure_session("sess-real-1", "test")
+    monkeypatch.chdir(project)
+    runner = CliRunner()
+
+    result = runner.invoke(app, ["distill", "--session", "sess-real-1"])
+
+    assert result.exit_code == 0
+    assert "not found" not in result.output

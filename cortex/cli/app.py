@@ -286,6 +286,14 @@ def distill(
 ) -> None:
     """Run the Distillation Engine over captured events (PRD §8)."""
     _, cfg, store = _require_workspace()
+    if session and store.get_session(session) is None:
+        # A typo'd --session used to silently "succeed" with 0 events
+        # processed — indistinguishable from a real session with nothing
+        # left to distill. Warn, but still run (mirrors `doctor`: signal,
+        # don't block) since the id might legitimately just be very old.
+        typer.secho(f"! session {session!r} not found in this store "
+                    "(check for a typo?) — proceeding, but expect 0 events.",
+                    fg=typer.colors.YELLOW)
     engine = DistillationEngine(
         store,
         min_confidence=cfg.min_confidence_for_persistence,
