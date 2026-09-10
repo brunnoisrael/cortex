@@ -3,8 +3,87 @@
 from __future__ import annotations
 
 import tomllib
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
+
+
+class CortexConfigError(Exception):
+    """A cortex.toml value could not be parsed or fails validation.
+
+    Raised instead of letting TOMLDecodeError/ValueError/TypeError escape
+    raw: every CLI command and every MCP tool loads config on the hot path,
+    so a config error must produce a one-line, actionable message rather
+    than a traceback (PLANO_ENDURECIMENTO_2026-09-08.md item 3.1)."""
+
+
+_ALLOWED_LLM = {"heuristic", "auto", "ollama"}
+_ALLOWED_DISTILL_MODES = {"offline", "online", "both"}
+
+
+def _as_bool(section: str, key: str, value: object, default: bool) -> bool:
+    """Strict boolean coercion: TOML `true`/`false` only.
+
+    bool("false") == True in plain Python, so a quoted string in the config
+    file must be rejected rather than silently coerced to True."""
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    raise CortexConfigError(
+        f"cortex.toml [{section}] {key}: esperado booleano (true/false), recebido {value!r}"
+    )
+
+
+def _as_int(section: str, key: str, value: object, default: int,
+            minimum: int | None = None) -> int:
+    if value is None:
+        return default
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or int(value) != value:
+        raise CortexConfigError(
+            f"cortex.toml [{section}] {key}: esperado inteiro, recebido {value!r}"
+        )
+    n = int(value)
+    if minimum is not None and n < minimum:
+        raise CortexConfigError(
+            f"cortex.toml [{section}] {key}: mínimo {minimum}, recebido {n}"
+        )
+    return n
+
+
+def _as_float(section: str, key: str, value: object, default: float,
+              minimum: float | None = None, maximum: float | None = None) -> float:
+    if value is None:
+        return default
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise CortexConfigError(
+            f"cortex.toml [{section}] {key}: esperado número, recebido {value!r}"
+        )
+    n = float(value)
+    if minimum is not None and n < minimum:
+        raise CortexConfigError(
+            f"cortex.toml [{section}] {key}: mínimo {minimum}, recebido {n}"
+        )
+    if maximum is not None and n > maximum:
+        raise CortexConfigError(
+            f"cortex.toml [{section}] {key}: máximo {maximum}, recebido {n}"
+        )
+    return n
+
+
+def _as_str(section: str, key: str, value: object, default: str,
+            allowed: set[str] | None = None) -> str:
+    if value is None:
+        return default
+    if not isinstance(value, str):
+        raise CortexConfigError(
+            f"cortex.toml [{section}] {key}: esperado texto, recebido {value!r}"
+        )
+    if allowed is not None and value not in allowed:
+        raise CortexConfigError(
+            f"cortex.toml [{section}] {key}={value!r} inválido; use {' | '.join(sorted(allowed))}"
+        )
+    return value
+
 
 DEFAULT_CONFIG_TEMPLATE = """\
 # Cortex configuration
@@ -40,11 +119,8 @@ include_last_review = true
 
 [privacy]
 telemetry = false
-network_calls = false        # local-only by default
-
-[multi_agent]
-enabled = false
-conflict_strategy = "append-and-resolve"
+network_calls = false        # local-only by default: non-loopback ollama_url
+                              # is refused unless this is true (PLANO item 3.4)
 """
 
 
@@ -69,44 +145,110 @@ class CortexConfig:
     include_last_review: bool = True
     telemetry: bool = False
     network_calls: bool = False
-    multi_agent: bool = False
-    federation_stores: list[str] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        """Range/enum validation (item 3.1): defaults above are always valid,
+        so this only ever fires for values that came from a user's
+        cortex.toml via load()."""
+        if not 0.0 <= self.min_confidence_for_persistence <= 1.0:
+            raise CortexConfigError(
+                "distillation.min_confidence_for_persistence deve estar em [0,1]: "
+                f"{self.min_confidence_for_persistence}"
+            )
+        if self.context_max_tokens < 100:
+            raise CortexConfigError(
+                f"context.max_tokens mínimo é 100: {self.context_max_tokens}"
+            )
+        if self.raw_retention_days < 0:
+            raise CortexConfigError(
+                f"capture.raw_retention_days não pode ser negativo: {self.raw_retention_days}"
+            )
+        if self.correnda_min_evidence < 1:
+            raise CortexConfigError(
+                f"distillation.correnda_min_evidence mínimo é 1: {self.correnda_min_evidence}"
+            )
+        if self.llm_timeout_s <= 0:
+            raise CortexConfigError(
+                f"distillation.llm_timeout_s deve ser positivo: {self.llm_timeout_s}"
+            )
+        if self.llm not in _ALLOWED_LLM:
+            raise CortexConfigError(
+                f"distillation.llm={self.llm!r} inválido; use {' | '.join(sorted(_ALLOWED_LLM))}"
+            )
+        if self.distill_mode not in _ALLOWED_DISTILL_MODES:
+            raise CortexConfigError(
+                f"distillation.mode={self.distill_mode!r} inválido; "
+                f"use {' | '.join(sorted(_ALLOWED_DISTILL_MODES))}"
+            )
 
     @classmethod
     def load(cls, root: Path) -> CortexConfig:
         path = root / "cortex.toml"
-        cfg = cls()
-        if path.exists():
+        if not path.exists():
+            return cls()
+        return cls.load_from(path)
+
+    @classmethod
+    def load_from(cls, path: Path) -> CortexConfig:
+        """Parse and validate a cortex.toml at an exact path (item 3.2 uses
+        this to validate a candidate file before it replaces the real one)."""
+        try:
             data = tomllib.loads(path.read_text(encoding="utf-8"))
-            proj = data.get("project", {})
-            cfg.project_name = proj.get("name", cfg.project_name)
-            cfg.phase = proj.get("phase", cfg.phase)
-            cap = data.get("capture", {})
-            cfg.capture_enabled = bool(cap.get("enabled", cfg.capture_enabled))
-            cfg.raw_retention_days = int(cap.get("raw_retention_days", cfg.raw_retention_days))
-            dis = data.get("distillation", {})
-            cfg.distill_mode = dis.get("mode", cfg.distill_mode)
-            cfg.llm = dis.get("llm", cfg.llm)
-            cfg.ollama_url = dis.get("ollama_url", cfg.ollama_url)
-            cfg.llm_model = dis.get("llm_model", cfg.llm_model)
-            cfg.llm_timeout_s = float(dis.get("llm_timeout_s", cfg.llm_timeout_s))
-            cfg.min_confidence_for_persistence = float(
-                dis.get("min_confidence_for_persistence", cfg.min_confidence_for_persistence)
-            )
-            cfg.correnda_min_evidence = int(dis.get("correnda_min_evidence", cfg.correnda_min_evidence))
-            ctx = data.get("context", {})
-            cfg.context_max_tokens = int(ctx.get("max_tokens", cfg.context_max_tokens))
-            cfg.max_adrs = int(ctx.get("max_adrs", cfg.max_adrs))
-            cfg.max_intentions = int(ctx.get("max_intentions", cfg.max_intentions))
-            cfg.max_correndas = int(ctx.get("max_correndas", cfg.max_correndas))
-            cfg.include_recent_fixes = bool(ctx.get("include_recent_fixes", cfg.include_recent_fixes))
-            cfg.include_last_review = bool(ctx.get("include_last_review", cfg.include_last_review))
-            priv = data.get("privacy", {})
-            cfg.telemetry = bool(priv.get("telemetry", cfg.telemetry))
-            cfg.network_calls = bool(priv.get("network_calls", cfg.network_calls))
-            fed = data.get("federation", {})
-            cfg.federation_stores = fed.get("stores", cfg.federation_stores)
-        return cfg
+        except tomllib.TOMLDecodeError as exc:
+            raise CortexConfigError(f"cortex.toml não pôde ser interpretado: {exc}") from exc
+
+        defaults = cls()
+        proj = data.get("project", {})
+        cap = data.get("capture", {})
+        dis = data.get("distillation", {})
+        ctx = data.get("context", {})
+        priv = data.get("privacy", {})
+
+        return cls(
+            project_name=_as_str("project", "name", proj.get("name"), defaults.project_name),
+            phase=_as_str("project", "phase", proj.get("phase"), defaults.phase),
+            capture_enabled=_as_bool("capture", "enabled", cap.get("enabled"),
+                                     defaults.capture_enabled),
+            raw_retention_days=_as_int("capture", "raw_retention_days",
+                                        cap.get("raw_retention_days"),
+                                        defaults.raw_retention_days),
+            distill_mode=_as_str("distillation", "mode", dis.get("mode"),
+                                  defaults.distill_mode),
+            llm=_as_str("distillation", "llm", dis.get("llm"), defaults.llm),
+            ollama_url=_as_str("distillation", "ollama_url", dis.get("ollama_url"),
+                                defaults.ollama_url),
+            llm_model=_as_str("distillation", "llm_model", dis.get("llm_model"),
+                               defaults.llm_model),
+            llm_timeout_s=_as_float("distillation", "llm_timeout_s",
+                                     dis.get("llm_timeout_s"), defaults.llm_timeout_s),
+            min_confidence_for_persistence=_as_float(
+                "distillation", "min_confidence_for_persistence",
+                dis.get("min_confidence_for_persistence"),
+                defaults.min_confidence_for_persistence,
+            ),
+            correnda_min_evidence=_as_int(
+                "distillation", "correnda_min_evidence", dis.get("correnda_min_evidence"),
+                defaults.correnda_min_evidence,
+            ),
+            context_max_tokens=_as_int("context", "max_tokens", ctx.get("max_tokens"),
+                                        defaults.context_max_tokens),
+            max_adrs=_as_int("context", "max_adrs", ctx.get("max_adrs"),
+                              defaults.max_adrs, minimum=0),
+            max_intentions=_as_int("context", "max_intentions", ctx.get("max_intentions"),
+                                    defaults.max_intentions, minimum=0),
+            max_correndas=_as_int("context", "max_correndas", ctx.get("max_correndas"),
+                                   defaults.max_correndas, minimum=0),
+            include_recent_fixes=_as_bool("context", "include_recent_fixes",
+                                           ctx.get("include_recent_fixes"),
+                                           defaults.include_recent_fixes),
+            include_last_review=_as_bool("context", "include_last_review",
+                                          ctx.get("include_last_review"),
+                                          defaults.include_last_review),
+            telemetry=_as_bool("privacy", "telemetry", priv.get("telemetry"),
+                                defaults.telemetry),
+            network_calls=_as_bool("privacy", "network_calls", priv.get("network_calls"),
+                                    defaults.network_calls),
+        )
 
     def to_toml(self) -> str:
         return DEFAULT_CONFIG_TEMPLATE.format(project_name=self.project_name)

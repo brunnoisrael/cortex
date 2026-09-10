@@ -19,7 +19,7 @@ except ImportError:
 
 from cortex.capture.recorder import capture_event
 from cortex.compiler.compiler import CompileInput, compile_context, rank
-from cortex.config import CortexConfig
+from cortex.config import CortexConfig, CortexConfigError
 from cortex.distillation.engine import DistillationEngine
 from cortex.distillation.review import build_session_review
 from cortex.knowledge.models import (
@@ -44,16 +44,20 @@ def _ws():
         ws = detect_workspace(Path(root))
         if ws is None:
             raise RuntimeError(f"no workspace found at CORTEX_ROOT={root}")
-        return ws, CortexConfig.load(ws.root)
-    ws = detect_workspace(Path.cwd())
-    initialized = ws is not None and (
-        (ws.root / "cortex.toml").exists() or (ws.root / ".cortex").exists()
-    )
-    if not initialized:
-        raise RuntimeError(
-            "Cortex workspace not detected. Run `cortex init` or set CORTEX_ROOT."
+    else:
+        ws = detect_workspace(Path.cwd())
+        initialized = ws is not None and (
+            (ws.root / "cortex.toml").exists() or (ws.root / ".cortex").exists()
         )
-    return ws, CortexConfig.load(ws.root)
+        if not initialized:
+            raise RuntimeError(
+                "Cortex workspace not detected. Run `cortex init` or set CORTEX_ROOT."
+            )
+    try:
+        return ws, CortexConfig.load(ws.root)
+    except CortexConfigError as exc:
+        # Surfaced as a readable tool error to the agent, not a bare traceback.
+        raise RuntimeError(str(exc)) from exc
 
 
 def _store():
@@ -227,6 +231,9 @@ def cortex_distill(session_id: str = "") -> str:
             retention_days=cfg.raw_retention_days,
             llm=cfg.llm,
             ollama_url=cfg.ollama_url,
+            llm_model=cfg.llm_model,
+            llm_timeout_s=cfg.llm_timeout_s,
+            network_calls=cfg.network_calls,
         )
         report = engine.distill_session(session_id) if session_id else engine.distill_all()
         return report.summary() + (" | new: " + ", ".join(report.new_ids) if report.new_ids else "")
