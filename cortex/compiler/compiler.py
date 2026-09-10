@@ -218,12 +218,19 @@ def rank(
 
 
 
-def _tokens(text: str) -> int:
-    # ~1.4 tokens/word accounts for PT/EN morphology better than chars/4
-    # Optimized with input validation
+def token_estimate(text: str) -> int:
+    """Rough token estimate used for context-budget accounting (PRD §18.4).
+
+    ~1.4 tokens/word accounts for PT/EN morphology better than chars/4.
+    Public (renamed from `_tokens`, item 5.2) so tests can assert against
+    the actual estimator production uses, instead of duplicating a
+    different one and asserting on that."""
     if not text or not isinstance(text, str):
         return 0
     return max(1, int(len(text.split()) * 1.4))
+
+
+_tokens = token_estimate  # backwards-compat alias; cli/app.py imports this name
 
 
 def compile_context(store: KnowledgeStore, inp: CompileInput,
@@ -237,23 +244,24 @@ def compile_context(store: KnowledgeStore, inp: CompileInput,
         return _minimal_safe_context(store)  # PRD §42: never block the session
 
     block = ["<!-- CORTEX CONTEXT -->"]
-    used = sum(_tokens(ln) for ln in block)
+    used = sum(token_estimate(ln) for ln in block)
 
     def fits(line: str) -> bool:
-        return used + _tokens(line) <= max_tokens
+        return used + token_estimate(line) <= max_tokens
 
     def add(line: str) -> None:
         nonlocal used
         block.append(line)
-        used += _tokens(line)
+        used += token_estimate(line)
 
     emit_directive = "[DIRECTIVE] When making architectural decisions, rejecting alternatives, or fixing bugs, invoke `cortex_emit` to record structured knowledge."
     if fits(emit_directive):
         add(emit_directive)
 
-    project = store.stats()
-    if fits(f"PROJECT: {project.get('entities', {})}") and inp.branch:
-        add(f"BRANCH: {inp.branch}")
+    if inp.branch:
+        line = f"BRANCH: {inp.branch}"
+        if fits(line):
+            add(line)
 
     intentions = [r for r in ranked if r.entity.type == ArtifactType.INTENTION][:max_intentions]
     if intentions:
