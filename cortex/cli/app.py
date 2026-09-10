@@ -10,7 +10,7 @@ import typer
 
 from cortex.capture.recorder import capture_event
 from cortex.compiler.compiler import CompileInput, compile_context, rank
-from cortex.config import CortexConfig, write_default_config
+from cortex.config import CortexConfig, CortexConfigError, write_default_config
 from cortex.distillation.engine import DistillationEngine
 from cortex.distillation.review import build_session_review
 from cortex.git.context import git_context
@@ -42,7 +42,11 @@ def _require_workspace() -> tuple[Path, CortexConfig, KnowledgeStore]:
             "Cortex not initialized here. Run `cortex init` first.", fg=typer.colors.RED
         )
         raise typer.Exit(1)
-    cfg = CortexConfig.load(ws.root)
+    try:
+        cfg = CortexConfig.load(ws.root)
+    except CortexConfigError as exc:
+        typer.secho(f"config error: {exc}", fg=typer.colors.RED)
+        raise typer.Exit(1) from exc
     store = KnowledgeStore(ws.db_path)
     return ws.root, cfg, store
 
@@ -252,6 +256,7 @@ def distill(
         ollama_url=cfg.ollama_url,
         llm_model=cfg.llm_model,
         llm_timeout_s=cfg.llm_timeout_s,
+        network_calls=cfg.network_calls,
     )
     if dry_run:
         events = store.undistilled_events(session)
@@ -603,7 +608,12 @@ def hook(
     """Install or serve host hooks (Claude Code / Cursor adapters)."""
     if install:
         from cortex.adapters.installer import install_hooks
-        installed = install_hooks(install, Path.cwd())
+        ws = detect_workspace()
+        if ws is None:
+            typer.secho("✗ no workspace detected — run `cortex init` first.",
+                        fg=typer.colors.RED)
+            raise typer.Exit(1)
+        installed = install_hooks(install, ws.root)
         for path in installed:
             typer.secho(f"✓ hooks installed: {path}", fg=typer.colors.GREEN)
         return
@@ -770,7 +780,11 @@ def config(
         _config_set(ws.root, set_key, value)
         typer.secho(f"✓ {set_key} = {value}", fg=typer.colors.GREEN)
         return
-    cfg = CortexConfig.load(ws.root)
+    try:
+        cfg = CortexConfig.load(ws.root)
+    except CortexConfigError as exc:
+        typer.secho(f"config error: {exc}", fg=typer.colors.RED)
+        raise typer.Exit(1) from exc
     for field_ in vars(cfg):
         typer.echo(f"{field_} = {getattr(cfg, field_)}")
 
@@ -780,6 +794,8 @@ CONFIG_SECTIONS = {
     "capture.enabled": "capture", "capture.raw_retention_days": "capture",
     "distillation.mode": "distillation", "distillation.llm": "distillation",
     "distillation.ollama_url": "distillation",
+    "distillation.llm_model": "distillation",
+    "distillation.llm_timeout_s": "distillation",
     "distillation.min_confidence_for_persistence": "distillation",
     "distillation.correnda_min_evidence": "distillation",
     "context.max_tokens": "context", "context.max_adrs": "context",
@@ -788,13 +804,65 @@ CONFIG_SECTIONS = {
     "privacy.telemetry": "privacy", "privacy.network_calls": "privacy",
 }
 
+# Keys whose TOML value must be a bare `true`/`false` or numeric literal
+# (everything else is treated as a string and JSON-quoted — see
+# _coerce_config_value). This is the type table `--set` validates against;
+# CortexConfig.__post_init__ still validates ranges/enums on top of it.
+_BOOL_KEYS = {"capture.enabled", "context.include_recent_fixes",
+              "context.include_last_review", "privacy.telemetry", "privacy.network_calls"}
+_INT_KEYS = {"capture.raw_retention_days", "distillation.correnda_min_evidence",
+             "context.max_tokens", "context.max_adrs", "context.max_intentions",
+             "context.max_correndas"}
+_FLOAT_KEYS = {"distillation.min_confidence_for_persistence", "distillation.llm_timeout_s"}
+
+
+def _coerce_config_value(key: str, value: str) -> str:
+    """Convert/validate a `--set` value and return the literal to write into
+    the TOML file. String keys are always JSON-quoted: TOML basic strings and
+    JSON strings agree on escaping, so a value containing a newline or `"`
+    can never break out into a new key/section (item 3.2's injection case)."""
+    if key in _BOOL_KEYS:
+        if value.lower() not in ("true", "false"):
+            raise CortexConfigError(f"{key}: use true ou false, recebido {value!r}")
+        return value.lower()
+    if key in _INT_KEYS:
+        try:
+            int(value)
+        except ValueError as exc:
+            raise CortexConfigError(f"{key}: esperado inteiro, recebido {value!r}") from exc
+        return value
+    if key in _FLOAT_KEYS:
+        try:
+            float(value)
+        except ValueError as exc:
+            raise CortexConfigError(f"{key}: esperado número, recebido {value!r}") from exc
+        return value
+    if "\n" in value or "\r" in value:
+        # A newline could only be an attempt to inject a new key/section on
+        # the next line; every string key here is a single-line value.
+        raise CortexConfigError(f"{key}: valor não pode conter quebra de linha")
+    return json.dumps(value)  # TOML basic string == JSON string here → quotes/backslashes escaped safely
+
 
 def _config_set(root: Path, key: str, value: str) -> None:
-    """Update one validated key in cortex.toml, preserving the rest."""
+    """Update one validated key in cortex.toml, preserving the rest.
+
+    Validates and writes atomically (item 3.2): the coerced value is
+    type-checked *before* anything touches disk; the candidate file is
+    written to a `.tmp` sibling and only replaces cortex.toml once the
+    *whole* resulting file both parses as TOML and passes
+    CortexConfig.__post_init__ validation. A failure at any step leaves
+    the original cortex.toml byte-for-byte untouched and removes the .tmp."""
     if key not in CONFIG_SECTIONS:
         typer.secho(f"unknown key: {key}. Valid keys: {', '.join(sorted(CONFIG_SECTIONS))}",
                     fg=typer.colors.RED)
         raise typer.Exit(1)
+    try:
+        coerced = _coerce_config_value(key, value)
+    except CortexConfigError as exc:
+        typer.secho(str(exc), fg=typer.colors.RED)
+        raise typer.Exit(1) from exc
+
     section = CONFIG_SECTIONS[key]
     name = key.split(".", 1)[1]
     path = root / "cortex.toml"
@@ -807,7 +875,7 @@ def _config_set(root: Path, key: str, value: str) -> None:
         if stripped.startswith("[") and stripped.endswith("]"):
             current_section = stripped[1:-1]
         if current_section == section and stripped.split("=")[0].strip() == name:
-            out.append(f"{name} = {value}")
+            out.append(f"{name} = {coerced}")
             replaced = True
         else:
             out.append(line)
@@ -816,11 +884,19 @@ def _config_set(root: Path, key: str, value: str) -> None:
         if section in [ln.strip()[1:-1] for ln in out if ln.strip().startswith("[")]:
             insert_at = max(i for i, ln in enumerate(out)
                             if ln.strip() == f"[{section}]") + 1
-            out.insert(insert_at, f"{name} = {value}")
+            out.insert(insert_at, f"{name} = {coerced}")
         else:
-            out += ["", f"[{section}]", f"{name} = {value}"]
-    path.write_text("\n".join(out) + "\n", encoding="utf-8")
-    CortexConfig.load(root)  # validate it still parses
+            out += ["", f"[{section}]", f"{name} = {coerced}"]
+
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text("\n".join(out) + "\n", encoding="utf-8")
+    try:
+        CortexConfig.load_from(tmp)  # full parse + range/enum validation
+    except CortexConfigError as exc:
+        tmp.unlink(missing_ok=True)
+        typer.secho(f"update would produce invalid config: {exc}", fg=typer.colors.RED)
+        raise typer.Exit(1) from exc
+    tmp.replace(path)  # atomic on POSIX and Windows (os.replace, Python >=3.3)
 
 
 def main() -> None:
