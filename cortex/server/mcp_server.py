@@ -130,7 +130,12 @@ def cortex_recall(query: str, scope: list[str] | None = None,
 @mcp.tool()
 def cortex_remember(statement: str, kind: str = "intention", motivation: str = "",
                     scope: list[str] | None = None) -> str:
-    """Explicitly record knowledge: kind = intention | adr | correnda."""
+    """Explicitly record knowledge: kind = intention | adr | correnda.
+
+    This tool is invoked by the agent, so nothing here can verify a human
+    was in the loop — recorded knowledge is agent_inferred and PROPOSED,
+    exactly like cortex_emit. Human confirmation stays a CLI governance
+    action (`cortex correnda confirm` / `cortex adrs accept`)."""
     _, _, store = _store()
     try:
         etype = ArtifactType(kind)
@@ -140,17 +145,17 @@ def cortex_remember(statement: str, kind: str = "intention", motivation: str = "
     ent_type_map = {
         "intention": {"motivation": motivation},
         "adr": {"context": motivation, "decision": statement, "alternatives_rejected": []},
-        "correnda": {"rule": statement, "origin": [], "confirmed_by_human": True},
+        "correnda": {"rule": statement, "origin": [], "confirmed_by_human": False},
     }
     ent = Entity(
         id=eid, type=etype, statement=statement,
-        status=Status.ACTIVE, authority=Authority.HUMAN_CONFIRMED, confidence=0.95,
+        status=Status.PROPOSED, authority=Authority.AGENT_INFERRED, confidence=0.85,
         scope=scope or [], session_id=session_id_for("mcp"),
         details=ent_type_map.get(kind, {}),
-        provenance=Provenance(extraction_source="explicit_user_statement"),
+        provenance=Provenance(extraction_source="explicit_agent_statement"),
     )
     store.upsert(ent)
-    return f"recorded {eid} ({kind}, human_confirmed)"
+    return f"recorded {eid} ({kind}, proposed — confirm via CLI governance to activate)"
 
 
 @mcp.tool()
