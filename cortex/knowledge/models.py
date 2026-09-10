@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import time
 import uuid
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
@@ -138,7 +139,27 @@ CorrendaDetails = dict  # rule, origin fix ids, confirmed_by_human
 
 
 def _utcnow() -> str:
+    # Compact second-resolution Zulu format: lexicographic order == chronological
+    # order, which purge_old_events() and ORDER BY rely on. Keep it stable.
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+
+def parse_utc(ts: str) -> datetime | None:
+    """Tolerant ISO-8601 parser for stored timestamps.
+
+    Stores written by older releases (or hosts embedding their own event
+    timestamps) may carry offsets, microseconds or 'Z'. `fromisoformat`
+    handles all of those since 3.11; anything unparseable returns None so
+    callers skip the entity with a signal instead of faking freshness."""
+    if not ts or not isinstance(ts, str):
+        return None
+    try:
+        dt = datetime.fromisoformat(ts.strip())
+    except ValueError:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=UTC)
+    return dt
 
 
 def session_id_for(host: str) -> str:

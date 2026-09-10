@@ -29,6 +29,7 @@ from cortex.knowledge.models import (
     Provenance,
     Status,
     _utcnow,
+    parse_utc,
 )
 from cortex.storage.store import KnowledgeStore
 
@@ -450,28 +451,15 @@ def _needs_contradiction_check(e: Entity) -> bool:
     updated_at, so any later mutation re-triggers the check — including the
     contradiction_pending flag itself, which is intentional: the next run
     re-validates flagged pairs until a human resolves them."""
-    checked = e.freshness.contradiction_checked_at
-    if not checked:
+    checked = parse_utc(e.freshness.contradiction_checked_at or "")
+    updated = parse_utc(e.updated_at)
+    if checked is None or updated is None:
         return True
-    checked_dt = _parse_utc(checked)
-    updated_dt = _parse_utc(e.updated_at)
-    if checked_dt is None or updated_dt is None:
-        return True
-    return updated_dt > checked_dt
-
-
-def _parse_utc(ts: str) -> datetime | None:
-    try:
-        return datetime.strptime(ts.replace("Z", ""), "%Y-%m-%dT%H:%M:%S").replace(
-            tzinfo=UTC)
-    except ValueError:
-        return None
+    return updated > checked
 
 
 def _days_since(ts: str) -> float | None:
-    try:
-        dt = datetime.strptime(ts.replace("Z", ""), "%Y-%m-%dT%H:%M:%S").replace(
-            tzinfo=UTC)
-        return (datetime.now(UTC) - dt).days
-    except ValueError:
+    dt = parse_utc(ts)
+    if dt is None:
         return None  # caller skips the entity and counts it — never fakes freshness
+    return (datetime.now(UTC) - dt).days

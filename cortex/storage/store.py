@@ -323,10 +323,21 @@ class KnowledgeStore:
         # leave the entity invisible to search.
         with self._write_txn():
             self.conn.execute(
-                "INSERT OR REPLACE INTO entities "
+                # ON CONFLICT DO UPDATE, not INSERT OR REPLACE: REPLACE is
+                # DELETE+INSERT (fires delete-side cascades/triggers, and would
+                # break any future FK referencing entities.id).
+                "INSERT INTO entities "
                 "(id, type, status, authority, confidence, statement, details, scope, phase,"
                 " session_id, provenance, freshness, superseded_by, created_at, updated_at)"
-                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                " ON CONFLICT(id) DO UPDATE SET"
+                " type=excluded.type, status=excluded.status,"
+                " authority=excluded.authority, confidence=excluded.confidence,"
+                " statement=excluded.statement, details=excluded.details,"
+                " scope=excluded.scope, phase=excluded.phase,"
+                " session_id=excluded.session_id, provenance=excluded.provenance,"
+                " freshness=excluded.freshness, superseded_by=excluded.superseded_by,"
+                " created_at=excluded.created_at, updated_at=excluded.updated_at",
                 (
                     entity.id,
                     entity.type.value,

@@ -44,6 +44,37 @@ def test_affirmative_decision_still_extracts():
     assert len(adrs) == 1 and adrs[0].etype == ArtifactType.ADR
 
 
+# ---------- store: tolerant ISO-8601 timestamp parsing ----------
+
+def test_parse_utc_accepts_iso_variants():
+    from datetime import UTC, datetime
+
+    from cortex.knowledge.models import parse_utc
+
+    zulu = parse_utc("2026-09-10T12:00:00Z")
+    assert zulu is not None and zulu.tzinfo is not None
+    offset = parse_utc("2026-09-10T12:00:00+02:00")
+    assert offset is not None
+    micros = parse_utc("2026-09-10T12:00:00.123456Z")
+    assert micros is not None
+    naive = parse_utc("2026-09-10T12:00:00")
+    assert naive is not None and naive.tzinfo == UTC
+    assert parse_utc("garbage") is None
+    assert parse_utc("") is None
+    assert parse_utc(None) is None
+
+
+def test_days_since_accepts_offset_timestamps():
+    """An event timestamp from a host that embeds its own ISO format (offset
+    or microseconds) must still age normally — the strict strptime used to
+    mark it unparsed and skip staleness forever."""
+    from cortex.distillation.engine import _days_since
+
+    assert _days_since("2020-01-01T00:00:00Z") is not None
+    assert _days_since("2020-01-01T00:00:00+05:30") is not None
+    assert _days_since("2020-01-01T00:00:00.999999Z") is not None
+
+
 # ---------- performance: incremental contradiction pass ----------
 
 def test_contradiction_pass_does_not_recount_stable_pairs(store):
