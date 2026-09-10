@@ -151,7 +151,7 @@ class KnowledgeStore:
         self.conn.executescript(SCHEMA)
         self._migrate()
 
-    def __enter__(self) -> "KnowledgeStore":
+    def __enter__(self) -> KnowledgeStore:
         return self
 
     def __exit__(self, exc_type, exc, tb) -> None:
@@ -189,9 +189,6 @@ class KnowledgeStore:
             # newer release (stored > SCHEMA_VERSION would be a downgrade).
             self.conn.execute(f"PRAGMA user_version = {version}")
         self.schema_version = version
-
-    def close(self) -> None:
-        self.conn.close()
 
     # ---- sessions ----
 
