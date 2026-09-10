@@ -2,11 +2,19 @@
 
 from __future__ import annotations
 
+import re
+
 from cortex.knowledge.models import ArtifactType, Authority, Entity, Provenance, Status
 from cortex.storage.store import KnowledgeStore
 
-UNRESOLVED_RE = ("pendente", "unresolved", "ficou faltando", "open question", "todo",
+UNRESOLVED_RE = ("pendente", "unresolved", "ficou faltando", "open question",
                  "not resolved", "ainda falta")
+# Bare "todo" as a plain substring check (the tuple above) matches inside
+# ordinary Portuguese words — "todos", "método", etc. — none of which mean
+# an unresolved code-comment TODO. Match it only as the actual code-comment
+# marker: capitalized TODO as a whole word, or "todo:" with a colon (case
+# folded, since that's a deliberate marker either way).
+UNRESOLVED_TODO_RE = re.compile(r"\bTODO\b|todo:")
 RISK_RE = ("risco", "risk", "cuidado", "careful")
 
 
@@ -38,9 +46,10 @@ def build_session_review(store: KnowledgeStore, session_id: str) -> Entity | Non
 
     events = store.all_events(session_id)
     for e in events:
-        content = (e.get("content") or "").lower()
-        if any(m in content for m in UNRESOLVED_RE):
-            unresolved.append((e.get("content") or "")[:160])
+        raw_content = e.get("content") or ""
+        content = raw_content.lower()
+        if any(m in content for m in UNRESOLVED_RE) or UNRESOLVED_TODO_RE.search(raw_content):
+            unresolved.append(raw_content[:160])
 
     eid = store.reserve_entity_id(ArtifactType.REVIEW)
     review = Entity(
