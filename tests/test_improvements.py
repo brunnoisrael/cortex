@@ -589,6 +589,33 @@ def test_config_has_llm_model_and_timeout(tmp_path):
     assert cfg.llm_timeout_s == 12.5
 
 
+def test_stop_hook_caps_llm_timeout_to_ten_seconds(project, monkeypatch):
+    """Acceptance criterion #3 (PLANO §7): a configured llm_timeout_s of 30s
+    must not hold the Stop hook that long — _auto_distill caps it to 10s
+    regardless of what cortex.toml says, since it runs at the end of every
+    session."""
+    (project / "cortex.toml").write_text(
+        '[distillation]\nllm = "auto"\nllm_timeout_s = 30\n', encoding="utf-8")
+    captured = {}
+    real_init = DistillationEngine.__init__
+
+    def spy_init(self, store, **kw):
+        captured.update(kw)
+        real_init(self, store, **kw)
+
+    monkeypatch.setattr(DistillationEngine, "__init__", spy_init)
+    from cortex.adapters.installer import handle_hook_payload
+    handle_hook_payload({
+        "session_id": "sess-cap-1", "hook_event_name": "UserPromptSubmit",
+        "prompt": "Vamos usar Kafka porque precisamos de fila durável.",
+        "cwd": str(project),
+    }, project)
+    handle_hook_payload({
+        "session_id": "sess-cap-1", "hook_event_name": "Stop", "cwd": str(project),
+    }, project)
+    assert captured["llm_timeout_s"] == 10.0
+
+
 def test_extractor_failure_is_isolated(store, monkeypatch):
     """One broken extractor must not sink the others' candidates."""
     store.ensure_session("s1", "test")
