@@ -109,7 +109,6 @@ class DistillationEngine:
         candidates = self._extract(events, report)
 
         existing = self.store.all_entities()
-        existing_statements = {e.statement.lower() for e in existing}
 
         for cand in candidates:
             if cand.confidence < self.min_confidence:
@@ -122,7 +121,6 @@ class DistillationEngine:
                 continue
             entity = self._persist_candidate(cand)
             existing.append(entity)
-            existing_statements.add(cand.statement.lower())
             report.new_ids.append(entity.id)
             self._count(report, entity.type)
 

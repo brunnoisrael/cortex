@@ -17,7 +17,6 @@ WORKSPACE_MARKERS = [
 
 CORTEX_DIR = ".cortex"
 STORE_FILE = "cortex.db"
-SESSIONS_FILE = "sessions.jsonl"
 
 
 @dataclass
@@ -32,16 +31,6 @@ class Workspace:
     @property
     def db_path(self) -> Path:
         return self.cortex_dir / STORE_FILE
-
-    @property
-    def events_path(self) -> Path:
-        return self.cortex_dir / SESSIONS_FILE
-
-    @property
-    def project_id(self) -> str:
-        """Stable identity derived from the absolute root path, not folder name."""
-        import hashlib
-        return hashlib.sha256(str(self.root.resolve()).encode()).hexdigest()[:16]
 
 
 def detect_workspace(start: Path | None = None) -> Workspace | None:

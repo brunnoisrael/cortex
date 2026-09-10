@@ -45,13 +45,6 @@ class Authority(str, Enum):
 
 
 # Context authority tiers (PRD §48): higher tier = more authoritative source.
-AUTHORITY_TIER = {
-    Authority.OBSERVED: 3,
-    Authority.AGENT_INFERRED: 4,
-    Authority.REPOSITORY_VERIFIED: 2,
-    Authority.HUMAN_CONFIRMED: 1,
-}
-
 AUTHORITY_WEIGHT = {
     Authority.OBSERVED: 0.65,
     Authority.AGENT_INFERRED: 0.70,
@@ -146,19 +139,3 @@ def _utcnow() -> str:
 
 def session_id_for(host: str) -> str:
     return f"sess-{host[:4].lower()}-{uuid.uuid4().hex[:6]}"
-
-
-def classify_knowledge_kind(statement: str) -> str | None:
-    """Detect negative knowledge (PRD §45) categories from phrasing."""
-    s = statement.lower()
-    checks = [
-        ("rejected decision", ("rejeitad", "rejected", "descartad")),
-        ("failed approach", ("falhou", "failed", "não funcionou", "did not work")),
-        ("known limitation", ("limitação", "limitation", "não suporta")),
-        ("unsafe pattern", ("unsafe", "inseguro", "evitar", "avoid")),
-        ("superseded approach", ("substituí", "superseded", "replaced by")),
-    ]
-    for kind, needles in checks:
-        if any(n in s for n in needles):
-            return kind
-    return None

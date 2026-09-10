@@ -26,12 +26,10 @@ def build_session_review(store: KnowledgeStore, session_id: str) -> Entity | Non
     counts: dict[str, int] = {"intentions": 0, "adrs": 0, "fixes": 0, "correndas_proposed": 0}
     unresolved: list[str] = []
     risks: list[str] = []
-    produced_ids: list[str] = []
 
     for ent in store.all_entities():
         if ent.session_id != session_id:
             continue
-        produced_ids.append(ent.id)
         if ent.type == ArtifactType.INTENTION:
             counts["intentions"] += 1
         elif ent.type == ArtifactType.ADR:
