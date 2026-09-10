@@ -6,6 +6,7 @@ score = semantic_relevance x scope_match x authority_weight x confidence
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 
 from cortex.distillation.extractors import dense_semantic_similarity
@@ -102,7 +103,7 @@ def rank(
         
     files = inp.files or []
     stores = [store] + (federated_stores or [])
-    
+
     # Onda 12 & Onda 13: Weight auto-calibration and hybrid search parameters
     w = {
         "authority": 1.0,
@@ -111,9 +112,16 @@ def rank(
         "sparse": 0.55,
         "dense": 0.45,
         "density": 0.25,
-        **(weights_override or {}),
     }
-    
+    if weights_override:
+        unknown = set(weights_override) - set(w)
+        if unknown:
+            raise ValueError(
+                f"rank(): unknown weight key(s) {sorted(unknown)}; valid keys are "
+                f"{sorted(w)} (a typo here would silently be ignored otherwise)"
+            )
+        w.update(weights_override)
+
     items: list[RankedItem] = []
     for s_idx, st in enumerate(stores):
         is_federated = s_idx > 0
@@ -125,6 +133,10 @@ def rank(
                     mx = max(s for _, s in results) or 1.0
                     fts = {e.id: s / mx for e, s in results}
             except Exception:
+                logging.getLogger("cortex.compiler").warning(
+                    "FTS search failed for store %s; ranking continues without it",
+                    getattr(st, "db_path", st), exc_info=True,
+                )
                 fts = {}
 
         for ent in st.all_entities():
