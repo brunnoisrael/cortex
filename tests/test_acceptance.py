@@ -186,8 +186,10 @@ def test_H_budget_respected(store):
     make_engine(store).distill_session("s1")
     small = compile_context(store, CompileInput(query="decisões do projeto"),
                             max_tokens=300)
-    est = len(small) // 4
-    assert est <= 320, f"context too large: ~{est} tokens for budget 300"
+    from cortex.compiler.compiler import token_estimate
+    assert token_estimate(small) <= 300, (
+        f"context too large: ~{token_estimate(small)} tokens for budget 300"
+    )
     assert small.startswith("<!-- CORTEX CONTEXT -->")
     assert small.rstrip().endswith("<!-- END CORTEX CONTEXT -->")
 
@@ -200,7 +202,7 @@ def test_redaction_strips_secrets(store):
     capture_event(store, {"type": "user_instruction", "session_id": "s1", "content": raw})
     events = store.conn.execute("SELECT content FROM events").fetchall()
     contents = [r["content"] for r in events]
-    assert any("sk-proj-abc123" not in (c or "") for c in contents)
+    assert all("sk-proj-abc123" not in (c or "") for c in contents)
     assert all("SuperSecret9" not in (c or "") for c in contents)
 
 
