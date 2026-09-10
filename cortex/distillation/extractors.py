@@ -39,8 +39,10 @@ INTENTION_RE = re.compile(
     re.IGNORECASE,
 )
 NEGATIVE_RE = re.compile(
-    r"\b(não usar|não utilize|não usaremos|não recomend|don't use|do not use|"
-    r"avoid using|never use|rejected? because)\b\s+([A-Za-z0-9_\-\.]{2,40})",
+    r"\b(não usar|não utilize|não usaremos|não recomend|não vamos usar|não vamos adotar|"
+    r"não vamos migrar|don't use|do not use|avoid using|never use|"
+    r"we will not use|we won't use|we decided not to use|rejected? because)\b"
+    r"\s+([A-Za-z0-9_\-\.]{2,40})",
     re.IGNORECASE,
 )
 FIX_MARKER_RE = re.compile(
@@ -111,6 +113,12 @@ def extract_decisions(events: list[dict]) -> list[Candidate]:
             continue
         text = _clean(e.get("content"))
         if not text or not DECISION_RE.search(text):
+            continue
+        # Negation-first: "não vamos usar X" / "we decided not to use X"
+        # matches DECISION_RE's verb ("vamos usar"/"we decided") but asserts
+        # the *rejection* of X — that is negative knowledge, not an ADR
+        # claiming X. extract_negative_knowledge owns those events.
+        if NEGATIVE_RE.search(text):
             continue
         if e["type"] == "commit":
             source = "code_git_evidence"

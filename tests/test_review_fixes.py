@@ -8,9 +8,40 @@ from __future__ import annotations
 from pathlib import Path
 
 import cortex.server.mcp_server as mcp_server
-from cortex.knowledge.models import Authority, Status
+from cortex.distillation.extractors import extract_decisions, extract_negative_knowledge
+from cortex.knowledge.models import ArtifactType, Authority, Status
 from cortex.storage.store import KnowledgeStore
 from cortex.workspace import CORTEX_DIR
+
+
+def _ev(content: str) -> dict:
+    return {"id": "evt-t1", "type": "user_instruction", "session_id": "s1",
+            "content": content, "files": []}
+
+
+# ---------- extraction: negation-first decision detection ----------
+
+def test_negated_decision_is_negative_knowledge_not_adr():
+    events = [_ev("Não vamos usar DynamoDB neste domínio")]
+    assert extract_decisions(events) == [], (
+        "'não vamos usar X' asserts the rejection of X — must not become an ADR"
+    )
+    negs = extract_negative_knowledge(events)
+    assert len(negs) == 1
+    assert negs[0].etype == ArtifactType.NEGATIVE_KNOWLEDGE
+    assert "DynamoDB" in negs[0].statement
+
+
+def test_negated_decision_english_variant():
+    events = [_ev("We decided not to use MongoDB because the schema is predictable")]
+    assert extract_decisions(events) == []
+    assert len(extract_negative_knowledge(events)) == 1
+
+
+def test_affirmative_decision_still_extracts():
+    events = [_ev("Vamos usar MySQL 8 porque simplicidade")]
+    adrs = extract_decisions(events)
+    assert len(adrs) == 1 and adrs[0].etype == ArtifactType.ADR
 
 
 # ---------- governance: cortex_remember authority escalation ----------
