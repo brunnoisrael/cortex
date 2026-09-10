@@ -112,17 +112,22 @@ def run_ccb(root: Path | None = None) -> dict:
     if root is None:
         tmp = tempfile.TemporaryDirectory()
         root = Path(tmp.name)
-    (root / "src" / "handlers").mkdir(parents=True, exist_ok=True)
-    (root / "src" / "db").mkdir(parents=True, exist_ok=True)
-    (root / "src" / "auth").mkdir(parents=True, exist_ok=True)
-    write_default_config(root, "ccb-fixture")
-    ensure_cortex_dir(root)
-    store = KnowledgeStore(root / ".cortex" / "cortex.db")
     try:
-        _seed_history(store)
-        return _evaluate(store)
+        (root / "src" / "handlers").mkdir(parents=True, exist_ok=True)
+        (root / "src" / "db").mkdir(parents=True, exist_ok=True)
+        (root / "src" / "auth").mkdir(parents=True, exist_ok=True)
+        write_default_config(root, "ccb-fixture")
+        ensure_cortex_dir(root)
+        store = KnowledgeStore(root / ".cortex" / "cortex.db")
+        try:
+            _seed_history(store)
+            return _evaluate(store)
+        finally:
+            store.close()
     finally:
-        store.close()
+        # Covers setup failures too (mkdir/config/store-open), not just the
+        # evaluation itself — a failure between creating the TemporaryDirectory
+        # and entering the inner try used to leak it on disk (item A.4).
         if tmp:
             tmp.cleanup()
 
