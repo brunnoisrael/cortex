@@ -374,6 +374,7 @@ def test_distill_does_not_mark_events_on_extraction_failure(store, monkeypatch):
 
 def test_hook_exit_code_signals_failure(tmp_path, monkeypatch):
     from typer.testing import CliRunner
+
     from cortex.cli.app import app
     monkeypatch.chdir(tmp_path)  # no workspace markers → hook payload fails
     runner = CliRunner()
@@ -386,6 +387,7 @@ def test_hook_exit_code_signals_failure(tmp_path, monkeypatch):
 
 def test_hook_exit_code_zero_on_success(project, monkeypatch):
     from typer.testing import CliRunner
+
     from cortex.cli.app import app
     monkeypatch.chdir(project)
     runner = CliRunner()
@@ -432,7 +434,10 @@ def test_reserve_entity_id_is_atomic_across_connections(project):
 
         t1 = threading.Thread(target=hammer)
         t2 = threading.Thread(target=hammer)
-        t1.start(); t2.start(); t1.join(); t2.join()
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
         assert not errors, errors
     finally:
         a.close()
@@ -464,6 +469,7 @@ def test_one_malformed_row_does_not_poison_reads(store):
 
 def test_store_upgrades_legacy_db_without_user_version(tmp_path):
     import sqlite3
+
     from cortex.storage.store import MIGRATIONS, SCHEMA, SCHEMA_VERSION
     db = tmp_path / "c.db"
     legacy_v1 = SCHEMA.replace("    meta TEXT,\n    host TEXT,\n", "    meta TEXT,\n")
@@ -487,8 +493,8 @@ def test_store_upgrades_legacy_db_without_user_version(tmp_path):
 
 
 def test_fresh_store_is_current_schema(project):
-    from cortex.workspace import CORTEX_DIR
     from cortex.storage.store import SCHEMA_VERSION
+    from cortex.workspace import CORTEX_DIR
     store2 = KnowledgeStore(project / CORTEX_DIR / "cortex.db")
     try:
         assert store2.schema_version == SCHEMA_VERSION
@@ -532,7 +538,6 @@ def test_llm_candidates_provenance_is_honest(store):
 
 def test_llm_explicit_mode_probes_availability(store, monkeypatch):
     """llm="ollama" com servidor caído: probe de 2s, sem chamada de extract."""
-    import cortex.distillation.engine as eng
     calls = {"extract": 0}
     monkeypatch.setattr(
         "cortex.distillation.llm.OllamaDistiller.available", lambda self: False)

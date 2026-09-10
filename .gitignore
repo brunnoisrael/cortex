@@ -9,6 +9,11 @@ dist/
 # Lint cache
 .ruff_cache/
 
+# Type-check / coverage artifacts
+.mypy_cache/
+.coverage
+htmlcov/
+
 # Documentos internos de processo/implementação — não fazem parte do produto
 REFINAMENTO.md
 CORTEX_SUPER_EVOLUCAO.md
