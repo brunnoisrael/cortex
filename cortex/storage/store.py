@@ -28,7 +28,7 @@ from cortex.knowledge.models import (
     _utcnow,
 )
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 # Maps ArtifactType -> short id prefix used by reserve_entity_id.
 _PREFIX_BY_TYPE: dict[ArtifactType, str] = {
@@ -50,8 +50,23 @@ def _migration_002_events_host(conn: sqlite3.Connection) -> None:
         conn.execute("ALTER TABLE events ADD COLUMN host TEXT")
 
 
+def _migration_003_entities_quarantine(conn: sqlite3.Connection) -> None:
+    """003 (additive): quarantine table for `doctor --fix` (item 2.2
+    follow-up) — moving a malformed row here instead of deleting it keeps
+    the raw data recoverable (Principle 2: never lose evidence)."""
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS entities_quarantine (
+            id TEXT,
+            raw_row TEXT NOT NULL,
+            error TEXT NOT NULL,
+            quarantined_at TEXT NOT NULL
+        )
+    """)
+
+
 MIGRATIONS: dict[int, Callable[[sqlite3.Connection], None]] = {
     2: _migration_002_events_host,
+    3: _migration_003_entities_quarantine,
 }
 
 SCHEMA = """
@@ -123,6 +138,12 @@ CREATE TABLE IF NOT EXISTS distill_runs (
 CREATE INDEX IF NOT EXISTS idx_distill_runs_ts ON distill_runs(ts);
 CREATE VIRTUAL TABLE IF NOT EXISTS entities_fts USING fts5(
     id UNINDEXED, text
+);
+CREATE TABLE IF NOT EXISTS entities_quarantine (
+    id TEXT,
+    raw_row TEXT NOT NULL,
+    error TEXT NOT NULL,
+    quarantined_at TEXT NOT NULL
 );
 """
 
@@ -549,9 +570,13 @@ class KnowledgeStore:
     def reserve_entity_id(self, etype: ArtifactType) -> str:
         return f"{_PREFIX_BY_TYPE[etype]}-{self._mint_seq(etype.value):04d}"
 
-    def _row_to_entity(self, row: sqlite3.Row) -> Entity | None:
+    def _row_to_entity(self, row: sqlite3.Row, count: bool = True) -> Entity | None:
         """Degrade with signal (Principle 1): one malformed row must never
-        poison every reader — skip it, count it, log the id."""
+        poison every reader — skip it, count it, log the id.
+
+        `count=False` is used by quarantine_malformed()'s detection pass, so
+        that pass doesn't double the malformed_rows counter on top of
+        whatever a prior all_entities() call already counted."""
         from cortex.knowledge.models import Freshness, Provenance
         try:
             return Entity(
@@ -572,7 +597,36 @@ class KnowledgeStore:
                 updated_at=row["updated_at"],
             )
         except Exception as exc:
-            self.malformed_rows += 1
+            if count:
+                self.malformed_rows += 1
             logging.getLogger("cortex.store").error(
                 "malformed entity row skipped: id=%s err=%s", row["id"], exc)
             return None
+
+    def quarantine_malformed(self) -> list[str]:
+        """`cortex doctor --fix`: move entity rows that fail to parse into
+        entities_quarantine (raw column values as JSON + the error message),
+        then delete them from `entities`.
+
+        Never destroys the data (Principle 2: never lose evidence) — it
+        just gets unreadable rows out of the read path so all_entities()/
+        search() stop skipping (and re-logging) them on every call. Returns
+        the ids quarantined."""
+        rows = self.conn.execute("SELECT * FROM entities").fetchall()
+        quarantined: list[str] = []
+        with self._write_txn():
+            for row in rows:
+                if self._row_to_entity(row, count=False) is not None:
+                    continue
+                raw = {k: row[k] for k in row.keys()}
+                self.conn.execute(
+                    "INSERT INTO entities_quarantine (id, raw_row, error, quarantined_at) "
+                    "VALUES (?, ?, ?, ?)",
+                    (row["id"], json.dumps(raw, default=str),
+                     "failed to parse as Entity", _utcnow()),
+                )
+                self.conn.execute("DELETE FROM entities WHERE id = ?", (row["id"],))
+                self.conn.execute("DELETE FROM entities_fts WHERE id = ?", (row["id"],))
+                quarantined.append(row["id"])
+        self.malformed_rows = max(0, self.malformed_rows - len(quarantined))
+        return quarantined

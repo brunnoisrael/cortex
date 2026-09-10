@@ -142,7 +142,9 @@ def _logs(store: KnowledgeStore) -> list[str]:
 
 
 @app.command()
-def doctor() -> None:
+def doctor(fix: bool = typer.Option(False, "--fix",
+                                    help="Quarantine malformed entity rows (data is kept, "
+                                         "not deleted — see entities_quarantine).")) -> None:
     """Diagnose local setup (PRD §41)."""
     ws = detect_workspace()
     if ws is None:
@@ -169,12 +171,21 @@ def doctor() -> None:
             checks["schema version"] = store.schema_version > 0
             store.all_entities()  # hydrate every row: malformed ones get counted
             if store.malformed_rows:
-                checks["entity rows readable"] = False
-                typer.secho(
-                    f"! {store.malformed_rows} entity rows are malformed and were"
-                    " skipped (ids logged). Run `cortex doctor --fix` to quarantine them.",
-                    fg=typer.colors.YELLOW,
-                )
+                if fix:
+                    quarantined = store.quarantine_malformed()
+                    typer.secho(
+                        f"✓ quarantined {len(quarantined)} malformed entity row(s) "
+                        "into entities_quarantine (data preserved, not deleted).",
+                        fg=typer.colors.GREEN,
+                    )
+                    checks["entity rows readable"] = True
+                else:
+                    checks["entity rows readable"] = False
+                    typer.secho(
+                        f"! {store.malformed_rows} entity rows are malformed and were"
+                        " skipped (ids logged). Run `cortex doctor --fix` to quarantine them.",
+                        fg=typer.colors.YELLOW,
+                    )
         except Exception as exc:  # corrupted store -> safe mode (PRD §42)
             checks["store integrity"] = False
             typer.secho(f"store error: {exc}; Cortex enters read-only safe mode", fg=typer.colors.RED)

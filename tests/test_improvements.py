@@ -465,6 +465,66 @@ def test_one_malformed_row_does_not_poison_reads(store):
     assert store.get("adr-9999") is None
 
 
+# ---------- `cortex doctor --fix`: quarantine, don't delete, malformed rows ----------
+
+def test_quarantine_malformed_removes_row_and_preserves_raw_data(store):
+    store.conn.execute(
+        "INSERT INTO entities (id, type, status, authority, confidence, statement,"
+        " details, scope, provenance, freshness, created_at, updated_at)"
+        " VALUES ('adr-bad', 'tipo_inexistente', 'active', 'observed', 0.5,"
+        " 'a broken row', '{}', '[]', '{}', '{}', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')")
+    store.all_entities()
+    assert store.malformed_rows == 1
+
+    quarantined = store.quarantine_malformed()
+
+    assert quarantined == ["adr-bad"]
+    assert store.malformed_rows == 0, "counter must reflect the row is gone, not still 'skipped'"
+    assert store.get("adr-bad") is None
+    assert all(e.id != "adr-bad" for e in store.all_entities())
+    row = store.conn.execute(
+        "SELECT * FROM entities_quarantine WHERE id = ?", ("adr-bad",)).fetchone()
+    assert row is not None, "raw row must be preserved, never destroyed (Principle 2)"
+    assert "a broken row" in row["raw_row"]
+
+
+def test_quarantine_malformed_is_a_noop_on_a_clean_store(store):
+    store.ensure_session("s1", "test")
+    capture_event(store, {"type": "user_instruction", "session_id": "s1",
+                          "content": "Vamos usar Redis porque cache"})
+    make_engine(store).distill_session("s1")
+    before = [e.id for e in store.all_entities()]
+
+    quarantined = store.quarantine_malformed()
+
+    assert quarantined == []
+    assert [e.id for e in store.all_entities()] == before
+
+
+def test_cli_doctor_fix_quarantines_and_reports(project, store, monkeypatch):
+    from typer.testing import CliRunner
+
+    from cortex.cli.app import app
+    store.conn.execute(
+        "INSERT INTO entities (id, type, status, authority, confidence, statement,"
+        " details, scope, provenance, freshness, created_at, updated_at)"
+        " VALUES ('adr-bad', 'tipo_inexistente', 'active', 'observed', 0.5,"
+        " 'x', '{}', '[]', '{}', '{}', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')")
+    monkeypatch.chdir(project)
+    runner = CliRunner()
+
+    before = runner.invoke(app, ["doctor"])
+    assert "✗ entity rows readable" in before.output
+
+    after = runner.invoke(app, ["doctor", "--fix"])
+    assert after.exit_code == 0
+    assert "quarantined 1 malformed entity row" in after.output
+    assert "✓ entity rows readable" in after.output
+
+    clean = runner.invoke(app, ["doctor"])
+    assert "✓ entity rows readable" in clean.output or "entity rows readable" not in clean.output
+
+
 # ---------- Onda 2.3: schema versioning / legacy store upgrade ----------
 
 def test_store_upgrades_legacy_db_without_user_version(tmp_path):
