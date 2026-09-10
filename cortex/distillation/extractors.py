@@ -29,7 +29,8 @@ RATIONALE_RE = re.compile(
     re.IGNORECASE,
 )
 ALTERNATIVE_RE = re.compile(
-    r"\b(em vez de|ao invés de|no lugar de|instead of|rather than|over)\s+([A-Za-z0-9_\-\.]{2,40})",
+    r"\b(em vez de|ao invés de|no lugar de|instead of|rather than|prefer\s+\w+\s+over)"
+    r"\s+([A-Za-z0-9_\-\.]{2,40})",
     re.IGNORECASE,
 )
 INTENTION_RE = re.compile(
@@ -337,9 +338,29 @@ AFFIRMATIVE_TERMS = {
     "usar", "use", "adotar", "adopt", "permitir", "allow", "enable", "ativar", "prefer", "incluir"
 }
 
+
+def _word_boundary_re(terms: set[str]) -> re.Pattern[str]:
+    # Longest-first so a multi-word/longer term (e.g. "don't") isn't shadowed
+    # by a shorter one sharing a prefix.
+    return re.compile(
+        r"\b(?:" + "|".join(re.escape(t) for t in sorted(terms, key=len, reverse=True)) + r")\b",
+        re.IGNORECASE,
+    )
+
+
+# Whole-word match, not `statement_tokens()`: that helper's stopword list
+# (_SIM_STOP, tuned for topic-similarity) deliberately strips exactly the
+# words negation detection needs ("não", "no", "usar") since they're
+# near-universal function words for *that* purpose. A plain substring `in`
+# check has the opposite problem (matches "no" inside "node"/"snapshot").
+# Word-boundary regex gets both right: "no" alone matches, "no" inside
+# "node" doesn't.
+_NEGATION_RE = _word_boundary_re(NEGATION_TERMS)
+_AFFIRMATIVE_RE = _word_boundary_re(AFFIRMATIVE_TERMS)
+
 def detect_negation_conflict(text_a: str, text_b: str) -> bool:
     """Detect polar contradiction between two technical statements or decisions.
-    
+
     Optimized to avoid redundant checks and early exit for obvious non-conflicts."""
     toks_a = statement_tokens(text_a)
     toks_b = statement_tokens(text_b)
@@ -349,20 +370,16 @@ def detect_negation_conflict(text_a: str, text_b: str) -> bool:
     common = toks_a & toks_b
     if not common:
         return False
-        
+
     overlap_ratio = len(common) / min(len(toks_a), len(toks_b))
     if overlap_ratio < 0.35:
         return False
 
-    # Check negation and affirmative terms in one pass
-    text_a_lower = text_a.lower()
-    text_b_lower = text_b.lower()
-    
-    has_neg_a = bool(toks_a & NEGATION_TERMS or any(n in text_a_lower for n in NEGATION_TERMS))
-    has_neg_b = bool(toks_b & NEGATION_TERMS or any(n in text_b_lower for n in NEGATION_TERMS))
+    has_neg_a = bool(_NEGATION_RE.search(text_a))
+    has_neg_b = bool(_NEGATION_RE.search(text_b))
 
-    has_aff_a = bool(toks_a & AFFIRMATIVE_TERMS or any(a in text_a_lower for a in AFFIRMATIVE_TERMS))
-    has_aff_b = bool(toks_b & AFFIRMATIVE_TERMS or any(a in text_b_lower for a in AFFIRMATIVE_TERMS))
+    has_aff_a = bool(_AFFIRMATIVE_RE.search(text_a))
+    has_aff_b = bool(_AFFIRMATIVE_RE.search(text_b))
 
     # One is affirmative and one is negative on the same core subject
     return (has_neg_a and not has_neg_b and has_aff_b) or (has_neg_b and not has_neg_a and has_aff_a)
