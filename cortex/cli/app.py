@@ -153,7 +153,15 @@ def doctor() -> None:
         "store": ws.db_path.exists(),
         "git": (ws.root / ".git").exists(),
     }
+    if checks["cortex.toml"]:
+        try:
+            CortexConfig.load(ws.root)
+            checks["cortex.toml valid"] = True
+        except CortexConfigError as exc:
+            checks["cortex.toml valid"] = False
+            typer.secho(f"config error: {exc}", fg=typer.colors.RED)
     if ws.db_path.exists():
+        store = None
         try:
             store = KnowledgeStore(ws.db_path)
             integrity = store.conn.execute("PRAGMA integrity_check").fetchone()[0]
@@ -167,10 +175,12 @@ def doctor() -> None:
                     " skipped (ids logged). Run `cortex doctor --fix` to quarantine them.",
                     fg=typer.colors.YELLOW,
                 )
-            store.close()
         except Exception as exc:  # corrupted store -> safe mode (PRD §42)
             checks["store integrity"] = False
             typer.secho(f"store error: {exc}; Cortex enters read-only safe mode", fg=typer.colors.RED)
+        finally:
+            if store is not None:
+                store.close()
     for name, ok in checks.items():
         mark = "✓" if ok else "✗"
         typer.echo(f"{mark} {name}")

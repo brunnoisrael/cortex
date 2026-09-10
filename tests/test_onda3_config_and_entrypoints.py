@@ -99,6 +99,33 @@ def test_cli_status_reports_config_error_not_traceback(project, store, monkeypat
     assert "Traceback" not in result.output
 
 
+def test_doctor_reports_invalid_config(project, store, monkeypatch):
+    """Plan's own final acceptance criterion #1: `cortex doctor` must detect
+    and report invalid config, not just malformed rows/schema — it silently
+    only checked cortex.toml *existence* before this."""
+    from typer.testing import CliRunner
+
+    from cortex.cli.app import app
+    (project / "cortex.toml").write_text('[distillation]\nllm = "not-a-real-mode"\n',
+                                          encoding="utf-8")
+    monkeypatch.chdir(project)
+    runner = CliRunner()
+    result = runner.invoke(app, ["doctor"])
+    assert "✗ cortex.toml valid" in result.output
+    assert "distillation.llm" in result.output
+
+
+def test_doctor_reports_valid_config(project, store, monkeypatch):
+    from typer.testing import CliRunner
+
+    from cortex.cli.app import app
+    monkeypatch.chdir(project)
+    runner = CliRunner()
+    result = runner.invoke(app, ["doctor"])
+    assert result.exit_code == 0
+    assert "✓ cortex.toml valid" in result.output
+
+
 # ---------- 3.2: `cortex config --set` cannot inject TOML or corrupt the file ----------
 
 def test_config_set_rejects_injection(project, monkeypatch):
