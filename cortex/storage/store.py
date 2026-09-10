@@ -393,6 +393,8 @@ class KnowledgeStore:
 
     def related(self, entity_id: str, rel: str | None = None,
                 direction: str = "out") -> list[tuple[str, Entity]]:
+        sql: str
+        params: tuple[str, ...]
         if direction == "out":
             sql, params = "SELECT rel, dst FROM edges WHERE src = ?", (entity_id,)
         elif direction == "in":
@@ -472,6 +474,11 @@ class KnowledgeStore:
         self.add_edge(new_id, "SUPERSEDES", old_id)
         self.set_status(old_id, Status.SUPERSEDED)
         old = self.get(old_id)
+        if old is None:
+            # Vanished between the fetch above and here (concurrent delete);
+            # SUPERSEDES edge and status change already recorded, so this is
+            # not a correctness issue, just nothing left to annotate.
+            return True
         old.superseded_by = new_id
         old.authority = Authority.SUPERSEDED
         self.upsert(old)
