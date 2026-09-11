@@ -61,6 +61,7 @@ class DistillationReport:
     unparsed_timestamps: int = 0
     warnings: list[str] = field(default_factory=list)
     new_ids: list[str] = field(default_factory=list)
+    extraction_by_source: dict[str, int] = field(default_factory=dict)
 
     def summary(self) -> str:
         return (
@@ -72,6 +73,7 @@ class DistillationReport:
             + (" llm=on" if self.llm_used else "")
             + (f" unparsed_timestamps={self.unparsed_timestamps}"
                if self.unparsed_timestamps else "")
+            + (f" extraction={self.extraction_by_source}" if self.extraction_by_source else "")
         )
 
 
@@ -211,6 +213,10 @@ class DistillationEngine:
                 import logging
                 logging.getLogger("cortex.distill").warning(
                     "LLM extraction failed, falling back to heuristics", exc_info=True)
+        for candidate in candidates:
+            report.extraction_by_source[candidate.source] = (
+                report.extraction_by_source.get(candidate.source, 0) + 1
+            )
         return candidates
 
     # ---- dedup ----
@@ -277,6 +283,10 @@ class DistillationEngine:
             status = Status.ACTIVE
         if cand.etype == ArtifactType.NEGATIVE_KNOWLEDGE and cand.source == "explicit_user_statement":
             status = Status.ACTIVE
+        event_map = {event["id"]: event for event in self.store.all_events(cand.session_id)}
+        branch = next((event.get("branch") for event in event_map.values() if event.get("branch")), None)
+        details = dict(cand.details)
+        details.setdefault("extraction_method", cand.source)
         entity = Entity(
             id=eid,
             type=cand.etype,
@@ -290,10 +300,11 @@ class DistillationEngine:
                            else ReviewPolicy.MULTIPLE_EVIDENCE),
             observed_at=_utcnow(),
             valid_from=_utcnow() if status == Status.ACTIVE else None,
+            branch=branch,
             scope=cand.scope,
             phase=None,
             session_id=cand.session_id,
-            details=cand.details,
+            details=details,
             provenance=Provenance(
                 source_session=cand.session_id,
                 source_events=cand.event_ids,
@@ -302,7 +313,6 @@ class DistillationEngine:
                 extraction_source=cand.source,
             ),
         )
-        event_map = {event["id"]: event for event in self.store.all_events(cand.session_id)}
         entity.evidence = [Evidence(
             id=f"ev-{event_id}", type=EvidenceType.EVENT, location=event_id,
             fingerprint=_event_fingerprint(event_map.get(event_id)),
@@ -426,6 +436,18 @@ class DistillationEngine:
                 is_contradiction = False
                 contradiction_type = None
 
+                similarity = statement_similarity(new.statement, old.statement)
+                if similarity >= 0.90:
+                    self.store.add_edge(new.id, "DUPLICATES", old.id)
+                    continue
+                if new.branch and old.branch and new.branch != old.branch:
+                    # Same knowledge observed on different branches is a
+                    # variant, not a global contradiction. Keep the relation
+                    # explicit so review/impact tools can distinguish it.
+                    if similarity >= 0.55:
+                        self.store.add_edge(new.id, "VARIANT_OF", old.id)
+                        continue
+
                 # Vector 1: ADR vs Rejected Alternative
                 if new.type == ArtifactType.ADR and old.type == ArtifactType.ADR:
                     dec_tokens = statement_tokens(new.details.get("decision") or new.statement)
@@ -442,6 +464,13 @@ class DistillationEngine:
                 if not is_contradiction and detect_negation_conflict(new.statement, old.statement):
                     is_contradiction = True
                     contradiction_type = "direct_contradiction"
+
+                if (not is_contradiction and new.type == old.type == ArtifactType.ADR
+                        and new.details.get("context") and old.details.get("context")
+                        and dense_semantic_similarity(new.details["context"], old.details["context"]) < 0.35
+                        and similarity >= 0.35):
+                    is_contradiction = True
+                    contradiction_type = "changed_premise"
 
                 # Vector 3: Correnda Rule vs Decision / Intention Conflict
                 if not is_contradiction and old.type == ArtifactType.CORRENDA and new.type in (ArtifactType.ADR, ArtifactType.INTENTION):

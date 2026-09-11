@@ -4,7 +4,18 @@ from __future__ import annotations
 
 from typing import Any
 
-from cortex.knowledge.models import Authority, Entity, EvidenceStatus, ReviewPolicy, RiskLevel, Status
+from cortex.knowledge.evidence import evidence_id, fingerprint_text
+from cortex.knowledge.models import (
+    Authority,
+    Entity,
+    Evidence,
+    EvidenceStatus,
+    EvidenceType,
+    ReviewPolicy,
+    RiskLevel,
+    Status,
+    _utcnow,
+)
 from cortex.storage.store import KnowledgeStore
 
 
@@ -48,6 +59,7 @@ def promote(
     reason: str = "",
     evidence_ids: list[str] | None = None,
     force_human: bool = False,
+    review_id: str | None = None,
 ) -> Entity:
     entity = store.get(entity_id)
     if entity is None:
@@ -55,6 +67,21 @@ def promote(
     check = promotion_check(store, entity)
     if not check["allowed"] and not force_human:
         raise ValueError(check["reason"])
+    if review_id:
+        review = store.get(review_id)
+        if review is None or review.type.value != "review":
+            raise ValueError(f"review {review_id} not found")
+        entity.details["review_id"] = review_id
+        review_evidence = Evidence(
+            id=evidence_id(entity.id, EvidenceType.REVIEW, review_id),
+            type=EvidenceType.REVIEW, location=review_id,
+            fingerprint=fingerprint_text(review.statement), observed_at=_utcnow(),
+            status=EvidenceStatus.RESOLVED, verification_method="engineering_review",
+        )
+        entity.evidence = [item for item in entity.evidence if item.id != review_evidence.id] + [review_evidence]
+        store.upsert(entity)
+        evidence_ids = [*(evidence_ids or []), review_evidence.id]
+        force_human = True
     authority = Authority.HUMAN_CONFIRMED if force_human or actor == "human" else Authority.AGENT_INFERRED
     promoted = store.transition(
         entity_id, Status.ACTIVE, action="promote", actor=actor,
@@ -84,4 +111,3 @@ def quarantine(store: KnowledgeStore, entity_id: str, *, actor: str = "human", r
     if entity is None:
         raise ValueError(f"entity {entity_id} not found")
     return entity
-

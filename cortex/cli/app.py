@@ -470,6 +470,97 @@ def quarantine_command(entity_id: str, reason: str = typer.Option("", "--reason"
         typer.echo(f"{entity.id} quarantined; history preserved.")
 
 
+@app.command("review-attach")
+def review_attach(
+    base: str = typer.Option("HEAD", "--base"),
+    commit: str | None = typer.Option(None, "--commit"),
+    pull_request: str | None = typer.Option(None, "--pr"),
+    files: str | None = typer.Option(None, "--files", help="Comma-separated changed paths."),
+    output: Path | None = typer.Option(None, "--output", "-o", help="Review Markdown or JSON output."),
+) -> None:
+    """Attach the current diff/commit/PR reference to impacted knowledge."""
+    with workspace_store() as (root, _, store):
+        from cortex.engineering_review import build_review_summary, render_review_markdown, review_as_dict
+        review = build_review_summary(
+            store, root, base=base, commit=commit, pull_request=pull_request,
+            paths=[item.strip() for item in files.split(",") if item.strip()] if files else None,
+        )
+        payload = render_review_markdown(review_as_dict(store, review.id))
+        if output:
+            output.parent.mkdir(parents=True, exist_ok=True)
+            if output.suffix.lower() == ".json":
+                output.write_text(json.dumps(review_as_dict(store, review.id), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            else:
+                output.write_text(payload, encoding="utf-8")
+        typer.echo(f"review {review.id} created; impacted={len(review.details['impacted_entities'])}")
+
+
+@app.command("review-summary")
+def review_summary(
+    review_id: str,
+    json_output: bool = typer.Option(False, "--json"),
+    output: Path | None = typer.Option(None, "--output", "-o"),
+) -> None:
+    """Show an auditable review summary."""
+    with workspace_store() as (_, _, store):
+        from cortex.engineering_review import render_review_markdown, review_as_dict
+        try:
+            summary = review_as_dict(store, review_id)
+        except ValueError as exc:
+            typer.secho(str(exc), fg=typer.colors.RED)
+            raise typer.Exit(1) from exc
+        content = (json.dumps(summary, ensure_ascii=False, indent=2) + "\n"
+                   if json_output else render_review_markdown(summary))
+        if output:
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_text(content, encoding="utf-8")
+        else:
+            typer.echo(content)
+
+
+@app.command("review-confirm")
+def review_confirm(review_id: str, entity_id: str, reason: str = typer.Option("", "--reason")) -> None:
+    """Confirm one impacted decision from a review and keep the receipt."""
+    with workspace_store() as (_, _, store):
+        try:
+            entity = govern_promote(store, entity_id, reason=reason or f"confirmed from review {review_id}",
+                                    review_id=review_id, force_human=True)
+        except ValueError as exc:
+            typer.secho(str(exc), fg=typer.colors.RED)
+            raise typer.Exit(1) from exc
+        typer.secho(f"✓ {entity.id} confirmed from {review_id}.", fg=typer.colors.GREEN)
+
+
+@app.command("export-store")
+def export_store_command(output: Path = typer.Option(..., "--output", "-o")) -> None:
+    """Export the complete versioned knowledge package."""
+    with workspace_store() as (_, _, store):
+        from cortex.portable import export_store
+        export_store(store, output)
+        typer.echo(f"exported Cortex package to {output.resolve()}")
+
+
+@app.command("import-store")
+def import_store_command(input_file: Path = typer.Argument(...), trusted: bool = typer.Option(False, "--trusted")) -> None:
+    """Import a package; external active knowledge stays proposed by default."""
+    with workspace_store() as (_, _, store):
+        from cortex.portable import import_store
+        if not input_file.exists():
+            typer.secho(f"file not found: {input_file}", fg=typer.colors.RED)
+            raise typer.Exit(1)
+        result = import_store(store, json.loads(input_file.read_text(encoding="utf-8")), trusted=trusted)
+        typer.echo(json.dumps(result, ensure_ascii=False, indent=2))
+
+
+@app.command("derive-rules")
+def derive_rules(output: Path = typer.Option(Path("AGENTS.md"), "--output", "-o")) -> None:
+    """Generate AGENTS/CLAUDE/Cursor-compatible rules as derived output."""
+    with workspace_store() as (_, _, store):
+        from cortex.portable import render_derived_rules
+        render_derived_rules(store, output)
+        typer.echo(f"derived rules written to {output.resolve()}")
+
+
 @app.command()
 def verify(entity_id: str) -> None:
     """Verify a memory against the repository: cited symbols must exist in
@@ -493,11 +584,12 @@ def verify(entity_id: str) -> None:
 def verify_diff_command(
     base: str = typer.Option("HEAD", "--base", help="Git commit or range used as diff base."),
     json_output: bool = typer.Option(False, "--json"),
+    apply: bool = typer.Option(False, "--apply", help="Persist stale/verification changes."),
 ) -> None:
     """Review repository entities affected by a diff in read-only mode."""
     with workspace_store() as (root, _, store):
-        from cortex.verification import verify_diff
-        result = verify_diff(store, root, base)
+        from cortex.verification import verify_diff, verify_diff_apply
+        result = verify_diff_apply(store, root, base) if apply else verify_diff(store, root, base)
         if json_output:
             typer.echo(json.dumps(result, ensure_ascii=False, indent=2))
             return
@@ -505,6 +597,21 @@ def verify_diff_command(
         for item in result["affected"]:
             verification = item["verification"]
             typer.echo(f"[{item['id']}] {verification['status']}: {', '.join(item['paths'])}")
+
+
+@app.command("ci-check")
+def ci_check(
+    base: str = typer.Option("HEAD", "--base"),
+    fail_on_stale: bool = typer.Option(True, "--fail-on-stale/--allow-stale"),
+) -> None:
+    """Read-only repository knowledge check suitable for CI."""
+    with workspace_store() as (root, _, store):
+        from cortex.verification import verify_diff
+        result = verify_diff(store, root, base)
+        stale = [item for item in result["affected"] if item["verification"]["status"] == "stale"]
+        typer.echo(json.dumps({"ok": not stale, "stale": stale, "read_only": True}, ensure_ascii=False))
+        if stale and fail_on_stale:
+            raise typer.Exit(1)
 
 
 @app.command()
@@ -600,6 +707,12 @@ def why(
             for receipt in receipts:
                 typer.echo(f"  {receipt['action']}: {receipt['from_status']} -> {receipt['to_status']} "
                            f"({receipt['actor']}; {receipt['reason']})")
+        history = store.decision_history(entity_id)
+        if history:
+            typer.echo("Decision history:")
+            for edge in history:
+                other = edge["dst"] if edge["src"] == entity_id else edge["src"]
+                typer.echo(f"  {edge['rel']} {other}")
         if ent.superseded_by:
             typer.echo(f"Superseded by: {ent.superseded_by}")
 
@@ -880,13 +993,32 @@ def benchmark(
     corpus: Path | None = typer.Option(None, "--corpus", "-c", help="Run the versioned retrieval corpus."),
     k: int = typer.Option(5, "--k", help="Retrieval depth for --corpus."),
     output: Path | None = typer.Option(None, "--output", "-o", help="Write corpus metrics as JSON."),
+    extraction_corpus: Path | None = typer.Option(None, "--extraction-corpus", help="Run per-artifact extraction metrics."),
+    all_adapters: bool = typer.Option(False, "--all-adapters", help="Report Cortex and optional adapter availability."),
+    budget: int = typer.Option(1000, "--budget", help="Context budget for pipeline metrics."),
 ) -> None:
     """Run the CCB memory-quality benchmark (PRD §31.4, Onda 8)."""
+    if extraction_corpus:
+        from cortex.benchmarks.extraction import evaluate_extraction, load_extraction_corpus
+        path = extraction_corpus if extraction_corpus.is_absolute() else Path.cwd() / extraction_corpus
+        typer.echo(json.dumps(evaluate_extraction(load_extraction_corpus(path)), ensure_ascii=False, indent=2))
+        return
     if corpus:
         with workspace_store() as (_, _, store):
-            from cortex.benchmarks.evaluation import evaluate_cortex, load_corpus
+            from cortex.benchmarks.adapters import default_adapters
+            from cortex.benchmarks.evaluation import evaluate_pipeline, load_corpus
             corpus_path = corpus if corpus.is_absolute() else Path.cwd() / corpus
-            result = evaluate_cortex(store, load_corpus(corpus_path), k=k)
+            cases = load_corpus(corpus_path)
+            result = evaluate_pipeline(store, cases, k=k, budget=budget)
+            if all_adapters:
+                result["adapters"] = {}
+                for name, adapter in default_adapters(store).items():
+                    adapter_result = adapter.evaluate(cases, k=k)
+                    result["adapters"][name] = {
+                        "available": adapter_result.available,
+                        "metrics": adapter_result.metrics,
+                        "limitation": adapter_result.limitation,
+                    }
             payload = json.dumps(result, ensure_ascii=False, indent=2) + "\n"
             if output:
                 output.parent.mkdir(parents=True, exist_ok=True)

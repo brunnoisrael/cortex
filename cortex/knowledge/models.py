@@ -110,6 +110,8 @@ RELATIONS = (
     "AFFECTS",
     "BLOCKS",
     "RESOLVES",
+    "DUPLICATES",
+    "VARIANT_OF",
 )
 
 
@@ -168,6 +170,7 @@ class Entity(BaseModel):
     review_policy: ReviewPolicy = ReviewPolicy.MULTIPLE_EVIDENCE
     scope: list[str] = Field(default_factory=list)
     phase: str | None = None
+    branch: str | None = None
     session_id: str | None = None
     details: dict[str, Any] = Field(default_factory=dict)
     provenance: Provenance = Field(default_factory=Provenance)

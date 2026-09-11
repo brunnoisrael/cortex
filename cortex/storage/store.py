@@ -34,7 +34,7 @@ from cortex.knowledge.models import (
     _utcnow,
 )
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 
 # Maps ArtifactType -> short id prefix used by reserve_entity_id.
 _PREFIX_BY_TYPE: dict[ArtifactType, str] = {
@@ -117,10 +117,18 @@ def _migration_004_evidence_governance(conn: sqlite3.Connection) -> None:
     """)
 
 
+def _migration_005_entity_branch(conn: sqlite3.Connection) -> None:
+    """005 (additive): retain the branch in which an artifact was observed."""
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(entities)")}
+    if "branch" not in cols:
+        conn.execute("ALTER TABLE entities ADD COLUMN branch TEXT")
+
+
 MIGRATIONS: dict[int, Callable[[sqlite3.Connection], None]] = {
     2: _migration_002_events_host,
     3: _migration_003_entities_quarantine,
     4: _migration_004_evidence_governance,
+    5: _migration_005_entity_branch,
 }
 
 SCHEMA = """
@@ -159,6 +167,7 @@ CREATE TABLE IF NOT EXISTS entities (
     details TEXT NOT NULL,
     scope TEXT NOT NULL,
     phase TEXT,
+    branch TEXT,
     session_id TEXT,
     provenance TEXT NOT NULL,
     freshness TEXT NOT NULL,
@@ -423,14 +432,15 @@ class KnowledgeStore:
                 # break any future FK referencing entities.id).
                 "INSERT INTO entities "
                 "(id, type, status, authority, confidence, statement, details, scope, phase,"
-                " session_id, provenance, freshness, superseded_by, risk_level, review_policy,"
+                " branch, session_id, provenance, freshness, superseded_by, risk_level, review_policy,"
                 " valid_from, valid_until, observed_at, superseded_at, created_at, updated_at)"
-                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
                 " ON CONFLICT(id) DO UPDATE SET"
                 " type=excluded.type, status=excluded.status,"
                 " authority=excluded.authority, confidence=excluded.confidence,"
                 " statement=excluded.statement, details=excluded.details,"
                 " scope=excluded.scope, phase=excluded.phase,"
+                " branch=excluded.branch,"
                 " session_id=excluded.session_id, provenance=excluded.provenance,"
                 " freshness=excluded.freshness, superseded_by=excluded.superseded_by,"
                 " risk_level=excluded.risk_level, review_policy=excluded.review_policy,"
@@ -447,6 +457,7 @@ class KnowledgeStore:
                     json.dumps(entity.details, ensure_ascii=False),
                     json.dumps(entity.scope, ensure_ascii=False),
                     entity.phase,
+                    entity.branch,
                     entity.session_id,
                     entity.provenance.model_dump_json(),
                     entity.freshness.model_dump_json(),
@@ -638,6 +649,30 @@ class KnowledgeStore:
         """Status transitions recorded as edges on the entity itself."""
         return self.edges_of(src=entity_id, rel="STATUS")
 
+    def decision_history(self, entity_id: str) -> list[dict[str, Any]]:
+        """Return supersession, contradiction and variant links around an entity."""
+        return [
+            edge for edge in self.edges_of()
+            if (edge["src"] == entity_id or edge["dst"] == entity_id)
+            and edge["rel"] in {"SUPERSEDES", "CONTRADICTS", "VARIANT_OF", "DUPLICATES"}
+        ]
+
+    def contradiction_cases(self) -> list[dict[str, Any]]:
+        """Materialize contradiction edges with both entities and their type."""
+        cases = []
+        for edge in self.edges_of(rel="CONTRADICTS"):
+            src, dst = self.get(edge["src"]), self.get(edge["dst"])
+            if not src or not dst:
+                continue
+            cases.append({
+                "src": src.id, "dst": dst.id,
+                "type": src.details.get("contradiction_type")
+                or dst.details.get("contradiction_type") or "semantic_conflict",
+                "src_status": src.status.value, "dst_status": dst.status.value,
+                "src_statement": src.statement, "dst_statement": dst.statement,
+            })
+        return cases
+
     def record_status_change(self, entity_id: str, from_status: str, to_status: str) -> None:
         self.add_edge(entity_id, "STATUS", f"{from_status}->{to_status}")
 
@@ -826,6 +861,7 @@ class KnowledgeStore:
                 review_policy=ReviewPolicy(row["review_policy"] or ReviewPolicy.MULTIPLE_EVIDENCE.value),
                 scope=json.loads(row["scope"] or "[]"),
                 phase=row["phase"],
+                branch=row["branch"],
                 session_id=row["session_id"],
                 details=json.loads(row["details"] or "{}"),
                 provenance=Provenance.model_validate_json(row["provenance"] or "{}"),

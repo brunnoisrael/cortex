@@ -171,6 +171,7 @@ def cortex_remember(statement: str, kind: str = "intention", motivation: str = "
         details=ent_type_map.get(kind, {}),
         provenance=Provenance(extraction_source="explicit_agent_statement"),
     )
+    ent.details["extraction_method"] = "cortex_remember"
     store.upsert(ent)
     return f"recorded {eid} ({kind}, proposed — confirm via CLI governance to activate)"
 
@@ -224,6 +225,7 @@ def cortex_emit(
         details = {"motivation": rationale or statement}
     elif kind == "fix":
         details = {"problem": statement, "solution": rationale}
+    details["extraction_method"] = "cortex_emit"
 
     conf = max(0.1, min(1.0, confidence_self_reported))
     status = Status.ACTIVE if kind == "fix" and risk != RiskLevel.HIGH else Status.PROPOSED
@@ -420,6 +422,7 @@ def cortex_why(entity_id: str) -> str:
         "provenance": ent.provenance.model_dump(), "evidence": evidence,
         "evidence_ledger": [item.model_dump(mode="json") for item in ent.evidence],
         "governance_receipts": store.governance_receipts(entity_id),
+        "decision_history": store.decision_history(entity_id),
         "last_verification": {
             "at": ent.freshness.last_verified_at,
             "source": ent.freshness.verification_source,
@@ -461,3 +464,35 @@ def cortex_evidence_export(entity_id: str) -> str:
         return json.dumps(export_evidence_package(store, entity_id), ensure_ascii=False, indent=2)
     except ValueError as exc:
         return json.dumps({"ok": False, "error": str(exc)})
+
+
+@mcp.tool()
+def cortex_review_attach(base: str = "HEAD", commit: str = "", pull_request: str = "",
+                         files: list[str] | None = None) -> str:
+    """Create an auditable impact review for a diff, commit or PR reference."""
+    from cortex.engineering_review import build_review_summary, review_as_dict
+    ws, _, store = _store()
+    review = build_review_summary(
+        store, ws.root, base=base, commit=commit or None,
+        pull_request=pull_request or None, paths=files,
+    )
+    return json.dumps(review_as_dict(store, review.id), ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+def cortex_review_summary(review_id: str) -> str:
+    """Return decisions, rules, conflicts and missing evidence for a review."""
+    from cortex.engineering_review import review_as_dict
+    _, _, store = _store()
+    try:
+        return json.dumps(review_as_dict(store, review_id), ensure_ascii=False, indent=2)
+    except ValueError as exc:
+        return json.dumps({"ok": False, "error": str(exc)})
+
+
+@mcp.tool()
+def cortex_store_export() -> str:
+    """Return the complete versioned portable store package."""
+    from cortex.portable import export_store
+    _, _, store = _store()
+    return json.dumps(export_store(store), ensure_ascii=False, indent=2, sort_keys=True)

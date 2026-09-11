@@ -9,6 +9,7 @@ from __future__ import annotations
 import functools
 import logging
 from dataclasses import dataclass
+from typing import cast
 
 from cortex.distillation.extractors import dense_semantic_similarity
 from cortex.knowledge.models import (
@@ -291,6 +292,12 @@ def compile_context(store: KnowledgeStore, inp: CompileInput,
                     max_correndas: int = 7, include_recent_fixes: bool = True,
                     include_last_review: bool = True) -> str:
     """Render the CORTEX CONTEXT block within the token budget (PRD §18.4)."""
+    profile = COMPILATION_PROFILES.get(inp.profile, {})
+    max_adrs = int(cast(int, profile.get("max_adrs", max_adrs)))
+    max_intentions = int(cast(int, profile.get("max_intentions", max_intentions)))
+    max_correndas = int(cast(int, profile.get("max_correndas", max_correndas)))
+    include_recent_fixes = bool(profile.get("include_recent_fixes", include_recent_fixes))
+    include_last_review = bool(profile.get("include_last_review", include_last_review))
     try:
         ranked = rank(store, inp)
     except Exception:
@@ -308,6 +315,16 @@ def compile_context(store: KnowledgeStore, inp: CompileInput,
     def add(line: str) -> None:
         block.append(line)
 
+    def provenance_hint(entity: Entity) -> str:
+        resolved = [item for item in entity.evidence if item.status.value == "resolved"]
+        if resolved:
+            item = resolved[0]
+            location = f"{item.location}:{item.line_start}" if item.line_start else item.location
+            return f" (source: {location})"
+        if entity.provenance.source_files:
+            return f" (source: {entity.provenance.source_files[0]})"
+        return ""
+
     if token_estimate("\n".join(block + [END_MARKER])) > max_tokens:
         return END_MARKER
 
@@ -324,7 +341,7 @@ def compile_context(store: KnowledgeStore, inp: CompileInput,
     if intentions and fits("ACTIVE INTENTIONS"):
         add("ACTIVE INTENTIONS")
         for r in intentions:
-            line = f"- [{r.entity.id}] {r.entity.statement}"
+            line = f"- [{r.entity.id}] {r.entity.statement}{provenance_hint(r.entity)}"
             if not fits(line):
                 break
             add(line)
@@ -334,7 +351,7 @@ def compile_context(store: KnowledgeStore, inp: CompileInput,
         add("RELEVANT ADRS")
         for r in adrs:
             decision = r.entity.details.get("decision") or r.entity.statement
-            line = f"- [{r.entity.id}] {decision}"
+            line = f"- [{r.entity.id}] {decision}{provenance_hint(r.entity)}"
             rejected = r.entity.details.get("alternatives_rejected") or []
             if rejected:
                 line += f" (rejected alternatives: {', '.join(rejected)})"
@@ -347,7 +364,7 @@ def compile_context(store: KnowledgeStore, inp: CompileInput,
         add("ACTIVE CORRENDAS")
         for r in correndas:
             suffix = "" if r.entity.status == Status.ACTIVE else f" (status: {r.entity.status.value})"
-            line = f"- [{r.entity.id}] {r.entity.statement}{suffix}"
+            line = f"- [{r.entity.id}] {r.entity.statement}{suffix}{provenance_hint(r.entity)}"
             if not fits(line):
                 break
             add(line)
@@ -356,7 +373,7 @@ def compile_context(store: KnowledgeStore, inp: CompileInput,
     if negatives and fits("NEGATIVE KNOWLEDGE (do not repeat)"):
         add("NEGATIVE KNOWLEDGE (do not repeat)")
         for r in negatives:
-            line = f"- [{r.entity.id}] {r.entity.statement}"
+            line = f"- [{r.entity.id}] {r.entity.statement}{provenance_hint(r.entity)}"
             if not fits(line):
                 break
             add(line)
@@ -366,7 +383,7 @@ def compile_context(store: KnowledgeStore, inp: CompileInput,
         if fixes and fits("RECENT FIXES"):
             add("RECENT FIXES")
             for r in fixes:
-                line = f"- [{r.entity.id}] {r.entity.details.get('symptom', r.entity.statement)}"
+                line = f"- [{r.entity.id}] {r.entity.details.get('symptom', r.entity.statement)}{provenance_hint(r.entity)}"
                 if not fits(line):
                     break
                 add(line)
@@ -402,7 +419,13 @@ def retrieval_trace(
     """Return a stable explanation of retrieval and exclusion decisions."""
     eligible_types = {item.value for item in CONTEXT_ELIGIBLE_TYPES}
     candidates = []
-    excluded = []
+    excluded: list[dict[str, object]] = []
+    recovered_ids: set[str] = set()
+    if inp.query.strip():
+        try:
+            recovered_ids.update(entity.id for entity, _score in store.search(inp.query, limit=200))
+        except Exception:
+            excluded.append({"id": "<fts>", "reason": "retrieval_failure"})
     for entity in store.all_entities():
         reason = None
         if entity.type.value not in eligible_types:
@@ -417,6 +440,7 @@ def retrieval_trace(
             excluded.append({"id": entity.id, "reason": reason})
         else:
             candidates.append(entity.id)
+            recovered_ids.add(entity.id)
     ranked = rank(store, inp, limit=limit)
     if selected_ids is None:
         selected_ids = {item.entity.id for item in ranked}
@@ -444,11 +468,34 @@ def retrieval_trace(
         "profile": inp.profile,
         "signals": {"sparse": 0.55, "dense": 0.45, "authority": 1.0, "freshness": 1.0,
                      "ast_boost": 1.25, "density": 0.25},
+        "recovered_ids": sorted(recovered_ids),
+        "recovered_count": len(recovered_ids),
         "candidate_count": len(candidates),
         "eligible_ids": sorted(candidates),
         "ranked": ranked_rows,
         "excluded": sorted(excluded, key=lambda row: (row["id"], row["reason"])),
         "budget": budget,
+        "budget_evaluation": budget_evaluation(ranked, selected_ids, budget),
+    }
+
+
+def budget_evaluation(ranked: list[RankedItem], selected_ids: set[str], budget: int | None) -> dict:
+    """Summarize utility/token tradeoffs and risky/duplicated context items."""
+    selected = [item for item in ranked if item.entity.id in selected_ids]
+    costs = {item.entity.id: token_estimate(f"[{item.entity.id}] {item.entity.statement}") for item in selected}
+    statements = [item.entity.statement.casefold().strip() for item in selected]
+    duplicates = len(statements) - len(set(statements))
+    total = sum(costs.values())
+    high_risk = [item.entity.id for item in selected if item.entity.risk_level.value == "high"]
+    utility = sum(item.score for item in selected)
+    return {
+        "estimated_tokens": total,
+        "within_budget": budget is None or total <= budget,
+        "utility": round(utility, 4),
+        "utility_per_token": round(utility / max(1, total), 6),
+        "high_risk_selected": high_risk,
+        "duplicate_items": duplicates,
+        "cost_by_id": costs,
     }
 
 

@@ -215,7 +215,7 @@ def verify_entity(store: KnowledgeStore, root: Path, entity: Entity) -> dict:
     
     from cortex.knowledge.evidence import refresh_entity_evidence
     ledger = refresh_entity_evidence(store, root, entity)
-    if tokens and found and ledger["resolved"] > 0:
+    if tokens and found and ledger["strictly_verified"]:
         store.set_status(entity.id, entity.status, authority=Authority.REPOSITORY_VERIFIED)
         ent = store.get(entity.id)
         ent.freshness.last_verified_at = _utcnow()
@@ -232,13 +232,15 @@ def verify_entity(store: KnowledgeStore, root: Path, entity: Entity) -> dict:
                 "authority": Authority.REPOSITORY_VERIFIED.value,
                 "verification_source": ent.freshness.verification_source,
                 "evidence_resolved": ledger["resolved"],
-                "evidence_unverifiable": ledger["unverifiable"]}
+                "evidence_unverifiable": ledger["unverifiable"],
+                "evidence_changed": ledger["changed"]}
 
     return {"status": "unverified",
             "detail": "no cited symbols found in scope files (authority unchanged)",
             "authority": entity.authority.value,
             "evidence_resolved": ledger["resolved"],
-            "evidence_unverifiable": ledger["unverifiable"]}
+            "evidence_unverifiable": ledger["unverifiable"],
+            "evidence_changed": ledger["changed"]}
 
 
 def changed_paths(root: Path, base: str = "HEAD") -> list[str]:
@@ -260,6 +262,11 @@ def verify_diff(store: KnowledgeStore, root: Path, base: str = "HEAD") -> dict:
     rechecked and only those whose evidence no longer resolves become stale.
     """
     paths = changed_paths(root, base)
+    return _verify_diff(store, root, base, paths, read_only=True)
+
+
+def _verify_diff(store: KnowledgeStore, root: Path, base: str,
+                 paths: list[str], read_only: bool = True) -> dict:
     affected: list[dict] = []
     unaffected: list[str] = []
     for entity in store.all_entities():
@@ -268,6 +275,48 @@ def verify_diff(store: KnowledgeStore, root: Path, base: str = "HEAD") -> dict:
         if not hits:
             unaffected.append(entity.id)
             continue
-        result = verify_entity(store, root, entity)
+        if read_only:
+            result = _read_only_entity_impact(store, root, entity)
+        else:
+            result = verify_entity(store, root, entity)
         affected.append({"id": entity.id, "paths": hits, "verification": result})
-    return {"base": base, "changed_paths": paths, "affected": affected, "unaffected": unaffected}
+    return {"base": base, "changed_paths": paths, "affected": affected,
+            "unaffected": unaffected, "read_only": read_only}
+
+
+def verify_diff_apply(store: KnowledgeStore, root: Path, base: str = "HEAD") -> dict:
+    """Apply stale/verification changes for a diff after explicit opt-in."""
+    paths = changed_paths(root, base)
+    return _verify_diff(store, root, base, paths, read_only=False)
+
+
+def _read_only_entity_impact(store: KnowledgeStore, root: Path, entity: Entity) -> dict:
+    """Inspect fingerprints without writing to the store (safe for CI)."""
+    from cortex.knowledge.evidence import fingerprint_bytes, fingerprint_directory
+    evidence = store.list_evidence(entity.id)
+    changed: list[str] = []
+    missing: list[str] = []
+    for item in evidence:
+        if item.type.value not in {"file", "symbol", "line", "test"}:
+            continue
+        location = item.location.split(":", 1)[0]
+        path = (root / location).resolve()
+        if not path.exists():
+            missing.append(location)
+            continue
+        try:
+            if path.is_dir():
+                current_fingerprint = fingerprint_directory(root, path)
+            else:
+                current_fingerprint = fingerprint_bytes(path.read_bytes())
+            if item.fingerprint and current_fingerprint != item.fingerprint:
+                changed.append(location)
+        except OSError:
+            missing.append(location)
+    if missing:
+        return {"status": "stale", "detail": f"missing evidence paths: {sorted(set(missing))}",
+                "mutated": False}
+    if changed:
+        return {"status": "stale", "detail": f"fingerprint changed: {sorted(set(changed))}",
+                "mutated": False}
+    return {"status": "current", "detail": "evidence fingerprints unchanged", "mutated": False}
