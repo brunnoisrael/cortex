@@ -26,7 +26,12 @@ from cortex.distillation.extractors import (
 from cortex.knowledge.models import (
     ArtifactType,
     Entity,
+    Evidence,
+    EvidenceStatus,
+    EvidenceType,
     Provenance,
+    ReviewPolicy,
+    RiskLevel,
     Status,
     _utcnow,
     parse_utc,
@@ -246,8 +251,19 @@ class DistillationEngine:
         if cand.files:
             existing.provenance.source_files = list(dict.fromkeys(
                 existing.provenance.source_files + cand.files))
+        event_map = {event["id"]: event for event in self.store.all_events(cand.session_id)}
+        known = {item.id for item in existing.evidence}
+        for event_id in cand.event_ids:
+            if f"ev-{event_id}" in known:
+                continue
+            existing.evidence.append(Evidence(
+                id=f"ev-{event_id}", type=EvidenceType.EVENT, location=event_id,
+                fingerprint=_event_fingerprint(event_map.get(event_id)),
+                observed_at=(event_map.get(event_id) or {}).get("ts") or _utcnow(),
+                status=EvidenceStatus.RESOLVED if event_id in event_map else EvidenceStatus.UNVERIFIABLE,
+                verification_method="event_store",
+            ))
         existing.confidence = round(min(0.95, existing.confidence + 0.02), 2)
-        from cortex.knowledge.models import _utcnow
         existing.updated_at = _utcnow()
         self.store.upsert(existing)
 
@@ -268,6 +284,12 @@ class DistillationEngine:
             status=status,
             authority=cand.authority,
             confidence=cand.confidence,
+            risk_level=(RiskLevel.HIGH if cand.etype == ArtifactType.ADR else RiskLevel.MEDIUM),
+            review_policy=(ReviewPolicy.HUMAN_CONFIRMATION
+                           if cand.etype in (ArtifactType.ADR, ArtifactType.CORRENDA)
+                           else ReviewPolicy.MULTIPLE_EVIDENCE),
+            observed_at=_utcnow(),
+            valid_from=_utcnow() if status == Status.ACTIVE else None,
             scope=cand.scope,
             phase=None,
             session_id=cand.session_id,
@@ -280,6 +302,14 @@ class DistillationEngine:
                 extraction_source=cand.source,
             ),
         )
+        event_map = {event["id"]: event for event in self.store.all_events(cand.session_id)}
+        entity.evidence = [Evidence(
+            id=f"ev-{event_id}", type=EvidenceType.EVENT, location=event_id,
+            fingerprint=_event_fingerprint(event_map.get(event_id)),
+            observed_at=(event_map.get(event_id) or {}).get("ts") or _utcnow(),
+            status=EvidenceStatus.RESOLVED if event_id in event_map else EvidenceStatus.UNVERIFIABLE,
+            verification_method="event_store",
+        ) for event_id in cand.event_ids]
         self.store.upsert(entity)
         # graph edges
         if cand.session_id:
@@ -394,6 +424,7 @@ class DistillationEngine:
                     continue
 
                 is_contradiction = False
+                contradiction_type = None
 
                 # Vector 1: ADR vs Rejected Alternative
                 if new.type == ArtifactType.ADR and old.type == ArtifactType.ADR:
@@ -404,17 +435,20 @@ class DistillationEngine:
                             overlap = len(alt_toks & dec_tokens) / len(alt_toks)
                             if overlap >= CONTRADICTION_SIMILARITY:
                                 is_contradiction = True
+                                contradiction_type = "direct_decision_clash"
                                 break
 
                 # Vector 2: Polar Negation / Antonym Conflict
                 if not is_contradiction and detect_negation_conflict(new.statement, old.statement):
                     is_contradiction = True
+                    contradiction_type = "direct_contradiction"
 
                 # Vector 3: Correnda Rule vs Decision / Intention Conflict
                 if not is_contradiction and old.type == ArtifactType.CORRENDA and new.type in (ArtifactType.ADR, ArtifactType.INTENTION):
                     rule = old.details.get("rule") or old.statement
                     if detect_negation_conflict(new.statement, rule) or dense_semantic_similarity(new.statement, rule) >= 0.70:
                         is_contradiction = True
+                        contradiction_type = "rule_conflict"
 
                 if is_contradiction:
                     recorded_pairs.add(pair_key)
@@ -424,6 +458,8 @@ class DistillationEngine:
                     # Flag contradiction pending review in details
                     new.details["contradiction_pending"] = True
                     old.details["contradiction_pending"] = True
+                    new.details["contradiction_type"] = contradiction_type or "semantic_conflict"
+                    old.details["contradiction_type"] = contradiction_type or "semantic_conflict"
                     self.store.upsert(new)
                     self.store.upsert(old)
             # Stamp after the full pass so the flag mutation above is included;
@@ -478,3 +514,11 @@ def _days_since(ts: str) -> float | None:
     if dt is None:
         return None  # caller skips the entity and counts it — never fakes freshness
     return (datetime.now(UTC) - dt).days
+
+
+def _event_fingerprint(event: dict | None) -> str | None:
+    if not event:
+        return None
+    import hashlib
+    payload = f"{event.get('id')}|{event.get('type')}|{event.get('content') or ''}"
+    return "sha256:" + hashlib.sha256(payload.encode("utf-8")).hexdigest()

@@ -34,6 +34,23 @@ class Status(str, Enum):
     REJECTED = "rejected"
     SUPERSEDED = "superseded"
     DEPRECATED = "deprecated"
+    QUARANTINED = "quarantined"
+
+
+class RiskLevel(str, Enum):
+    """Impacto potencial de colocar um artefato no contexto ativo."""
+
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+
+
+class ReviewPolicy(str, Enum):
+    """Política mínima para promoção de um artefato."""
+
+    OBSERVE = "observe"
+    MULTIPLE_EVIDENCE = "multiple_evidence"
+    HUMAN_CONFIRMATION = "human_confirmation"
 
 
 class Authority(str, Enum):
@@ -43,6 +60,22 @@ class Authority(str, Enum):
     HUMAN_CONFIRMED = "human_confirmed"
     DEPRECATED = "deprecated"
     SUPERSEDED = "superseded"
+
+
+class EvidenceType(str, Enum):
+    EVENT = "event"
+    FILE = "file"
+    SYMBOL = "symbol"
+    LINE = "line"
+    COMMIT = "commit"
+    TEST = "test"
+    REVIEW = "review"
+
+
+class EvidenceStatus(str, Enum):
+    RESOLVED = "resolved"
+    UNVERIFIABLE = "unverifiable"
+    STALE = "stale"
 
 
 # Context authority tiers (PRD §48): higher tier = more authoritative source.
@@ -90,6 +123,27 @@ class Provenance(BaseModel):
     extraction_source: str = "heuristic_inference"
 
 
+class Evidence(BaseModel):
+    """A verifiable observation supporting an entity.
+
+    ``source`` is intentionally separate from this record: a source can be
+    cited without being proof, while an Evidence row records what was checked
+    and which fingerprint was obtained at that time.
+    """
+
+    id: str
+    type: EvidenceType
+    location: str
+    fingerprint: str | None = None
+    observed_at: str = Field(default_factory=lambda: _utcnow())
+    status: EvidenceStatus = EvidenceStatus.UNVERIFIABLE
+    verification_method: str | None = None
+    line_start: int | None = None
+    line_end: int | None = None
+    content_excerpt: str | None = None
+    commit: str | None = None
+
+
 class Freshness(BaseModel):
     last_verified_at: str | None = None
     verification_source: str | None = None
@@ -110,6 +164,8 @@ class Entity(BaseModel):
     status: Status = Status.CANDIDATE
     authority: Authority = Authority.AGENT_INFERRED
     confidence: float = 0.6
+    risk_level: RiskLevel = RiskLevel.MEDIUM
+    review_policy: ReviewPolicy = ReviewPolicy.MULTIPLE_EVIDENCE
     scope: list[str] = Field(default_factory=list)
     phase: str | None = None
     session_id: str | None = None
@@ -117,6 +173,11 @@ class Entity(BaseModel):
     provenance: Provenance = Field(default_factory=Provenance)
     freshness: Freshness = Field(default_factory=Freshness)
     superseded_by: str | None = None
+    valid_from: str | None = None
+    valid_until: str | None = None
+    observed_at: str | None = None
+    superseded_at: str | None = None
+    evidence: list[Evidence] = Field(default_factory=list)
     created_at: str = Field(default_factory=lambda: _utcnow())
     updated_at: str = Field(default_factory=lambda: _utcnow())
 
@@ -127,7 +188,16 @@ class Entity(BaseModel):
             Status.SUPERSEDED,
             Status.DEPRECATED,
             Status.REJECTED,
+            Status.QUARANTINED,
         )
+
+    @property
+    def is_valid_now(self) -> bool:
+        """Whether the artifact is inside its explicit validity interval."""
+        now = datetime.now(UTC)
+        start = parse_utc(self.valid_from or "")
+        end = parse_utc(self.valid_until or "")
+        return (start is None or start <= now) and (end is None or now < end)
 
 
 # ---- typed payloads stored inside Entity.details ----

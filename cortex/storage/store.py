@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 import logging
 import sqlite3
+import uuid
 from collections.abc import Callable
 from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
@@ -24,11 +25,16 @@ from cortex.knowledge.models import (
     ArtifactType,
     Authority,
     Entity,
+    Evidence,
+    EvidenceStatus,
+    EvidenceType,
+    ReviewPolicy,
+    RiskLevel,
     Status,
     _utcnow,
 )
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 # Maps ArtifactType -> short id prefix used by reserve_entity_id.
 _PREFIX_BY_TYPE: dict[ArtifactType, str] = {
@@ -64,9 +70,57 @@ def _migration_003_entities_quarantine(conn: sqlite3.Connection) -> None:
     """)
 
 
+def _migration_004_evidence_governance(conn: sqlite3.Connection) -> None:
+    """004 (additive): explicit evidence, validity and governance receipts."""
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(entities)")}
+    additions = {
+        "risk_level": "TEXT NOT NULL DEFAULT 'medium'",
+        "review_policy": "TEXT NOT NULL DEFAULT 'multiple_evidence'",
+        "valid_from": "TEXT",
+        "valid_until": "TEXT",
+        "observed_at": "TEXT",
+        "superseded_at": "TEXT",
+    }
+    for name, declaration in additions.items():
+        if name not in cols:
+            conn.execute(f"ALTER TABLE entities ADD COLUMN {name} {declaration}")
+    conn.executescript("""
+        CREATE TABLE IF NOT EXISTS evidence (
+            id TEXT PRIMARY KEY,
+            entity_id TEXT NOT NULL,
+            type TEXT NOT NULL,
+            location TEXT NOT NULL,
+            fingerprint TEXT,
+            observed_at TEXT NOT NULL,
+            status TEXT NOT NULL,
+            verification_method TEXT,
+            line_start INTEGER,
+            line_end INTEGER,
+            content_excerpt TEXT,
+            "commit" TEXT
+        );
+        CREATE INDEX IF NOT EXISTS idx_evidence_entity ON evidence(entity_id);
+        CREATE INDEX IF NOT EXISTS idx_evidence_status ON evidence(status);
+        CREATE TABLE IF NOT EXISTS governance_receipts (
+            id TEXT PRIMARY KEY,
+            entity_id TEXT NOT NULL,
+            action TEXT NOT NULL,
+            from_status TEXT,
+            to_status TEXT NOT NULL,
+            actor TEXT NOT NULL,
+            reason TEXT NOT NULL,
+            evidence_ids TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            idempotency_key TEXT NOT NULL UNIQUE
+        );
+        CREATE INDEX IF NOT EXISTS idx_governance_entity ON governance_receipts(entity_id);
+    """)
+
+
 MIGRATIONS: dict[int, Callable[[sqlite3.Connection], None]] = {
     2: _migration_002_events_host,
     3: _migration_003_entities_quarantine,
+    4: _migration_004_evidence_governance,
 }
 
 SCHEMA = """
@@ -109,6 +163,12 @@ CREATE TABLE IF NOT EXISTS entities (
     provenance TEXT NOT NULL,
     freshness TEXT NOT NULL,
     superseded_by TEXT,
+    risk_level TEXT NOT NULL DEFAULT 'medium',
+    review_policy TEXT NOT NULL DEFAULT 'multiple_evidence',
+    valid_from TEXT,
+    valid_until TEXT,
+    observed_at TEXT,
+    superseded_at TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
@@ -145,6 +205,35 @@ CREATE TABLE IF NOT EXISTS entities_quarantine (
     error TEXT NOT NULL,
     quarantined_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS evidence (
+    id TEXT PRIMARY KEY,
+    entity_id TEXT NOT NULL,
+    type TEXT NOT NULL,
+    location TEXT NOT NULL,
+    fingerprint TEXT,
+    observed_at TEXT NOT NULL,
+    status TEXT NOT NULL,
+    verification_method TEXT,
+    line_start INTEGER,
+    line_end INTEGER,
+    content_excerpt TEXT,
+    "commit" TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_evidence_entity ON evidence(entity_id);
+CREATE INDEX IF NOT EXISTS idx_evidence_status ON evidence(status);
+CREATE TABLE IF NOT EXISTS governance_receipts (
+    id TEXT PRIMARY KEY,
+    entity_id TEXT NOT NULL,
+    action TEXT NOT NULL,
+    from_status TEXT,
+    to_status TEXT NOT NULL,
+    actor TEXT NOT NULL,
+    reason TEXT NOT NULL,
+    evidence_ids TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    idempotency_key TEXT NOT NULL UNIQUE
+);
+CREATE INDEX IF NOT EXISTS idx_governance_entity ON governance_receipts(entity_id);
 """
 
 
@@ -318,6 +407,12 @@ class KnowledgeStore:
     def upsert(self, entity: Entity) -> None:
         if not entity or not hasattr(entity, 'id'):
             raise ValueError("Entity must be a valid Entity object with an id")
+        if entity.risk_level == RiskLevel.HIGH and entity.status == Status.ACTIVE:
+            receipt = self.conn.execute(
+                "SELECT 1 FROM governance_receipts WHERE entity_id = ? LIMIT 1", (entity.id,)
+            ).fetchone()
+            if receipt is None:
+                raise ValueError("high-risk artifacts require a governance receipt before activation")
 
         # Entity row and FTS row must land together — a crash in between would
         # leave the entity invisible to search.
@@ -328,8 +423,9 @@ class KnowledgeStore:
                 # break any future FK referencing entities.id).
                 "INSERT INTO entities "
                 "(id, type, status, authority, confidence, statement, details, scope, phase,"
-                " session_id, provenance, freshness, superseded_by, created_at, updated_at)"
-                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                " session_id, provenance, freshness, superseded_by, risk_level, review_policy,"
+                " valid_from, valid_until, observed_at, superseded_at, created_at, updated_at)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
                 " ON CONFLICT(id) DO UPDATE SET"
                 " type=excluded.type, status=excluded.status,"
                 " authority=excluded.authority, confidence=excluded.confidence,"
@@ -337,6 +433,9 @@ class KnowledgeStore:
                 " scope=excluded.scope, phase=excluded.phase,"
                 " session_id=excluded.session_id, provenance=excluded.provenance,"
                 " freshness=excluded.freshness, superseded_by=excluded.superseded_by,"
+                " risk_level=excluded.risk_level, review_policy=excluded.review_policy,"
+                " valid_from=excluded.valid_from, valid_until=excluded.valid_until,"
+                " observed_at=excluded.observed_at, superseded_at=excluded.superseded_at,"
                 " created_at=excluded.created_at, updated_at=excluded.updated_at",
                 (
                     entity.id,
@@ -352,9 +451,26 @@ class KnowledgeStore:
                     entity.provenance.model_dump_json(),
                     entity.freshness.model_dump_json(),
                     entity.superseded_by,
+                    entity.risk_level.value,
+                    entity.review_policy.value,
+                    entity.valid_from,
+                    entity.valid_until,
+                    entity.observed_at,
+                    entity.superseded_at,
                     entity.created_at,
                     entity.updated_at,
                 ),
+            )
+            self.conn.execute("DELETE FROM evidence WHERE entity_id = ?", (entity.id,))
+            self.conn.executemany(
+                "INSERT INTO evidence (id, entity_id, type, location, fingerprint, observed_at,"
+                " status, verification_method, line_start, line_end, content_excerpt, \"commit\")"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                [(
+                    ev.id, entity.id, ev.type.value, ev.location, ev.fingerprint,
+                    ev.observed_at, ev.status.value, ev.verification_method,
+                    ev.line_start, ev.line_end, ev.content_excerpt, ev.commit,
+                ) for ev in entity.evidence],
             )
             text = self._fts_text(entity)
             self.conn.execute("DELETE FROM entities_fts WHERE id = ?", (entity.id,))
@@ -529,17 +645,80 @@ class KnowledgeStore:
 
     def set_status(self, entity_id: str, status: Status,
                    authority: Authority | None = None) -> Entity | None:
+        return self.transition(
+            entity_id, status, action="set_status", actor="system",
+            reason="legacy status API", authority=authority,
+            idempotency_key=f"legacy:{entity_id}:{status.value}:{authority.value if authority else ''}",
+        )
+
+    def transition(
+        self,
+        entity_id: str,
+        to_status: Status,
+        *,
+        action: str,
+        actor: str = "human",
+        reason: str = "",
+        evidence_ids: list[str] | None = None,
+        authority: Authority | None = None,
+        idempotency_key: str | None = None,
+    ) -> Entity | None:
+        """Apply an auditable, idempotent governance transition.
+
+        The receipt is written before the entity update in one transaction.
+        Repeating the same idempotency key returns the current entity without
+        creating a second receipt.
+        """
         ent = self.get(entity_id)
         if not ent:
             return None
-        self.record_status_change(entity_id, ent.status.value, status.value)
-        ent.status = status
+        evidence_ids = list(dict.fromkeys(evidence_ids or []))
+        key = idempotency_key or f"{entity_id}:{action}:{to_status.value}"
+        prior = self.conn.execute(
+            "SELECT 1 FROM governance_receipts WHERE idempotency_key = ?", (key,)
+        ).fetchone()
+        if prior:
+            return ent
+        allowed: dict[Status, set[Status]] = {
+            Status.CANDIDATE: {Status.PROPOSED, Status.ACTIVE, Status.REJECTED, Status.SUPERSEDED, Status.QUARANTINED},
+            Status.PROPOSED: {Status.ACTIVE, Status.REJECTED, Status.SUPERSEDED, Status.QUARANTINED},
+            Status.ACTIVE: {Status.SUPERSEDED, Status.DEPRECATED, Status.QUARANTINED},
+            Status.VALIDATED: {Status.ACTIVE, Status.REJECTED, Status.SUPERSEDED},
+            Status.IMPLEMENTED: {Status.ACTIVE, Status.SUPERSEDED, Status.DEPRECATED},
+            Status.REJECTED: {Status.PROPOSED, Status.QUARANTINED},
+            Status.SUPERSEDED: set(),
+            Status.DEPRECATED: {Status.PROPOSED},
+            Status.QUARANTINED: {Status.PROPOSED, Status.REJECTED},
+        }
+        if to_status != ent.status and to_status not in allowed.get(ent.status, set()):
+            raise ValueError(f"invalid governance transition {ent.status.value} -> {to_status.value}")
+        now = _utcnow()
+        from_status = ent.status.value
+        self.conn.execute(
+            "INSERT INTO governance_receipts (id, entity_id, action, from_status, to_status,"
+            " actor, reason, evidence_ids, created_at, idempotency_key) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (f"gvr-{uuid.uuid4().hex[:12]}", entity_id, action,
+             from_status, to_status.value, actor, reason,
+             json.dumps(evidence_ids), now, key),
+        )
+        self.conn.commit()
+        ent.status = to_status
         if authority is not None:
             ent.authority = authority
-        if status == Status.ACTIVE:
-            ent.freshness.last_verified_at = _utcnow()
+        if to_status == Status.ACTIVE and ent.valid_from is None:
+            ent.valid_from = now
+        if to_status == Status.ACTIVE:
+            ent.freshness.last_verified_at = now
             ent.freshness.stale = False
-        ent.updated_at = _utcnow()
+        if to_status in (Status.SUPERSEDED, Status.DEPRECATED, Status.REJECTED):
+            ent.valid_until = ent.valid_until or now
+        if to_status == Status.SUPERSEDED:
+            ent.superseded_at = now
+        self.conn.execute(
+            "INSERT OR IGNORE INTO edges (src, rel, dst, created_at) VALUES (?, 'STATUS', ?, ?)",
+            (entity_id, f"{from_status}->{to_status.value}", now),
+        )
+        ent.updated_at = now
         self.upsert(ent)
         return ent
 
@@ -557,6 +736,8 @@ class KnowledgeStore:
             return True
         old.superseded_by = new_id
         old.authority = Authority.SUPERSEDED
+        old.superseded_at = _utcnow()
+        old.valid_until = old.valid_until or old.superseded_at
         self.upsert(old)
         # Negative knowledge survives supersession (PRD §44.4): rejected
         # alternatives of the old decision stay visible in the new one unless
@@ -641,6 +822,8 @@ class KnowledgeStore:
                 status=Status(row["status"]),
                 authority=Authority(row["authority"]),
                 confidence=row["confidence"],
+                risk_level=RiskLevel(row["risk_level"] or RiskLevel.MEDIUM.value),
+                review_policy=ReviewPolicy(row["review_policy"] or ReviewPolicy.MULTIPLE_EVIDENCE.value),
                 scope=json.loads(row["scope"] or "[]"),
                 phase=row["phase"],
                 session_id=row["session_id"],
@@ -648,6 +831,11 @@ class KnowledgeStore:
                 provenance=Provenance.model_validate_json(row["provenance"] or "{}"),
                 freshness=Freshness.model_validate_json(row["freshness"] or "{}"),
                 superseded_by=row["superseded_by"],
+                valid_from=row["valid_from"],
+                valid_until=row["valid_until"],
+                observed_at=row["observed_at"],
+                superseded_at=row["superseded_at"],
+                evidence=self._evidence_for(row["id"]),
                 created_at=row["created_at"],
                 updated_at=row["updated_at"],
             )
@@ -657,6 +845,62 @@ class KnowledgeStore:
             logging.getLogger("cortex.store").error(
                 "malformed entity row skipped: id=%s err=%s", row["id"], exc)
             return None
+
+    def _evidence_for(self, entity_id: str) -> list[Evidence]:
+        rows = self.conn.execute(
+            "SELECT * FROM evidence WHERE entity_id = ? ORDER BY observed_at, id",
+            (entity_id,),
+        ).fetchall()
+        out: list[Evidence] = []
+        for row in rows:
+            try:
+                out.append(Evidence(
+                    id=row["id"], type=EvidenceType(row["type"]),
+                    location=row["location"], fingerprint=row["fingerprint"],
+                    observed_at=row["observed_at"], status=EvidenceStatus(row["status"]),
+                    verification_method=row["verification_method"],
+                    line_start=row["line_start"], line_end=row["line_end"],
+                    content_excerpt=row["content_excerpt"], commit=row["commit"],
+                ))
+            except Exception as exc:
+                logging.getLogger("cortex.store").warning(
+                    "malformed evidence row skipped: id=%s err=%s", row["id"], exc)
+        return out
+
+    def list_evidence(self, entity_id: str | None = None) -> list[Evidence]:
+        """Return ledger entries, optionally scoped to one entity."""
+        if entity_id:
+            return self._evidence_for(entity_id)
+        rows = self.conn.execute("SELECT DISTINCT entity_id FROM evidence ORDER BY entity_id").fetchall()
+        return [ev for row in rows for ev in self._evidence_for(row["entity_id"])]
+
+    def add_evidence(self, entity_id: str, evidence: Evidence) -> None:
+        """Upsert one ledger row without changing the entity statement."""
+        if not self.get(entity_id):
+            raise ValueError(f"entity {entity_id} not found")
+        self.conn.execute(
+            "INSERT INTO evidence (id, entity_id, type, location, fingerprint, observed_at,"
+            " status, verification_method, line_start, line_end, content_excerpt, \"commit\")"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            " ON CONFLICT(id) DO UPDATE SET entity_id=excluded.entity_id, type=excluded.type,"
+            " location=excluded.location, fingerprint=excluded.fingerprint, observed_at=excluded.observed_at,"
+            " status=excluded.status, verification_method=excluded.verification_method,"
+            " line_start=excluded.line_start, line_end=excluded.line_end,"
+            " content_excerpt=excluded.content_excerpt, \"commit\"=excluded.\"commit\"",
+            (evidence.id, entity_id, evidence.type.value, evidence.location, evidence.fingerprint,
+             evidence.observed_at, evidence.status.value, evidence.verification_method,
+             evidence.line_start, evidence.line_end, evidence.content_excerpt, evidence.commit),
+        )
+        self.conn.commit()
+
+    def governance_receipts(self, entity_id: str | None = None) -> list[dict[str, Any]]:
+        sql = "SELECT * FROM governance_receipts"
+        params: tuple[str, ...] = ()
+        if entity_id:
+            sql += " WHERE entity_id = ?"
+            params = (entity_id,)
+        sql += " ORDER BY created_at, id"
+        return [dict(row) for row in self.conn.execute(sql, params).fetchall()]
 
     def quarantine_malformed(self) -> list[str]:
         """`cortex doctor --fix`: move entity rows that fail to parse into
