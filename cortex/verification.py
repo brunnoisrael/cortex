@@ -10,6 +10,7 @@ from __future__ import annotations
 import ast
 import importlib
 import re
+import subprocess
 from pathlib import Path
 
 from cortex.knowledge.models import Authority, Entity, _utcnow
@@ -212,7 +213,9 @@ def verify_entity(store: KnowledgeStore, root: Path, entity: Entity) -> dict:
     found_tree = _scan_tree_sitter(root, entity.scope, tokens)
     found = found_ast or found_tree or _scan(root, entity.scope, tokens)
     
-    if tokens and found:
+    from cortex.knowledge.evidence import refresh_entity_evidence
+    ledger = refresh_entity_evidence(store, root, entity)
+    if tokens and found and ledger["resolved"] > 0:
         store.set_status(entity.id, entity.status, authority=Authority.REPOSITORY_VERIFIED)
         ent = store.get(entity.id)
         ent.freshness.last_verified_at = _utcnow()
@@ -227,8 +230,44 @@ def verify_entity(store: KnowledgeStore, root: Path, entity: Entity) -> dict:
         return {"status": "verified",
                 "detail": f"symbols found in code ({verifier_type}): {sorted(found)[:5]}",
                 "authority": Authority.REPOSITORY_VERIFIED.value,
-                "verification_source": ent.freshness.verification_source}
+                "verification_source": ent.freshness.verification_source,
+                "evidence_resolved": ledger["resolved"],
+                "evidence_unverifiable": ledger["unverifiable"]}
 
     return {"status": "unverified",
             "detail": "no cited symbols found in scope files (authority unchanged)",
-            "authority": entity.authority.value}
+            "authority": entity.authority.value,
+            "evidence_resolved": ledger["resolved"],
+            "evidence_unverifiable": ledger["unverifiable"]}
+
+
+def changed_paths(root: Path, base: str = "HEAD") -> list[str]:
+    """Return paths changed by a commit/range; failures degrade to []."""
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(root), "diff", "--name-only", base],
+            capture_output=True, text=True, timeout=10, check=True,
+        )
+    except Exception:
+        return []
+    return [line.strip().replace("\\", "/") for line in result.stdout.splitlines() if line.strip()]
+
+
+def verify_diff(store: KnowledgeStore, root: Path, base: str = "HEAD") -> dict:
+    """Read-only impact review for a diff.
+
+    The command never silently invalidates knowledge: affected entities are
+    rechecked and only those whose evidence no longer resolves become stale.
+    """
+    paths = changed_paths(root, base)
+    affected: list[dict] = []
+    unaffected: list[str] = []
+    for entity in store.all_entities():
+        scope = [item.replace("\\", "/") for item in entity.scope]
+        hits = [path for path in paths if not scope or any(path.startswith(item) or item in path for item in scope)]
+        if not hits:
+            unaffected.append(entity.id)
+            continue
+        result = verify_entity(store, root, entity)
+        affected.append({"id": entity.id, "paths": hits, "verification": result})
+    return {"base": base, "changed_paths": paths, "affected": affected, "unaffected": unaffected}

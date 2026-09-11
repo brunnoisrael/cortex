@@ -1,0 +1,3 @@
+{"id":"db-choice","query":"qual banco usar para transações ACID","relevant":["adr-0001"],"files":["src/db"]}
+{"id":"rejected-cache","query":"não repetir abordagem de cache global","relevant":["nk-0001"],"files":["src/cache"]}
+{"id":"resume","query":"o que ficou pendente da sessão","relevant":[],"files":[]}

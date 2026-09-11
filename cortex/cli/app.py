@@ -11,10 +11,19 @@ from pathlib import Path
 import typer
 
 from cortex.capture.recorder import capture_event
-from cortex.compiler.compiler import CompileInput, compile_context, rank
+from cortex.compiler.compiler import (
+    COMPILATION_PROFILES,
+    CompileInput,
+    compile_context_with_trace,
+    rank,
+)
 from cortex.config import CortexConfig, CortexConfigError, write_default_config
 from cortex.distillation.review import build_session_review
 from cortex.git.context import git_context
+from cortex.governance import promote as govern_promote
+from cortex.governance import quarantine as govern_quarantine
+from cortex.governance import reject as govern_reject
+from cortex.governance import review_queue
 from cortex.knowledge.models import (
     ArtifactType,
     Authority,
@@ -33,9 +42,11 @@ app = typer.Typer(no_args_is_help=True, help="Cortex — engineering knowledge c
 correnda_app = typer.Typer(help="Govern Correndas (confirm/reject).")
 adrs_app = typer.Typer(help="Govern ADRs (accept/reject).")
 commons_app = typer.Typer(help="Correnda Commons pattern export/import (Onda 10).")
+evidence_app = typer.Typer(help="Inspect and export the Evidence Ledger.")
 app.add_typer(correnda_app, name="correnda")
 app.add_typer(adrs_app, name="adrs")
 app.add_typer(commons_app, name="commons")
+app.add_typer(evidence_app, name="evidence")
 
 
 
@@ -396,6 +407,69 @@ def adr_reject(entity_id: str) -> None:
         typer.echo(f"{entity_id} rejected.")
 
 
+@app.command("review-queue")
+def review_queue_command() -> None:
+    """List candidate, proposed, high-risk and conflicting artifacts."""
+    with workspace_store() as (_, _, store):
+        items = review_queue(store)
+        if not items:
+            typer.echo("review queue is empty.")
+            return
+        for entity in items:
+            typer.echo(
+                f"[{entity.id}] {entity.type.value} status={entity.status.value} "
+                f"risk={entity.risk_level.value} policy={entity.review_policy.value}"
+            )
+            typer.echo(f"  {entity.statement}")
+            if entity.details.get("contradiction_pending"):
+                typer.secho("  ! contradiction pending", fg=typer.colors.YELLOW)
+
+
+@app.command("promote")
+def promote_command(
+    entity_id: str,
+    reason: str = typer.Option("", "--reason"),
+    evidence: str | None = typer.Option(None, "--evidence", help="Comma-separated evidence IDs."),
+    force: bool = typer.Option(False, "--force-human", help="Record explicit human confirmation."),
+) -> None:
+    """Promote a reviewed artifact with an auditable receipt."""
+    with workspace_store() as (_, _, store):
+        try:
+            entity = govern_promote(
+                store, entity_id, reason=reason,
+                evidence_ids=[x.strip() for x in evidence.split(",")] if evidence else [],
+                force_human=force,
+            )
+        except ValueError as exc:
+            typer.secho(str(exc), fg=typer.colors.RED)
+            raise typer.Exit(1) from exc
+        typer.secho(f"✓ {entity.id} promoted to {entity.status.value}; receipt recorded.", fg=typer.colors.GREEN)
+
+
+@app.command("reject")
+def reject_command(entity_id: str, reason: str = typer.Option("", "--reason")) -> None:
+    """Reject an artifact and retain its evidence and receipt."""
+    with workspace_store() as (_, _, store):
+        try:
+            entity = govern_reject(store, entity_id, reason=reason)
+        except ValueError as exc:
+            typer.secho(str(exc), fg=typer.colors.RED)
+            raise typer.Exit(1) from exc
+        typer.echo(f"{entity.id} rejected; history preserved.")
+
+
+@app.command("quarantine")
+def quarantine_command(entity_id: str, reason: str = typer.Option("", "--reason")) -> None:
+    """Keep an artifact out of context pending review."""
+    with workspace_store() as (_, _, store):
+        try:
+            entity = govern_quarantine(store, entity_id, reason=reason)
+        except ValueError as exc:
+            typer.secho(str(exc), fg=typer.colors.RED)
+            raise typer.Exit(1) from exc
+        typer.echo(f"{entity.id} quarantined; history preserved.")
+
+
 @app.command()
 def verify(entity_id: str) -> None:
     """Verify a memory against the repository: cited symbols must exist in
@@ -413,6 +487,24 @@ def verify(entity_id: str) -> None:
             typer.secho(f"⚠ {entity_id}: {result['detail']}. Flagged stale.", fg=typer.colors.YELLOW)
         else:
             typer.echo(f"· {entity_id}: {result['detail']}")
+
+
+@app.command("verify-diff")
+def verify_diff_command(
+    base: str = typer.Option("HEAD", "--base", help="Git commit or range used as diff base."),
+    json_output: bool = typer.Option(False, "--json"),
+) -> None:
+    """Review repository entities affected by a diff in read-only mode."""
+    with workspace_store() as (root, _, store):
+        from cortex.verification import verify_diff
+        result = verify_diff(store, root, base)
+        if json_output:
+            typer.echo(json.dumps(result, ensure_ascii=False, indent=2))
+            return
+        typer.echo(f"changed paths: {len(result['changed_paths'])}")
+        for item in result["affected"]:
+            verification = item["verification"]
+            typer.echo(f"[{item['id']}] {verification['status']}: {', '.join(item['paths'])}")
 
 
 @app.command()
@@ -474,6 +566,7 @@ def why(
         typer.echo("")
         typer.echo("Statement:")
         typer.echo(f"  {ent.statement}")
+        typer.echo(f"Extraction: {p.extraction_source}")
         if ent.details.get("root_cause"):
             typer.echo(f"  root cause: {ent.details['root_cause']}")
         typer.echo("")
@@ -486,13 +579,27 @@ def why(
             typer.echo(f"  source events: {', '.join(p.source_events)}")
         if p.source_files:
             typer.echo(f"  source files: {', '.join(p.source_files)}")
+        if ent.evidence:
+            typer.echo("  evidence ledger:")
+            for ev in ent.evidence:
+                marker = "resolved" if ev.status.value == "resolved" else ev.status.value
+                location = f"{ev.location}:{ev.line_start}" if ev.line_start else ev.location
+                typer.echo(f"    - {ev.type.value} {location} [{marker}] {ev.fingerprint or 'no fingerprint'}")
         typer.echo("")
         typer.echo(f"Sessions: {p.source_session or 'n/a'}")
         typer.echo(f"Confidence: {ent.confidence:.2f}")
         typer.echo(f"Authority: {ent.authority.value}")
         typer.echo(f"Status: {ent.status.value}")
+        typer.echo(f"Last verification: {ent.freshness.last_verified_at or 'never'} "
+                   f"({ent.freshness.verification_source or 'n/a'})")
         typer.echo(f"Human confirmation: "
                    f"{'confirmed' if ent.details.get('confirmed_by_human') else 'not confirmed'}")
+        receipts = store.governance_receipts(entity_id)
+        if receipts:
+            typer.echo("Governance receipts:")
+            for receipt in receipts:
+                typer.echo(f"  {receipt['action']}: {receipt['from_status']} -> {receipt['to_status']} "
+                           f"({receipt['actor']}; {receipt['reason']})")
         if ent.superseded_by:
             typer.echo(f"Superseded by: {ent.superseded_by}")
 
@@ -576,13 +683,17 @@ def context(
     task: str = typer.Option("", "--task", help="Current task description."),
     files: str | None = typer.Option(None, help="Comma-separated paths being worked on."),
     branch: str | None = typer.Option(None),
+    profile: str = typer.Option("default", "--profile", help="default | bug_fix | architecture_review | onboarding | session_resume"),
+    trace: bool = typer.Option(False, "--trace", help="Emit JSON with context and retrieval trace."),
 ) -> None:
     """Compile the session context block (what cortex_init returns)."""
     with workspace_store() as (_, cfg, store):
         file_list = [f.strip() for f in files.split(",")] if files else None
-        out = compile_context(
-            store,
-            CompileInput(query=task, files=file_list, branch=branch, phase=cfg.phase),
+        if profile not in COMPILATION_PROFILES:
+            typer.secho(f"unknown profile {profile!r}; use: {', '.join(COMPILATION_PROFILES)}", fg=typer.colors.RED)
+            raise typer.Exit(1)
+        options = dict(COMPILATION_PROFILES[profile])
+        compile_kwargs = dict(
             max_tokens=cfg.context_max_tokens,
             max_adrs=cfg.max_adrs,
             max_intentions=cfg.max_intentions,
@@ -590,7 +701,13 @@ def context(
             include_recent_fixes=cfg.include_recent_fixes,
             include_last_review=cfg.include_last_review,
         )
-        typer.echo(out)
+        compile_kwargs.update({key: value for key, value in options.items() if key in compile_kwargs})
+        inp = CompileInput(query=task, files=file_list, branch=branch, phase=cfg.phase, profile=profile)
+        out = compile_context_with_trace(
+            store,
+            inp, **compile_kwargs,
+        )
+        typer.echo(json.dumps(out, ensure_ascii=False, indent=2) if trace else out["context"])
 
 
 # ---- host hooks ----
@@ -657,6 +774,7 @@ def diff(
 def retrieval_debug(
     query: str = typer.Argument(...),
     files: str | None = typer.Option(None, help="Comma-separated paths."),
+    json_output: bool = typer.Option(False, "--json"),
 ) -> None:
     """Explain retrieval: per-candidate hybrid score components & density (PRD §41)."""
     from cortex.compiler.compiler import CompileInput, _tokens, rank
@@ -670,6 +788,11 @@ def retrieval_debug(
         typer.echo(f"query: {query!r}  (budget {cfg.context_max_tokens} tokens)")
         typer.echo(f"bm25 hits: {len(fts_ids)} entities")
         items = rank(store, CompileInput(query=query, files=file_list), limit=15)
+        if json_output:
+            from cortex.compiler.compiler import retrieval_trace
+            typer.echo(json.dumps(retrieval_trace(store, CompileInput(query=query, files=file_list), limit=15,
+                                                  budget=cfg.context_max_tokens), ensure_ascii=False, indent=2))
+            return
         if not items:
             typer.echo("no candidates survived filtering.")
         for item in items:
@@ -683,7 +806,26 @@ def retrieval_debug(
                 f"authority={r.get('authority')} conf={r.get('confidence'):.2f} "
                 f"contradicted={'YES' if r.get('contradicted') else 'no'} "
                 f"bm25={'yes' if e.id in fts_ids else 'no'} scope={e.scope or '-'} ~{_tokens(line)}tk)"
-            )
+        )
+
+
+@evidence_app.command("export")
+def evidence_export(entity_id: str, output: Path = typer.Option(..., "--output", "-o")) -> None:
+    """Export entity, ledger, receipts and relations for reproducible audit."""
+    with workspace_store() as (_, _, store):
+        from cortex.knowledge.evidence import export_evidence_package
+        try:
+            export_evidence_package(store, entity_id, output)
+        except ValueError as exc:
+            typer.secho(str(exc), fg=typer.colors.RED)
+            raise typer.Exit(1) from exc
+        typer.secho(f"✓ evidence package exported to {output.resolve()}", fg=typer.colors.GREEN)
+
+
+@app.command("evidence-export")
+def evidence_export_compat(entity_id: str, output: Path = typer.Option(..., "--output", "-o")) -> None:
+    """Compatibility alias for `cortex evidence export`."""
+    evidence_export(entity_id, output)
 
 
 
@@ -735,8 +877,24 @@ def benchmark(
         help="Run the fixture with naturally-phrased events instead of "
              "extractor-shaped ones (item 8): honest read on extraction "
              "generalization, not just ranking/compiler correctness."),
+    corpus: Path | None = typer.Option(None, "--corpus", "-c", help="Run the versioned retrieval corpus."),
+    k: int = typer.Option(5, "--k", help="Retrieval depth for --corpus."),
+    output: Path | None = typer.Option(None, "--output", "-o", help="Write corpus metrics as JSON."),
 ) -> None:
     """Run the CCB memory-quality benchmark (PRD §31.4, Onda 8)."""
+    if corpus:
+        with workspace_store() as (_, _, store):
+            from cortex.benchmarks.evaluation import evaluate_cortex, load_corpus
+            corpus_path = corpus if corpus.is_absolute() else Path.cwd() / corpus
+            result = evaluate_cortex(store, load_corpus(corpus_path), k=k)
+            payload = json.dumps(result, ensure_ascii=False, indent=2) + "\n"
+            if output:
+                output.parent.mkdir(parents=True, exist_ok=True)
+                output.write_text(payload, encoding="utf-8")
+                typer.echo(f"benchmark written to {output.resolve()}")
+            else:
+                typer.echo(payload)
+        return
     from cortex.benchmarks.ccb import (
         format_report,
         run_ccb,

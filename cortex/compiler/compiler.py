@@ -36,6 +36,16 @@ class CompileInput:
     files: list[str] | None = None
     branch: str | None = None
     phase: str | None = None
+    profile: str = "default"
+
+
+COMPILATION_PROFILES: dict[str, dict[str, object]] = {
+    "default": {},
+    "bug_fix": {"include_recent_fixes": True, "include_last_review": True},
+    "architecture_review": {"max_adrs": 10, "max_correndas": 10, "include_recent_fixes": False},
+    "onboarding": {"max_intentions": 10, "max_adrs": 8, "max_correndas": 8},
+    "session_resume": {"include_last_review": True, "include_recent_fixes": True},
+}
 
 
 @dataclass
@@ -144,7 +154,7 @@ def rank(
         for ent in st.all_entities():
             if ent.type not in CONTEXT_ELIGIBLE_TYPES:
                 continue
-            if not ent.is_current or ent.freshness.stale:
+            if not ent.is_current or ent.freshness.stale or not ent.is_valid_now:
                 continue
             candidates.append(ent)
         if not candidates:
@@ -230,6 +240,10 @@ def rank(
                     "federated": is_federated,
                     "ast_verified": getattr(ent.freshness, "verification_source", None) == "ast",
                     "contradicted": contradicted,
+                    "contradiction_penalty": contradiction_penalty,
+                    "scope_match": round(scope_match(ent.scope, files), 2),
+                    "authority_weight": round(authority_weight, 3),
+                    "freshness": round(freshness, 3),
                 }
             ))
 
@@ -375,6 +389,77 @@ def compile_context(store: KnowledgeStore, inp: CompileInput,
 
     block.append(END_MARKER)
     return "\n".join(block)
+
+
+def retrieval_trace(
+    store: KnowledgeStore,
+    inp: CompileInput,
+    *,
+    limit: int = 20,
+    budget: int | None = None,
+    selected_ids: set[str] | None = None,
+) -> dict:
+    """Return a stable explanation of retrieval and exclusion decisions."""
+    eligible_types = {item.value for item in CONTEXT_ELIGIBLE_TYPES}
+    candidates = []
+    excluded = []
+    for entity in store.all_entities():
+        reason = None
+        if entity.type.value not in eligible_types:
+            reason = "type_not_context_eligible"
+        elif not entity.is_current:
+            reason = "non_current_status"
+        elif entity.freshness.stale:
+            reason = "stale"
+        elif not entity.is_valid_now:
+            reason = "outside_validity_interval"
+        if reason:
+            excluded.append({"id": entity.id, "reason": reason})
+        else:
+            candidates.append(entity.id)
+    ranked = rank(store, inp, limit=limit)
+    if selected_ids is None:
+        selected_ids = {item.entity.id for item in ranked}
+    ranked_rows = [{
+        "id": item.entity.id,
+        "score": item.score,
+        "reasons": item.reasons,
+        "selected": item.entity.id in selected_ids,
+    } for item in ranked]
+    for item in ranked:
+        if item.entity.id not in selected_ids:
+            excluded.append({"id": item.entity.id, "reason": "not_selected_by_limit"})
+    if budget is not None:
+        estimated = 0
+        for item in ranked:
+            text = f"[{item.entity.id}] {item.entity.statement}"
+            cost = token_estimate(text)
+            if item.entity.id in selected_ids:
+                estimated += cost
+                if estimated > budget:
+                    excluded.append({"id": item.entity.id, "reason": "budget", "estimated_tokens": cost})
+    return {
+        "schema": "retrieval_trace/v1",
+        "query": inp.query,
+        "profile": inp.profile,
+        "signals": {"sparse": 0.55, "dense": 0.45, "authority": 1.0, "freshness": 1.0,
+                     "ast_boost": 1.25, "density": 0.25},
+        "candidate_count": len(candidates),
+        "eligible_ids": sorted(candidates),
+        "ranked": ranked_rows,
+        "excluded": sorted(excluded, key=lambda row: (row["id"], row["reason"])),
+        "budget": budget,
+    }
+
+
+def compile_context_with_trace(store: KnowledgeStore, inp: CompileInput, **kwargs) -> dict:
+    """Compile context and return the rendered block plus its audit trace."""
+    context = compile_context(store, inp, **kwargs)
+    selected = {line.split("]", 1)[0][3:] for line in context.splitlines() if line.startswith("- [") and "]" in line}
+    trace = retrieval_trace(store, inp, budget=kwargs.get("max_tokens"), selected_ids=selected)
+    trace["selected_ids"] = sorted(selected)
+    trace["estimated_context_tokens"] = token_estimate(context)
+    return {"context": context, "trace": trace}
 
 
 def _minimal_safe_context(store: KnowledgeStore) -> str:

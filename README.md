@@ -65,6 +65,14 @@ O código atual oferece:
 - exportação de um grafo HTML de proveniência;
 - importação/exportação opt-in de padrões via Correnda Commons;
 - federação read-only entre stores.
+- um Evidence Ledger separado das citações de proveniência, com fingerprint, método de
+  verificação, status `resolved`/`unverifiable` e exportação reproduzível;
+- validade temporal (`valid_from`, `valid_until`) e recibos idempotentes para transições de
+  governança, com fila de revisão para propostas, alto risco e contradições;
+- trace estável de retrieval, com sinais, penalidades, filtros, seleção e exclusões por
+  budget;
+- verificação de impacto por diff e um corpus versionado para medir recall, precision, MRR,
+  nDCG, latência e tokens injetados.
 
 O fluxo completo está distribuído principalmente entre
 [capture](C:/Users/Sergio/Documents/GitHub/cortex/cortex/capture),
@@ -111,6 +119,19 @@ cada mecanismo individual.
 `confidence` representa o quanto uma inferência parece correta. `authority` representa
 quanto ela deve influenciar o contexto. Uma inferência do agente pode ter confiança alta,
 mas não deve automaticamente virar regra confirmada por humano.
+
+### Ledger e governança
+
+Cada artefato mantém suas citações em `provenance` e suas provas resolvidas em um ledger
+separado. Uma prova pode ser evento, arquivo/símbolo/linha, commit, teste ou review; cada
+registro guarda fingerprint, data, método e status `resolved`, `stale` ou `unverifiable`.
+`cortex why` exibe a cadeia e `cortex evidence export` gera um pacote JSON auditável.
+
+O fluxo de governança é `candidate → proposed → active`, com saídas reversíveis para
+`rejected`, `quarantined`, `deprecated` ou `superseded`. Promoções registram ator, data,
+motivo e evidências usadas. Artefatos `high` exigem recibo humano; artefatos com política
+`multiple_evidence` exigem ao menos duas provas resolvidas. Repetir a mesma ação é
+idempotente e não cria um segundo recibo.
 
 Esse princípio é aplicado no ranking. Ainda assim, a extração atual é majoritariamente
 heurística; os campos não transformam uma afirmação em verdade.
@@ -180,12 +201,19 @@ cortex adrs accept adr-0001
 cortex verify adr-0001
 cortex why adr-0001
 cortex contradictions
+cortex review-queue
+cortex promote adr-0001 --reason "confirmado no review" --force-human
+cortex evidence export adr-0001 --output audit/adr-0001.json
 ```
 
 Compilação de contexto:
 
 ```bash
 cortex context --task "alterar o acesso ao banco" --files src/db
+cortex context --profile architecture_review --trace --task "revisar persistência"
+cortex retrieval-debug "persistência" --json
+cortex verify-diff --base HEAD~1 --json
+cortex benchmark --corpus cortex/benchmarks/corpus/engineering_v1.jsonl
 ```
 
 Por padrão, o store fica em `.cortex/cortex.db`. A configuração padrão é local-only:
@@ -221,12 +249,14 @@ Exemplo de configuração:
 }
 ```
 
-O servidor expõe 16 ferramentas MCP:
+O servidor expõe ferramentas MCP para bootstrap, captura, destilação, governança,
+retrieval trace e exportação do ledger:
 
 `cortex_init` · `cortex_recall` · `cortex_remember` · `cortex_emit` ·
 `cortex_capture` · `cortex_distill` · `cortex_review` · `cortex_status` ·
 `cortex_verify` · `cortex_phase` · `cortex_intention` · `cortex_adr` ·
-`cortex_fix` · `cortex_correnda` · `cortex_diff` · `cortex_why`
+`cortex_fix` · `cortex_correnda` · `cortex_diff` · `cortex_why` ·
+`cortex_retrieval_trace` · `cortex_review_queue` · `cortex_evidence_export`
 
 `cortex_emit` permite que o agente registre uma decisão, fix ou regra estruturada no
 momento em que ela acontece. Ainda é uma emissão feita pelo agente: o Cortex não consegue

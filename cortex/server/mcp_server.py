@@ -22,12 +22,16 @@ from cortex.capture.recorder import capture_event
 from cortex.compiler.compiler import CompileInput, compile_context, rank
 from cortex.config import CortexConfig, CortexConfigError
 from cortex.distillation.review import build_session_review
+from cortex.governance import review_queue
 from cortex.knowledge.models import (
     ArtifactType,
     Authority,
     Entity,
     Provenance,
+    ReviewPolicy,
+    RiskLevel,
     Status,
+    _utcnow,
     session_id_for,
 )
 from cortex.service import (
@@ -124,6 +128,7 @@ def cortex_recall(query: str, scope: list[str] | None = None,
             "id": e.id, "type": e.type.value, "statement": e.statement,
             "status": e.status.value, "authority": e.authority.value,
             "confidence": e.confidence, "scope": e.scope, "score": item.score,
+            "risk_level": e.risk_level.value, "review_policy": e.review_policy.value,
         }
         if include_provenance:
             entry["provenance"] = e.provenance.model_dump()
@@ -133,7 +138,9 @@ def cortex_recall(query: str, scope: list[str] | None = None,
 
 @mcp.tool()
 def cortex_remember(statement: str, kind: str = "intention", motivation: str = "",
-                    scope: list[str] | None = None) -> str:
+                    scope: list[str] | None = None,
+                    risk_level: str = "medium",
+                    review_policy: str = "multiple_evidence") -> str:
     """Explicitly record knowledge: kind = intention | adr | correnda.
 
     This tool is invoked by the agent, so nothing here can verify a human
@@ -145,6 +152,11 @@ def cortex_remember(statement: str, kind: str = "intention", motivation: str = "
         etype = ArtifactType(kind)
     except ValueError:
         return _invalid_kind_error(kind)
+    try:
+        risk = RiskLevel(risk_level)
+        policy = ReviewPolicy(review_policy)
+    except ValueError:
+        return json.dumps({"ok": False, "error": "invalid risk_level or review_policy"})
     eid = store.reserve_entity_id(etype)
     ent_type_map = {
         "intention": {"motivation": motivation},
@@ -155,6 +167,7 @@ def cortex_remember(statement: str, kind: str = "intention", motivation: str = "
         id=eid, type=etype, statement=statement,
         status=Status.PROPOSED, authority=Authority.AGENT_INFERRED, confidence=0.85,
         scope=scope or [], session_id=session_id_for("mcp"),
+        risk_level=risk, review_policy=policy,
         details=ent_type_map.get(kind, {}),
         provenance=Provenance(extraction_source="explicit_agent_statement"),
     )
@@ -170,6 +183,8 @@ def cortex_emit(
     alternatives_rejected: list[str] | None = None,
     scope: list[str] | None = None,
     confidence_self_reported: float = 0.95,
+    risk_level: str = "medium",
+    review_policy: str = "multiple_evidence",
 ) -> str:
     """Agent native knowledge emission (Onda 6).
 
@@ -184,6 +199,11 @@ def cortex_emit(
         etype = ArtifactType(type_str)
     except ValueError:
         return _invalid_kind_error(kind, extra=("negative_knowledge",))
+    try:
+        risk = RiskLevel(risk_level)
+        policy = ReviewPolicy(review_policy)
+    except ValueError:
+        return json.dumps({"ok": False, "error": "invalid risk_level or review_policy"})
     eid = store.reserve_entity_id(etype)
 
     details: dict = {}
@@ -206,7 +226,7 @@ def cortex_emit(
         details = {"problem": statement, "solution": rationale}
 
     conf = max(0.1, min(1.0, confidence_self_reported))
-    status = Status.ACTIVE if kind == "fix" else Status.PROPOSED
+    status = Status.ACTIVE if kind == "fix" and risk != RiskLevel.HIGH else Status.PROPOSED
     authority = Authority.AGENT_INFERRED
 
     ent = Entity(
@@ -217,6 +237,10 @@ def cortex_emit(
         authority=authority,
         confidence=conf,
         scope=scope or [],
+        risk_level=risk, review_policy=policy,
+        observed_at=_utcnow(),
+        valid_from=_utcnow()
+        if status == Status.ACTIVE else None,
         session_id=session_id_for("mcp"),
         details=details,
         provenance=Provenance(extraction_source="cortex_emit_mcp_tool"),
@@ -312,6 +336,7 @@ def _list_artifacts(store: KnowledgeStore, etype: ArtifactType, limit: int = DEF
         "items": [{
             "id": e.id, "statement": e.statement, "status": e.status.value,
             "authority": e.authority.value, "confidence": e.confidence, "scope": e.scope,
+            "risk_level": e.risk_level.value, "review_policy": e.review_policy.value,
         } for e in ents],
     }, ensure_ascii=False, indent=2)
 
@@ -389,7 +414,50 @@ def cortex_why(entity_id: str) -> str:
     ]
     return json.dumps({
         "id": ent.id, "type": ent.type.value, "statement": ent.statement,
+        "extraction": ent.provenance.extraction_source,
         "status": ent.status.value, "authority": ent.authority.value,
         "confidence": ent.confidence, "details": ent.details,
         "provenance": ent.provenance.model_dump(), "evidence": evidence,
+        "evidence_ledger": [item.model_dump(mode="json") for item in ent.evidence],
+        "governance_receipts": store.governance_receipts(entity_id),
+        "last_verification": {
+            "at": ent.freshness.last_verified_at,
+            "source": ent.freshness.verification_source,
+            "stale": ent.freshness.stale,
+        },
     }, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+def cortex_retrieval_trace(task: str = "", files: list[str] | None = None,
+                           limit: int = 20, budget: int | None = None) -> str:
+    """Return stable signals, rankings and exclusion reasons for a retrieval."""
+    from cortex.compiler.compiler import retrieval_trace
+    _, cfg, store = _store()
+    return json.dumps(retrieval_trace(
+        store, CompileInput(query=task, files=files), limit=limit,
+        budget=budget or cfg.context_max_tokens,
+    ), ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+def cortex_review_queue() -> str:
+    """List proposed, high-risk and contradictory artifacts awaiting review."""
+    _, _, store = _store()
+    return json.dumps([{
+        "id": entity.id, "type": entity.type.value, "statement": entity.statement,
+        "status": entity.status.value, "risk_level": entity.risk_level.value,
+        "review_policy": entity.review_policy.value,
+        "contradiction_pending": bool(entity.details.get("contradiction_pending")),
+    } for entity in review_queue(store)], ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+def cortex_evidence_export(entity_id: str) -> str:
+    """Return a reproducible evidence package for one artifact."""
+    from cortex.knowledge.evidence import export_evidence_package
+    _, _, store = _store()
+    try:
+        return json.dumps(export_evidence_package(store, entity_id), ensure_ascii=False, indent=2)
+    except ValueError as exc:
+        return json.dumps({"ok": False, "error": str(exc)})
