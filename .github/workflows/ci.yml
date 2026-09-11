@@ -34,10 +34,28 @@ jobs:
         run: python -m pytest tests/ -v --cov=cortex --cov-report=term-missing
 
       - name: pip-audit
-        run: pip-audit
+        run: pip-audit . --skip-editable
+
+  enhanced:
+    name: Enhanced contracts
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Cortex with enhanced integrations
+        run: pip install -e ".[dev,enhanced]"
+
+      - name: Run enhanced contract tests
+        run: python -m pytest tests/ -q
 
       # NOTE: `cortex benchmark --dogfood` is intentionally not wired into CI
       # yet — dogfooding against this repo itself is a small, self-referential
-      # sample (see AUDITORIA_EXTERNA_2026-09-07.md, Onda 16). Add it here
-      # once it runs against a real external repository in a scheduled job,
-      # not on every PR, so a bad benchmark day doesn't block unrelated PRs.
+      # sample. Add it in a scheduled job once it runs against a real external
+      # repository, not on every PR, so a bad benchmark day does not block
+      # unrelated changes.

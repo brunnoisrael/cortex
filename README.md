@@ -9,7 +9,7 @@ Cursor · Claude Code · Codex · qualquer host que fale MCP.
 
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Tests](https://img.shields.io/badge/tests-136%2B%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-142%2B%20passing-brightgreen)
 ![Status](https://img.shields.io/badge/status-v0.3%20%2F%20Hybrid%20%26%20Contradiction-green)
 ![Local First](https://img.shields.io/badge/cloud-zero-lightgrey)
 
@@ -76,7 +76,7 @@ Memória genérica (a que já existe em vários produtos de "AI memory") respond
 
 O ciclo é **incremental e compressivo**: o histórico bruto pode crescer para sempre, mas o contexto injetado na próxima sessão não — ele é compilado, ranqueado e limitado por um budget de tokens (padrão: 2.000).
 
-### O que ele guarda — 5 tipos de conhecimento, não um só
+### O que ele guarda — conhecimento de engenharia estruturado
 
 Memória genérica guarda "o que aconteceu". Cortex guarda 5 coisas diferentes, porque engenharia de software não é uma coisa só:
 
@@ -87,6 +87,7 @@ Memória genérica guarda "o que aconteceu". Cortex guarda 5 coisas diferentes, 
 | **Fix** | Sintoma → causa-raiz → resolução | *"TypeError em payload nulo → validação ausente → guard clause + Pydantic"* |
 | **Correnda** | Uma regra aprendida, com evidência, nunca "verdade absoluta" | *"Validar payload externo antes de destructuring em handlers"* — nasce sempre `proposed`, só vira regra confiável depois que um humano confirma |
 | **Review** | O que a sessão produziu e o que ficou pendente | *"2 intentions, 1 ADR, 2 fixes. Pendente: estratégia de cache"* |
+| **Negative knowledge** | O que foi rejeitado ou não deve ser repetido | *"Não usar MongoDB neste domínio: schema relacional e ACID são requisitos"* |
 
 Cada artefato carrega **proveniência** (sessão, eventos, arquivos, commits de origem), **confidence** (quão provável é que esteja certo) e **authority** (quão autorizado o Cortex está a tratá-lo como regra — que não é a mesma coisa que confidence). Uma regra com 95% de confiança inferida pelo agente **não** tem a mesma prioridade que uma regra confirmada por humano com 70% — e essa distinção é aplicada de verdade no ranking, não é só um campo decorativo.
 
@@ -146,6 +147,25 @@ Os extras mantêm os fallbacks locais. Embeddings densos são opt-in com
 TOMLKit, detect-secrets, o cliente OpenAI-compatível do Ollama, tree-sitter e
 pyvis são carregados sob demanda quando disponíveis.
 
+### Capacidades enterprise opcionais
+
+O núcleo continua instalável sem serviços externos. O extra `enhanced` adiciona
+integrações maduras sem alterar o contrato local-first:
+
+| Capacidade | Padrão | Fallback | Efeito prático |
+|---|---|---|---|
+| Contagem de tokens | `tiktoken` obrigatório | estimativa por palavras | budget de contexto reproduzível |
+| Similaridade densa | `model2vec` + `sqlite-vec`, opt-in | n-gram/token local | ranking e contradições sem exigir modelo por padrão |
+| Segredos | `detect-secrets` | redaction regex | proteção adicional antes da persistência |
+| TOML | `tomlkit` | editor seguro + `tomllib` | preserva comentários e valida atomicamente |
+| Ollama | OpenAI SDK compatível | `urllib` | cliente moderno com degradação local |
+| Verificação | tree-sitter + grammars | AST Python/text scan | símbolos em múltiplas linguagens |
+| Grafo | pyvis | HTML standalone | exploração interativa opcional |
+
+Nenhuma dessas integrações habilita rede silenciosamente: embeddings exigem a
+flag explícita, Ollama respeita `privacy.network_calls`, e o fallback continua
+disponível quando um pacote ou grammar não está instalado.
+
 Saída esperada:
 
 ```text
@@ -160,7 +180,10 @@ Saída esperada:
 Cortex is ready.
 ```
 
-Isso cria `.cortex/cortex.db` (SQLite, WAL) dentro do seu repositório. Nada sai da sua máquina.
+Isso cria `.cortex/cortex.db` (SQLite, WAL) dentro do seu repositório. Na
+instalação mínima, nada sai da sua máquina; o único download potencial é o
+peso de embeddings quando `CORTEX_ENABLE_DENSE_EMBEDDINGS=1` é habilitado
+explicitamente.
 
 ---
 
@@ -303,7 +326,7 @@ cortex/
 ├── storage/        SQLite WAL + FTS5 (bm25)
 ├── git/            contexto de branch/commits como evidência
 ├── privacy/        redação antes da persistência
-├── verification.py verificação Tier 0 via AST — promove authority com evidência real
+├── verification.py verificação Tier 0 via AST/tree-sitter — evidencia o código real
 ├── commons.py      Correnda Commons — generalização opt-in de padrões
 └── visualizer.py   grafo de proveniência exportável como HTML standalone
 ```
@@ -320,10 +343,20 @@ Guardrails que **não são cosméticos** — são testados:
 
 ```bash
 python -m pytest tests/ -q
-# 136+ passed
+# 142+ passed
+
+# mesmos checks principais do CI
+python -m pytest tests/ -q --cov=cortex --cov-report=term-missing
+ruff check .
+mypy
+pip-audit . --skip-editable
 ```
 
-A suíte cobre os 8 critérios de aceitação do MVP (§58 do PRD) — por exemplo: uma decisão da sessão 1 tem que ser recuperável na sessão 3 sem reexplicação manual; uma decisão rejeitada não pode reaparecer como sugestão nova; dois fixes com causa-raiz parecida têm que gerar uma Correnda candidata; falha do Cortex nunca pode travar o workflow.
+A suíte cobre os 8 critérios de aceitação do MVP (§58 do PRD) e contratos dos
+fallbacks/integrações opcionais — por exemplo: uma decisão da sessão 1 tem que
+ser recuperável na sessão 3 sem reexplicação manual; uma decisão rejeitada não
+pode reaparecer como sugestão nova; dois fixes com causa-raiz parecida têm que
+gerar uma Correnda candidata; falha do Cortex nunca pode travar o workflow.
 
 ---
 
@@ -344,7 +377,8 @@ Este projeto documenta o próprio estado com honestidade, de propósito — incl
 | Onda 12 — Auto-calibração | hook de pesos configuráveis no Context Compiler | ✅ |
 | Onda 13 — Busca Híbrida + Densidade | esparso (BM25) + denso (n-gram/TF-IDF) + densidade de nó no Grafo e sinal técnico | ✅ |
 | Onda 14 — Contradição Semântica Robusta | matriz multi-vetorial (Decisão vs Decisão, Decisão vs Rejeitada, Correnda vs Regra, Negações Polares) | ✅ |
-| v0.3 — Verification & Hybrid Loop | busca híbrida com densidade, revalidação e matriz de contradição | ✅ concluído (136+ testes passing) |
+| Enterprise integrations | tiktoken, model2vec/sqlite-vec, detect-secrets, TOMLKit, OpenAI/Ollama, tree-sitter e pyvis, todos com fallback | ✅ implementado · paths enriquecidos são opt-in |
+| v0.3 — Verification & Hybrid Loop | busca híbrida com densidade, revalidação e matriz de contradição | ✅ concluído (142+ testes passing) |
 | v0.5 — Team Memory | multi-agente com permissões e CRDT | ⬜ não iniciado (por escolha, não por atraso) |
 
 **O que isso significa na prática:** este é um MVP funcional, com ciclo fechado e testado ponta a ponta, não um produto de produção acabado. Se você é o tipo de engenheiro que confia mais em quem admite o que ainda não está pronto, esse é o projeto certo pra acompanhar.

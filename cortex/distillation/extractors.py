@@ -344,7 +344,12 @@ def _sqlite_vec_similarity(first, second) -> float | None:
         first_values = first.tolist() if hasattr(first, "tolist") else list(first)
         second_values = second.tolist() if hasattr(second, "tolist") else list(second)
         conn = sqlite3.connect(":memory:")
+        # sqlite-vec is a loadable SQLite extension.  Enabling extensions is
+        # scoped to this in-memory connection and disabled immediately after
+        # loading; no user database can load arbitrary extensions here.
+        conn.enable_load_extension(True)
         sqlite_vec.load(conn)
+        conn.enable_load_extension(False)
         conn.execute(
             f"CREATE VIRTUAL TABLE vectors USING vec0(embedding float[{len(first_values)}] distance_metric=cosine)"
         )

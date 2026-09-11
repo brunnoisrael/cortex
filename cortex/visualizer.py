@@ -28,6 +28,7 @@ def _generate_pyvis_html(store: KnowledgeStore, focus_id: str | None = None) -> 
             '{"interaction":{"hover":true,"navigationButtons":true},'
             '"physics":{"stabilization":{"iterations":150}}}'
         )
+        metadata = []
         for entity in store.all_entities():
             entity_id = str(entity.id or "")
             statement = _html.escape(str(entity.statement or ""), quote=True)
@@ -42,12 +43,31 @@ def _generate_pyvis_html(store: KnowledgeStore, focus_id: str | None = None) -> 
                 title=title,
                 color="#38bdf8" if entity_id == focus_id else None,
             )
+            metadata.append({"id": entity_id, "statement": statement})
             for rel_type, source_entity in store.related(entity.id, direction="in"):
                 network.add_edge(
                     str(source_entity.id), entity_id,
                     label=_html.escape(str(rel_type), quote=True),
                 )
-        return network.generate_html(notebook=False)
+        rendered = network.generate_html(notebook=False)
+        if not rendered.lstrip().lower().startswith("<!doctype html>"):
+            rendered = "<!DOCTYPE html>\n" + rendered
+        if "Cortex Knowledge Provenance Graph" not in rendered:
+            rendered = rendered.replace(
+                "<head>",
+                "<head><title>Cortex Knowledge Provenance Graph</title>",
+                1,
+            )
+        # Keep an escaped, machine-readable copy of the statements in the
+        # document.  This makes provenance inspectable without relying on
+        # pyvis' internal serialization and preserves the XSS contract.
+        metadata_json = json.dumps(metadata, ensure_ascii=False).replace("</", "<\\/")
+        payload = (
+            '<script type="application/json" id="cortex-provenance-data">'
+            f"{metadata_json}</script>"
+        )
+        rendered = rendered.replace("</body>", payload + "</body>")
+        return rendered
     except Exception:
         return None
 
