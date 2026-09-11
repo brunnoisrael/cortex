@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
-from cortex.compiler.compiler import CompileInput, rank, token_estimate
+from cortex.compiler.compiler import CompileInput, compile_context_with_trace, rank, token_estimate
 from cortex.storage.store import KnowledgeStore
 
 
@@ -99,3 +99,40 @@ def evaluate_cortex(store: KnowledgeStore, cases: list[BenchmarkCase], k: int = 
         "limitations": ["relevance labels are corpus-specific", "external adapters are not bundled"],
     }
 
+
+def evaluate_context_quality(store: KnowledgeStore, cases: list[BenchmarkCase], budget: int = 1000) -> dict[str, Any]:
+    """Measure the final context separately from retrieval ranking."""
+    rows = []
+    for case in cases:
+        result = compile_context_with_trace(
+            store, CompileInput(query=case.query, files=list(case.files)), max_tokens=budget,
+        )
+        selected = set(result["trace"].get("selected_ids", []))
+        relevant = set(case.relevant)
+        rows.append({
+            "id": case.id,
+            "context_recall": len(selected & relevant) / max(1, len(relevant)),
+            "tokens": token_estimate(result["context"]),
+            "selected": sorted(selected),
+            "high_risk": result["trace"]["budget_evaluation"]["high_risk_selected"],
+            "duplicates": result["trace"]["budget_evaluation"]["duplicate_items"],
+        })
+    count = max(1, len(rows))
+    return {
+        "schema": "context_benchmark/v1", "cases": len(rows), "budget": budget,
+        "metrics": {
+            "context_recall": round(sum(row["context_recall"] for row in rows) / count, 4),
+            "tokens": round(sum(row["tokens"] for row in rows) / count, 2),
+            "high_risk_items": sum(len(row["high_risk"]) for row in rows),
+            "duplicate_items": sum(row["duplicates"] for row in rows),
+        },
+        "rows": rows,
+    }
+
+
+def evaluate_pipeline(store: KnowledgeStore, cases: list[BenchmarkCase], k: int = 5, budget: int = 1000) -> dict[str, Any]:
+    """Return extraction/ranking/context layers without conflating their scores."""
+    retrieval = evaluate_cortex(store, cases, k=k)
+    context = evaluate_context_quality(store, cases, budget=budget)
+    return {"schema": "cortex_pipeline_benchmark/v1", "retrieval": retrieval, "context": context,
+            "quality_layers": ["extraction", "ranking", "context"]}
