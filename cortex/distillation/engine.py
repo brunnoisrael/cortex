@@ -210,16 +210,31 @@ class DistillationEngine:
 
     # ---- dedup ----
 
-    @staticmethod
-    def _find_duplicate(cand, existing: list[Entity]) -> Entity | None:
+    def _find_duplicate(self, cand, existing: list[Entity]) -> Entity | None:
         # Fixes with similar symptoms are usually *distinct* evidence (the raw
         # material of Correndas) — merge only near-identical re-observations.
+        # O(N²) mitigation: cache similarity calculations within a single distillation
+        # run (item 2). The same statement may be compared against multiple existing
+        # entities; caching avoids redundant expensive similarity computations.
         threshold = (FIX_DEDUP_SIMILARITY if cand.etype == ArtifactType.FIX
                      else DEDUP_SIMILARITY)
+        
+        # Per-run similarity cache: maps (cand_statement, ent_statement) -> similarity
+        if not hasattr(self, '_similarity_cache'):
+            self._similarity_cache = {}
+        
         for ent in existing:
             if ent.type != cand.etype:
                 continue
-            if statement_similarity(cand.statement, ent.statement) >= threshold:
+            
+            cache_key = (cand.statement, ent.statement)
+            if cache_key in self._similarity_cache:
+                similarity = self._similarity_cache[cache_key]
+            else:
+                similarity = statement_similarity(cand.statement, ent.statement)
+                self._similarity_cache[cache_key] = similarity
+            
+            if similarity >= threshold:
                 return ent
         return None
 
