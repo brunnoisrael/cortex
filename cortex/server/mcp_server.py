@@ -290,40 +290,66 @@ def cortex_phase() -> str:
     return json.dumps(phase_health(store), ensure_ascii=False, indent=2)
 
 
-def _list_artifacts(store: KnowledgeStore, etype: ArtifactType) -> str:
+DEFAULT_LIST_LIMIT = 50
+MAX_LIST_LIMIT = 200
+
+
+def _list_artifacts(store: KnowledgeStore, etype: ArtifactType, limit: int = DEFAULT_LIST_LIMIT) -> str:
+    """Bounded listing (item: MCP listing limits). These tools used to
+    return every entity of a type with no cap — an agent calling
+    cortex_adr() on a store with thousands of ADRs got them all dumped into
+    its context in one tool result. Most-recently-created entities are the
+    ones an agent working right now is most likely to need, so a capped
+    call keeps those and reports the true total so the agent knows it was
+    truncated (and can ask for more, up to MAX_LIST_LIMIT, if it needs to)."""
+    limit = max(1, min(int(limit), MAX_LIST_LIMIT))
     ents = store.list_by_type(etype)
-    return json.dumps([{
-        "id": e.id, "statement": e.statement, "status": e.status.value,
-        "authority": e.authority.value, "confidence": e.confidence, "scope": e.scope,
-    } for e in ents], ensure_ascii=False, indent=2)
+    total = len(ents)
+    ents = sorted(ents, key=lambda e: e.created_at, reverse=True)[:limit]
+    return json.dumps({
+        "total": total,
+        "returned": len(ents),
+        "items": [{
+            "id": e.id, "statement": e.statement, "status": e.status.value,
+            "authority": e.authority.value, "confidence": e.confidence, "scope": e.scope,
+        } for e in ents],
+    }, ensure_ascii=False, indent=2)
 
 
 @mcp.tool()
-def cortex_intention() -> str:
-    """List recorded Intentions (PRD §20.2)."""
+def cortex_intention(limit: int = DEFAULT_LIST_LIMIT) -> str:
+    """List recorded Intentions, most recent first (PRD §20.2). Capped at
+    `limit` (default 50, max 200); the result's `total` field says how many
+    exist in the store even when truncated."""
     _, _, store = _store()
-    return _list_artifacts(store, ArtifactType.INTENTION)
+    return _list_artifacts(store, ArtifactType.INTENTION, limit)
 
 
 @mcp.tool()
-def cortex_adr() -> str:
-    """List ADRs (PRD §20.2)."""
+def cortex_adr(limit: int = DEFAULT_LIST_LIMIT) -> str:
+    """List ADRs, most recent first (PRD §20.2). Capped at `limit` (default
+    50, max 200); the result's `total` field says how many exist in the
+    store even when truncated."""
     _, _, store = _store()
-    return _list_artifacts(store, ArtifactType.ADR)
+    return _list_artifacts(store, ArtifactType.ADR, limit)
 
 
 @mcp.tool()
-def cortex_fix() -> str:
-    """List Fixes (PRD §20.2)."""
+def cortex_fix(limit: int = DEFAULT_LIST_LIMIT) -> str:
+    """List Fixes, most recent first (PRD §20.2). Capped at `limit`
+    (default 50, max 200); the result's `total` field says how many exist
+    in the store even when truncated."""
     _, _, store = _store()
-    return _list_artifacts(store, ArtifactType.FIX)
+    return _list_artifacts(store, ArtifactType.FIX, limit)
 
 
 @mcp.tool()
-def cortex_correnda() -> str:
-    """List Correndas with their lifecycle status (PRD §20.2)."""
+def cortex_correnda(limit: int = DEFAULT_LIST_LIMIT) -> str:
+    """List Correndas with their lifecycle status, most recent first (PRD
+    §20.2). Capped at `limit` (default 50, max 200); the result's `total`
+    field says how many exist in the store even when truncated."""
     _, _, store = _store()
-    return _list_artifacts(store, ArtifactType.CORRENDA)
+    return _list_artifacts(store, ArtifactType.CORRENDA, limit)
 
 
 @mcp.tool()

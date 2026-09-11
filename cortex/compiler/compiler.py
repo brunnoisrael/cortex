@@ -263,11 +263,16 @@ def compile_context(store: KnowledgeStore, inp: CompileInput,
     except Exception:
         return _minimal_safe_context(store)  # PRD §42: never block the session
 
+    END_MARKER = "<!-- END CORTEX CONTEXT -->"
     block = ["<!-- CORTEX CONTEXT -->"]
     used = sum(token_estimate(ln) for ln in block)
+    # The end marker is appended unconditionally below, after every fits()
+    # check has already run — reserve its cost up front so the last body
+    # line admitted still leaves room for it (item: END-marker budget).
+    end_marker_cost = token_estimate(END_MARKER)
 
     def fits(line: str) -> bool:
-        return used + token_estimate(line) <= max_tokens
+        return used + token_estimate(line) + end_marker_cost <= max_tokens
 
     def add(line: str) -> None:
         nonlocal used
@@ -350,7 +355,8 @@ def compile_context(store: KnowledgeStore, inp: CompileInput,
                         break
                     add(line)
 
-    add("<!-- END CORTEX CONTEXT -->")
+    block.append(END_MARKER)  # reserved above; never re-checked against fits()
+    used += end_marker_cost
     return "\n".join(block)
 
 

@@ -9,7 +9,7 @@ Cursor · Claude Code · Codex · qualquer host que fale MCP.
 
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Tests](https://img.shields.io/badge/tests-44%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-136%2B%20passing-brightgreen)
 ![Status](https://img.shields.io/badge/status-v0.3%20%2F%20Hybrid%20%26%20Contradiction-green)
 ![Local First](https://img.shields.io/badge/cloud-zero-lightgrey)
 
@@ -309,7 +309,7 @@ Guardrails que **não são cosméticos** — são testados:
 
 ```bash
 python -m pytest tests/ -q
-# 44 passed
+# 136+ passed
 ```
 
 A suíte cobre os 8 critérios de aceitação do MVP (§58 do PRD) — por exemplo: uma decisão da sessão 1 tem que ser recuperável na sessão 3 sem reexplicação manual; uma decisão rejeitada não pode reaparecer como sugestão nova; dois fixes com causa-raiz parecida têm que gerar uma Correnda candidata; falha do Cortex nunca pode travar o workflow.
@@ -333,7 +333,7 @@ Este projeto documenta o próprio estado com honestidade, de propósito — incl
 | Onda 12 — Auto-calibração | hook de pesos configuráveis no Context Compiler | ✅ |
 | Onda 13 — Busca Híbrida + Densidade | esparso (BM25) + denso (n-gram/TF-IDF) + densidade de nó no Grafo e sinal técnico | ✅ |
 | Onda 14 — Contradição Semântica Robusta | matriz multi-vetorial (Decisão vs Decisão, Decisão vs Rejeitada, Correnda vs Regra, Negações Polares) | ✅ |
-| v0.3 — Verification & Hybrid Loop | busca híbrida com densidade, revalidação e matriz de contradição | ✅ concluído (44 testes passing) |
+| v0.3 — Verification & Hybrid Loop | busca híbrida com densidade, revalidação e matriz de contradição | ✅ concluído (136+ testes passing) |
 | v0.5 — Team Memory | multi-agente com permissões e CRDT | ⬜ não iniciado (por escolha, não por atraso) |
 
 **O que isso significa na prática:** este é um MVP funcional, com ciclo fechado e testado ponta a ponta, não um produto de produção acabado. Se você é o tipo de engenheiro que confia mais em quem admite o que ainda não está pronto, esse é o projeto certo pra acompanhar.

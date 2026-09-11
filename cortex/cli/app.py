@@ -60,12 +60,10 @@ def _require_workspace() -> tuple[Path, CortexConfig, KnowledgeStore]:
 @contextmanager
 def workspace_store() -> Iterator[tuple[Path, CortexConfig, KnowledgeStore]]:
     """Same resolution as _require_workspace(), but guarantees store.close()
-    even when the command body raises (item 5.1). _require_workspace() itself
-    is left as-is deliberately: ~30 existing commands call it directly and
-    close() only on their happy path (a pre-existing pattern this plan
-    adopts incrementally, command by command, rather than in one big-bang
-    rewrite — see commons export/import and benchmark for the two commands
-    that already got this right by hand before this helper existed)."""
+    even when the command body raises (item 5.1 / item 6). Every CLI
+    command that opens a store now goes through this — the migration
+    is complete; _require_workspace() itself is kept only as this
+    function's building block, not called directly by any command."""
     root, cfg, store = _require_workspace()
     try:
         yield root, cfg, store
@@ -110,18 +108,17 @@ def init() -> None:
 @app.command()
 def status(verbose: bool = typer.Option(False, "--verbose")) -> None:
     """Show Cortex store statistics."""
-    _, cfg, store = _require_workspace()
-    st = store.stats()
-    typer.echo(f"project: {cfg.project_name}")
-    typer.echo(f"entities: {st['total_entities']}")
-    for etype, n in sorted(st["entities"].items()):
-        typer.echo(f"  {etype}: {n}")
-    typer.echo(f"raw events: {st['raw_events']}")
-    typer.echo(f"sessions: {st['sessions']}")
-    if verbose:
-        for line in _logs(store):
-            typer.echo(line)
-    store.close()
+    with workspace_store() as (_, cfg, store):
+        st = store.stats()
+        typer.echo(f"project: {cfg.project_name}")
+        typer.echo(f"entities: {st['total_entities']}")
+        for etype, n in sorted(st["entities"].items()):
+            typer.echo(f"  {etype}: {n}")
+        typer.echo(f"raw events: {st['raw_events']}")
+        typer.echo(f"sessions: {st['sessions']}")
+        if verbose:
+            for line in _logs(store):
+                typer.echo(line)
 
 
 def _logs(store: KnowledgeStore) -> list[str]:
@@ -211,62 +208,59 @@ def recall(
     include_provenance: bool = typer.Option(False, "--provenance"),
 ) -> None:
     """Retrieve relevant engineering knowledge (PRD §21.2)."""
-    _, _, store = _require_workspace()
-    files = [s.strip() for s in scope.split(",")] if scope else None
-    items = rank(store, CompileInput(query=query, files=files), limit=max_results)
-    if not items:
-        typer.echo("no relevant knowledge found.")
-        store.close()
-        return
-    for item in items:
-        e = item.entity
-        typer.secho(f"[{e.id}] {e.type.value} ({e.status.value}, confidence {e.confidence:.2f}, score {item.score:.3f})",
-                    fg=typer.colors.CYAN)
-        typer.echo(f"  {e.statement}")
-        if e.scope:
-            typer.echo(f"  scope: {', '.join(e.scope)}")
-        if include_provenance:
-            p = e.provenance
-            typer.echo(f"  provenance: session={p.source_session} events={p.source_events} "
-                       f"entities={p.source_entities}")
-    store.close()
+    with workspace_store() as (_, _, store):
+        files = [s.strip() for s in scope.split(",")] if scope else None
+        items = rank(store, CompileInput(query=query, files=files), limit=max_results)
+        if not items:
+            typer.echo("no relevant knowledge found.")
+            return
+        for item in items:
+            e = item.entity
+            typer.secho(f"[{e.id}] {e.type.value} ({e.status.value}, confidence {e.confidence:.2f}, score {item.score:.3f})",
+                        fg=typer.colors.CYAN)
+            typer.echo(f"  {e.statement}")
+            if e.scope:
+                typer.echo(f"  scope: {', '.join(e.scope)}")
+            if include_provenance:
+                p = e.provenance
+                typer.echo(f"  provenance: session={p.source_session} events={p.source_events} "
+                           f"entities={p.source_entities}")
 
 
 @app.command()
 def intentions() -> None:
-    _, _, store = _require_workspace()
-    _list_entities(store, ArtifactType.INTENTION)
+    with workspace_store() as (_, _, store):
+        _list_entities(store, ArtifactType.INTENTION)
 
 
 @app.command()
 def adrs() -> None:
-    _, _, store = _require_workspace()
-    _list_entities(store, ArtifactType.ADR)
+    with workspace_store() as (_, _, store):
+        _list_entities(store, ArtifactType.ADR)
 
 
 @app.command()
 def fixes() -> None:
-    _, _, store = _require_workspace()
-    _list_entities(store, ArtifactType.FIX)
+    with workspace_store() as (_, _, store):
+        _list_entities(store, ArtifactType.FIX)
 
 
 @app.command()
 def correndas() -> None:
-    _, _, store = _require_workspace()
-    _list_entities(store, ArtifactType.CORRENDA)
+    with workspace_store() as (_, _, store):
+        _list_entities(store, ArtifactType.CORRENDA)
 
 
 @app.command()
 def reviews() -> None:
-    _, _, store = _require_workspace()
-    _list_entities(store, ArtifactType.REVIEW)
+    with workspace_store() as (_, _, store):
+        _list_entities(store, ArtifactType.REVIEW)
 
 
 def _list_entities(store: KnowledgeStore, etype: ArtifactType) -> None:
     ents = store.list_by_type(etype)
     if not ents:
         typer.echo(f"no {etype.value}s yet. Run `cortex distill` after a session.")
-        store.close()
         return
     for e in ents:
         typer.secho(f"[{e.id}] ({e.status.value}, {e.authority.value}, confidence {e.confidence:.2f})",
@@ -278,7 +272,6 @@ def _list_entities(store: KnowledgeStore, etype: ArtifactType) -> None:
             typer.echo(f"  evidence: {', '.join(e.details['origin'])}")
         if e.scope:
             typer.echo(f"  scope: {', '.join(e.scope)}")
-    store.close()
 
 
 # ---- distillation ----
@@ -289,30 +282,28 @@ def distill(
     dry_run: bool = typer.Option(False, "--dry-run"),
 ) -> None:
     """Run the Distillation Engine over captured events (PRD §8)."""
-    _, cfg, store = _require_workspace()
-    if session and store.get_session(session) is None:
-        # A typo'd --session used to silently "succeed" with 0 events
-        # processed — indistinguishable from a real session with nothing
-        # left to distill. Warn, but still run (mirrors `doctor`: signal,
-        # don't block) since the id might legitimately just be very old.
-        typer.secho(f"! session {session!r} not found in this store "
-                    "(check for a typo?) — proceeding, but expect 0 events.",
-                    fg=typer.colors.YELLOW)
-    engine = build_distillation_engine(store, cfg)
-    if dry_run:
-        events = store.undistilled_events(session)
-        typer.echo(f"dry-run: {len(events)} events would be processed for "
-                   f"{'session ' + session if session else 'all sessions'}")
-        store.close()
-        return
-    report = engine.distill_session(session) if session else engine.distill_all()
-    typer.secho("distillation complete", fg=typer.colors.GREEN)
-    typer.echo(f"  {report.summary()}")
-    for w in report.warnings:
-        typer.secho(f"  ! {w}", fg=typer.colors.YELLOW)
-    if report.new_ids:
-        typer.echo(f"  new artifacts: {', '.join(report.new_ids)}")
-    store.close()
+    with workspace_store() as (_, cfg, store):
+        if session and store.get_session(session) is None:
+            # A typo'd --session used to silently "succeed" with 0 events
+            # processed — indistinguishable from a real session with nothing
+            # left to distill. Warn, but still run (mirrors `doctor`: signal,
+            # don't block) since the id might legitimately just be very old.
+            typer.secho(f"! session {session!r} not found in this store "
+                        "(check for a typo?) — proceeding, but expect 0 events.",
+                        fg=typer.colors.YELLOW)
+        engine = build_distillation_engine(store, cfg)
+        if dry_run:
+            events = store.undistilled_events(session)
+            typer.echo(f"dry-run: {len(events)} events would be processed for "
+                       f"{'session ' + session if session else 'all sessions'}")
+            return
+        report = engine.distill_session(session) if session else engine.distill_all()
+        typer.secho("distillation complete", fg=typer.colors.GREEN)
+        typer.echo(f"  {report.summary()}")
+        for w in report.warnings:
+            typer.secho(f"  ! {w}", fg=typer.colors.YELLOW)
+        if report.new_ids:
+            typer.echo(f"  new artifacts: {', '.join(report.new_ids)}")
 
 
 @app.command()
@@ -321,24 +312,20 @@ def review(
     phase: bool = typer.Option(False, "--phase", help="Aggregate phase review."),
 ) -> None:
     """Generate a session (or phase) review (PRD §13)."""
-    _, _, store = _require_workspace()
-    if phase:
-        _phase_review(store)
-        store.close()
-        return
-    if session is None:
-        session = latest_open_session_id(store)
-        if not session:
-            typer.echo("no open session found.")
-            store.close()
+    with workspace_store() as (_, _, store):
+        if phase:
+            _phase_review(store)
             return
-    rev = build_session_review(store, session)
-    if not rev:
-        typer.echo(f"session {session} not found.")
-        store.close()
-        return
-    _print_review(rev)
-    store.close()
+        if session is None:
+            session = latest_open_session_id(store)
+            if not session:
+                typer.echo("no open session found.")
+                return
+        rev = build_session_review(store, session)
+        if not rev:
+            typer.echo(f"session {session} not found.")
+            return
+        _print_review(rev)
 
 
 def _phase_review(store: KnowledgeStore) -> None:
@@ -442,24 +429,22 @@ def supersede(old_id: str, with_new: str = typer.Option(..., "--with")) -> None:
 @app.command()
 def contradictions() -> None:
     """List all detected semantic contradictions in the knowledge store."""
-    _, _, store = _require_workspace()
-    edges = store.edges_of(rel="CONTRADICTS")
-    if not edges:
-        typer.echo("no semantic contradictions detected.")
-        store.close()
-        return
+    with workspace_store() as (_, _, store):
+        edges = store.edges_of(rel="CONTRADICTS")
+        if not edges:
+            typer.echo("no semantic contradictions detected.")
+            return
 
-    typer.secho(f"Found {len(edges)} semantic contradiction edge(s):\n", fg=typer.colors.YELLOW)
-    for edge in edges:
-        src_ent = store.get(edge["src"])
-        dst_ent = store.get(edge["dst"])
-        if src_ent and dst_ent:
-            typer.secho(f"⚔ [{src_ent.id}] ({src_ent.type.value}, {src_ent.authority.value})", fg=typer.colors.RED)
-            typer.echo(f"  Statement: {src_ent.statement}")
-            typer.secho(f"  CONTRADICTS [{dst_ent.id}] ({dst_ent.type.value}, {dst_ent.authority.value})", fg=typer.colors.CYAN)
-            typer.echo(f"  Statement: {dst_ent.statement}")
-            typer.echo(f"  Resolution: use `cortex supersede {dst_ent.id} --with {src_ent.id}` or `cortex verify <id>`.\n")
-    store.close()
+        typer.secho(f"Found {len(edges)} semantic contradiction edge(s):\n", fg=typer.colors.YELLOW)
+        for edge in edges:
+            src_ent = store.get(edge["src"])
+            dst_ent = store.get(edge["dst"])
+            if src_ent and dst_ent:
+                typer.secho(f"⚔ [{src_ent.id}] ({src_ent.type.value}, {src_ent.authority.value})", fg=typer.colors.RED)
+                typer.echo(f"  Statement: {src_ent.statement}")
+                typer.secho(f"  CONTRADICTS [{dst_ent.id}] ({dst_ent.type.value}, {dst_ent.authority.value})", fg=typer.colors.CYAN)
+                typer.echo(f"  Statement: {dst_ent.statement}")
+                typer.echo(f"  Resolution: use `cortex supersede {dst_ent.id} --with {src_ent.id}` or `cortex verify <id>`.\n")
 
 
 
@@ -518,29 +503,27 @@ def graph(
     focus: str | None = typer.Option(None, "--focus", help="Focus entity ID."),
 ) -> None:
     """Generate a standalone visual provenance graph (Onda 9)."""
-    _, _, store = _require_workspace()
-    from cortex.visualizer import export_provenance_graph_file
-    out_path = export_provenance_graph_file(store, output, focus_id=focus)
-    typer.secho(f"✓ Provenance graph generated at {out_path.resolve()}", fg=typer.colors.GREEN)
-    store.close()
+    with workspace_store() as (_, _, store):
+        from cortex.visualizer import export_provenance_graph_file
+        out_path = export_provenance_graph_file(store, output, focus_id=focus)
+        typer.secho(f"✓ Provenance graph generated at {out_path.resolve()}", fg=typer.colors.GREEN)
 
 
 
 @app.command()
 def trace(session_id: str) -> None:
     """Show raw events and distilled artifacts of a session (PRD §41)."""
-    _, _, store = _require_workspace()
-    events = store.conn.execute(
-        "SELECT * FROM events WHERE session_id = ? ORDER BY ts", (session_id,)
-    ).fetchall()
-    typer.echo(f"session {session_id}: {len(events)} events")
-    for r in events:
-        content = (r["content"] or "")[:80].replace("\n", " ")
-        typer.echo(f"  {r['ts']} {r['type']:<16} {content}")
-    for ent in store.all_entities():
-        if ent.session_id == session_id:
-            typer.echo(f"  -> {ent.type.value} [{ent.id}] {ent.statement[:80]}")
-    store.close()
+    with workspace_store() as (_, _, store):
+        events = store.conn.execute(
+            "SELECT * FROM events WHERE session_id = ? ORDER BY ts", (session_id,)
+        ).fetchall()
+        typer.echo(f"session {session_id}: {len(events)} events")
+        for r in events:
+            content = (r["content"] or "")[:80].replace("\n", " ")
+            typer.echo(f"  {r['ts']} {r['type']:<16} {content}")
+        for ent in store.all_entities():
+            if ent.session_id == session_id:
+                typer.echo(f"  -> {ent.type.value} [{ent.id}] {ent.statement[:80]}")
 
 
 # ---- manual capture ----
@@ -555,29 +538,26 @@ def capture(
     limit: int = typer.Option(20, help="For 'commits': how many recent commits."),
 ) -> None:
     """Manually record a raw event, or import git history with 'commits'."""
-    _, _, store = _require_workspace()
-    if event_type == "commits":
-        from cortex.capture.recorder import capture_commits
-        ids = capture_commits(store, Path.cwd(), limit=limit, session_id=session)
-        typer.echo(f"imported {len(ids)} commit events as evidence")
-        store.close()
-        return
-    if not content:
-        typer.secho("content is required (or use 'cortex capture commits').",
-                    fg=typer.colors.RED)
-        store.close()
-        raise typer.Exit(1)
-    session = session or _current_session(store)
-    store.ensure_session(session, host="cli", branch=branch)
-    eid = capture_event(store, {
-        "type": event_type,
-        "session_id": session,
-        "content": content,
-        "files": [f.strip() for f in files.split(",")] if files else [],
-        "branch": branch,
-    })
-    typer.echo(f"captured {event_type} as {eid} (session {session})")
-    store.close()
+    with workspace_store() as (_, _, store):
+        if event_type == "commits":
+            from cortex.capture.recorder import capture_commits
+            ids = capture_commits(store, Path.cwd(), limit=limit, session_id=session)
+            typer.echo(f"imported {len(ids)} commit events as evidence")
+            return
+        if not content:
+            typer.secho("content is required (or use 'cortex capture commits').",
+                        fg=typer.colors.RED)
+            raise typer.Exit(1)
+        session = session or _current_session(store)
+        store.ensure_session(session, host="cli", branch=branch)
+        eid = capture_event(store, {
+            "type": event_type,
+            "session_id": session,
+            "content": content,
+            "files": [f.strip() for f in files.split(",")] if files else [],
+            "branch": branch,
+        })
+        typer.echo(f"captured {event_type} as {eid} (session {session})")
 
 
 def _current_session(store: KnowledgeStore) -> str:
@@ -598,20 +578,19 @@ def context(
     branch: str | None = typer.Option(None),
 ) -> None:
     """Compile the session context block (what cortex_init returns)."""
-    _, cfg, store = _require_workspace()
-    file_list = [f.strip() for f in files.split(",")] if files else None
-    out = compile_context(
-        store,
-        CompileInput(query=task, files=file_list, branch=branch, phase=cfg.phase),
-        max_tokens=cfg.context_max_tokens,
-        max_adrs=cfg.max_adrs,
-        max_intentions=cfg.max_intentions,
-        max_correndas=cfg.max_correndas,
-        include_recent_fixes=cfg.include_recent_fixes,
-        include_last_review=cfg.include_last_review,
-    )
-    typer.echo(out)
-    store.close()
+    with workspace_store() as (_, cfg, store):
+        file_list = [f.strip() for f in files.split(",")] if files else None
+        out = compile_context(
+            store,
+            CompileInput(query=task, files=file_list, branch=branch, phase=cfg.phase),
+            max_tokens=cfg.context_max_tokens,
+            max_adrs=cfg.max_adrs,
+            max_intentions=cfg.max_intentions,
+            max_correndas=cfg.max_correndas,
+            include_recent_fixes=cfg.include_recent_fixes,
+            include_last_review=cfg.include_last_review,
+        )
+        typer.echo(out)
 
 
 # ---- host hooks ----
@@ -657,23 +636,21 @@ def diff(
     sessions: int = typer.Option(2, "--sessions", help="How many recent sessions."),
 ) -> None:
     """Summarize knowledge changes across the last N sessions (PRD §21.5)."""
-    _, _, store = _require_workspace()
-    rows = store.conn.execute(
-        "SELECT id, started_at FROM sessions ORDER BY started_at DESC LIMIT ?",
-        (sessions,),
-    ).fetchall()
-    if not rows:
-        typer.echo("no sessions recorded.")
-        store.close()
-        return
-    for r in rows:
-        ents = store.entities_by_session(r["id"])
-        typer.secho(f"session {r['id']} ({r['started_at']})", fg=typer.colors.CYAN)
-        if not ents:
-            typer.echo("  (no distilled artifacts)")
-        for e in ents:
-            typer.echo(f"  + {e.type.value} [{e.id}] {e.statement[:90]}")
-    store.close()
+    with workspace_store() as (_, _, store):
+        rows = store.conn.execute(
+            "SELECT id, started_at FROM sessions ORDER BY started_at DESC LIMIT ?",
+            (sessions,),
+        ).fetchall()
+        if not rows:
+            typer.echo("no sessions recorded.")
+            return
+        for r in rows:
+            ents = store.entities_by_session(r["id"])
+            typer.secho(f"session {r['id']} ({r['started_at']})", fg=typer.colors.CYAN)
+            if not ents:
+                typer.echo("  (no distilled artifacts)")
+            for e in ents:
+                typer.echo(f"  + {e.type.value} [{e.id}] {e.statement[:90]}")
 
 
 @app.command("retrieval-debug")
@@ -683,40 +660,38 @@ def retrieval_debug(
 ) -> None:
     """Explain retrieval: per-candidate hybrid score components & density (PRD §41)."""
     from cortex.compiler.compiler import CompileInput, _tokens, rank
-    _, cfg, store = _require_workspace()
-    file_list = [f.strip() for f in files.split(",")] if files else None
-    try:
-        fts = store.search(query, limit=200)
-        fts_ids = {e.id for e, _ in fts}
-    except Exception:
-        fts_ids = set()
-    typer.echo(f"query: {query!r}  (budget {cfg.context_max_tokens} tokens)")
-    typer.echo(f"bm25 hits: {len(fts_ids)} entities")
-    items = rank(store, CompileInput(query=query, files=file_list), limit=15)
-    if not items:
-        typer.echo("no candidates survived filtering.")
-    for item in items:
-        e = item.entity
-        line = f"- [{e.id}] {e.statement}"
-        r = item.reasons
-        typer.echo(
-            f"[{e.id}] {e.type.value} score={item.score:.3f} "
-            f"(hybrid_rel={r.get('relevance', 0):.2f} [sparse={r.get('sparse', 0):.2f}, dense={r.get('dense', 0):.2f}] "
-            f"density=[graph={r.get('graph_density', 0):.2f}, content={r.get('content_density', 0):.2f}] "
-            f"authority={r.get('authority')} conf={r.get('confidence'):.2f} "
-            f"contradicted={'YES' if r.get('contradicted') else 'no'} "
-            f"bm25={'yes' if e.id in fts_ids else 'no'} scope={e.scope or '-'} ~{_tokens(line)}tk)"
-        )
-    store.close()
+    with workspace_store() as (_, cfg, store):
+        file_list = [f.strip() for f in files.split(",")] if files else None
+        try:
+            fts = store.search(query, limit=200)
+            fts_ids = {e.id for e, _ in fts}
+        except Exception:
+            fts_ids = set()
+        typer.echo(f"query: {query!r}  (budget {cfg.context_max_tokens} tokens)")
+        typer.echo(f"bm25 hits: {len(fts_ids)} entities")
+        items = rank(store, CompileInput(query=query, files=file_list), limit=15)
+        if not items:
+            typer.echo("no candidates survived filtering.")
+        for item in items:
+            e = item.entity
+            line = f"- [{e.id}] {e.statement}"
+            r = item.reasons
+            typer.echo(
+                f"[{e.id}] {e.type.value} score={item.score:.3f} "
+                f"(hybrid_rel={r.get('relevance', 0):.2f} [sparse={r.get('sparse', 0):.2f}, dense={r.get('dense', 0):.2f}] "
+                f"density=[graph={r.get('graph_density', 0):.2f}, content={r.get('content_density', 0):.2f}] "
+                f"authority={r.get('authority')} conf={r.get('confidence'):.2f} "
+                f"contradicted={'YES' if r.get('contradicted') else 'no'} "
+                f"bm25={'yes' if e.id in fts_ids else 'no'} scope={e.scope or '-'} ~{_tokens(line)}tk)"
+            )
 
 
 
 @app.command()
 def phase() -> None:
     """Phase review: long-range knowledge health (PRD §13.2)."""
-    _, _, store = _require_workspace()
-    _phase_review(store)
-    store.close()
+    with workspace_store() as (_, _, store):
+        _phase_review(store)
 
 
 @commons_app.command("export")
@@ -725,9 +700,8 @@ def commons_export(
     output: Path | None = typer.Option(None, "--output", "-o", help="Output JSON path."),
 ) -> None:
     """Export a generalized opt-in engineering pattern schema (Onda 10)."""
-    _, _, store = _require_workspace()
-    from cortex.commons import export_common_pattern
-    try:
+    with workspace_store() as (_, _, store):
+        from cortex.commons import export_common_pattern
         pattern = export_common_pattern(store, entity_id)
         content = json.dumps(pattern, indent=2, ensure_ascii=False)
         if output:
@@ -736,8 +710,6 @@ def commons_export(
             typer.secho(f"✓ Pattern exported to {output}", fg=typer.colors.GREEN)
         else:
             typer.echo(content)
-    finally:
-        store.close()
 
 
 @commons_app.command("import")
@@ -745,36 +717,47 @@ def commons_import(
     file_path: Path = typer.Argument(..., help="Path to common pattern JSON file."),
 ) -> None:
     """Import a generalized engineering pattern as a proposed local rule (Onda 10)."""
-    _, _, store = _require_workspace()
-    from cortex.commons import import_common_pattern
-    if not file_path.exists():
-        typer.secho(f"File {file_path} does not exist.", fg=typer.colors.RED)
-        store.close()
-        raise typer.Exit(1)
-    try:
+    with workspace_store() as (_, _, store):
+        from cortex.commons import import_common_pattern
+        if not file_path.exists():
+            typer.secho(f"File {file_path} does not exist.", fg=typer.colors.RED)
+            raise typer.Exit(1)
         data = json.loads(file_path.read_text(encoding="utf-8"))
         ent = import_common_pattern(store, data)
         typer.secho(f"✓ Pattern imported as [{ent.id}] ({ent.status.value}).", fg=typer.colors.GREEN)
-    finally:
-        store.close()
 
 
 @app.command()
 def benchmark(
     dogfood: bool = typer.Option(False, "--dogfood", help="Run benchmark on current store instead of fixture (Onda 8)."),
+    adversarial: bool = typer.Option(
+        False, "--adversarial",
+        help="Run the fixture with naturally-phrased events instead of "
+             "extractor-shaped ones (item 8): honest read on extraction "
+             "generalization, not just ranking/compiler correctness."),
 ) -> None:
     """Run the CCB memory-quality benchmark (PRD §31.4, Onda 8)."""
-    from cortex.benchmarks.ccb import format_report, run_ccb, run_ccb_on_store
+    from cortex.benchmarks.ccb import (
+        format_report,
+        run_ccb,
+        run_ccb_on_store,
+        run_ccb_paraphrased,
+    )
+    if dogfood and adversarial:
+        typer.secho("--dogfood and --adversarial are mutually exclusive.", fg=typer.colors.RED)
+        raise typer.Exit(1)
     if dogfood:
-        _, _, store = _require_workspace()
-        try:
+        with workspace_store() as (_, _, store):
             report = run_ccb_on_store(store)
-        finally:
-            store.close()
+    elif adversarial:
+        report = run_ccb_paraphrased()
     else:
         report = run_ccb()
     typer.echo(format_report(report))
-    if report["tasks_passed"] < report["tasks_total"]:
+    # --adversarial is a diagnostic read on extraction generalization, not
+    # an acceptance gate: a lower score than the fixture's is expected and
+    # informative, not a regression, so it never fails the process.
+    if not adversarial and report["tasks_passed"] < report["tasks_total"]:
         raise typer.Exit(1)
 
 

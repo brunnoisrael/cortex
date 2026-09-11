@@ -8,6 +8,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import cortex.server.mcp_server as mcp_server
+from cortex.capture.recorder import capture_event
 from cortex.distillation.extractors import extract_decisions, extract_negative_knowledge
 from cortex.knowledge.models import ArtifactType, Authority, Status
 from cortex.storage.store import KnowledgeStore
@@ -134,6 +135,67 @@ def test_cortex_remember_is_agent_inferred_and_proposed(project, monkeypatch):
             assert e.confidence <= 0.85
     finally:
         mcp_server._stores.clear()
+
+
+# ---------- compiler: END-marker budget is reserved, not an afterthought ----------
+
+def test_compile_context_never_exceeds_budget_including_end_marker(store):
+    """add("<!-- END CORTEX CONTEXT -->") used to run after every fits()
+    check had already passed, so the marker itself was never weighed
+    against max_tokens — a tight budget could come out a few tokens over.
+    Reserving its cost inside fits() keeps the whole block, marker
+    included, at or under budget."""
+    from cortex.compiler.compiler import CompileInput, compile_context, token_estimate
+
+    sess(store, "s1")
+    for i in range(20):
+        capture_event(store, {
+            "id": f"evt-budget-{i}", "type": "user_instruction", "session_id": "s1",
+            "content": f"Decisão {i}: usar PostgreSQL porque precisamos de ACID e consistência forte",
+        })
+    make_engine(store).distill_session("s1")
+
+    for budget in (40, 60, 80, 120, 2000):
+        out = compile_context(store, CompileInput(query="PostgreSQL"), max_tokens=budget)
+        assert out.rstrip().endswith("<!-- END CORTEX CONTEXT -->")
+        assert token_estimate(out) <= budget, (
+            f"budget={budget} but compiled block estimates to {token_estimate(out)} tokens"
+        )
+
+
+def sess(store, session_id: str) -> None:
+    store.ensure_session(session_id, host="test")
+
+
+def make_engine(store):
+    from cortex.distillation.engine import DistillationEngine
+    return DistillationEngine(store)
+
+
+# ---------- CCB: adversarial fixture is not self-referential ----------
+
+def test_ccb_adversarial_fixture_scores_honestly_below_the_tuned_fixture():
+    """The default fixture (_seed_history) is phrased to match the extractor
+    regexes exactly, so run_ccb() mostly measures ranking/compilation, not
+    extraction quality (item 8). The paraphrased fixture goes through the
+    same pipeline via _evaluate_dynamic, which no longer auto-passes tasks
+    with no applicable entity (see the vacuous-pass fix in ccb.py) — so a
+    lower, non-trivial score here is the honest signal the review asked for,
+    not a bug.
+    """
+    from cortex.benchmarks.ccb import run_ccb, run_ccb_paraphrased
+
+    tuned = run_ccb()
+    assert tuned["tasks_passed"] == tuned["tasks_total"] == 8
+
+    adversarial = run_ccb_paraphrased()
+    # At least some structured knowledge must still come out of natural
+    # phrasing — a total whiteout would mean the harness measures nothing.
+    assert adversarial["tasks_total"] + adversarial["tasks_skipped"] == 8
+    assert adversarial["tasks_total"] > 0, (
+        "paraphrased fixture produced zero checkable tasks — extraction "
+        "found nothing at all in naturally-phrased input"
+    )
 
 
 def test_cortex_remember_promotion_still_possible_via_cli(project, monkeypatch):
