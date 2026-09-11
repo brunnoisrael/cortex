@@ -4,6 +4,7 @@ This directory contains Architecture Decision Records for the Cortex project. AD
 
 ## Recent ADRs
 
+- [2026-09-10: Optional Enhanced Integrations](2026-09-10-optional-enhanced-integrations.md) - Added mature optional libraries with local fallbacks
 - [2026-09-10: CCB Benchmark Honest Signal and Adversarial Fixture](2026-09-10-ccb-benchmark-honesty.md) - Fixed self-referential benchmark and added adversarial testing
 - [2026-09-10: Compiler END-Marker Budget Reservation](2026-09-10-compiler-end-marker-budget.md) - Ensures context never exceeds token budget
 - [2026-09-10: MCP Listing Limits](2026-09-10-mcp-listing-limits.md) - Added limits to MCP listing tools for safety

@@ -843,6 +843,18 @@ def _coerce_config_value(key: str, value: str) -> str:
     return json.dumps(value)  # TOML basic string == JSON string here → quotes/backslashes escaped safely
 
 
+def _typed_config_value(key: str, value: str) -> object:
+    """Return the Python value that tomlkit should assign to a config key."""
+    _coerce_config_value(key, value)  # validate before touching the document
+    if key in _BOOL_KEYS:
+        return value.lower() == "true"
+    if key in _INT_KEYS:
+        return int(value)
+    if key in _FLOAT_KEYS:
+        return float(value)
+    return value
+
+
 def _config_set(root: Path, key: str, value: str) -> None:
     """Update one validated key in cortex.toml, preserving the rest.
 
@@ -862,33 +874,46 @@ def _config_set(root: Path, key: str, value: str) -> None:
         typer.secho(str(exc), fg=typer.colors.RED)
         raise typer.Exit(1) from exc
 
+    path = root / "cortex.toml"
     section = CONFIG_SECTIONS[key]
     name = key.split(".", 1)[1]
-    path = root / "cortex.toml"
-    lines = path.read_text(encoding="utf-8").splitlines() if path.exists() else []
-    replaced = False
-    current_section = ""
-    out = []
-    for line in lines:
-        stripped = line.strip()
-        if stripped.startswith("[") and stripped.endswith("]"):
-            current_section = stripped[1:-1]
-        if current_section == section and stripped.split("=")[0].strip() == name:
-            out.append(f"{name} = {coerced}")
-            replaced = True
-        else:
-            out.append(line)
-    if not replaced:
-        # append to the section (or create it)
-        if section in [ln.strip()[1:-1] for ln in out if ln.strip().startswith("[")]:
-            insert_at = max(i for i, ln in enumerate(out)
-                            if ln.strip() == f"[{section}]") + 1
-            out.insert(insert_at, f"{name} = {coerced}")
-        else:
-            out += ["", f"[{section}]", f"{name} = {coerced}"]
+    source = path.read_text(encoding="utf-8") if path.exists() else ""
+    try:
+        import tomlkit
 
+        document = tomlkit.parse(source)
+        if section not in document:
+            document[section] = tomlkit.table()
+        document[section][name] = _typed_config_value(key, value)
+        candidate = tomlkit.dumps(document)
+    except Exception:
+        # Minimal installations, or a TOMLKit parser incompatibility, still
+        # get the original safe line editor.  The candidate is always parsed
+        # and validated below before it can replace the real file.
+        lines = source.splitlines()
+        replaced = False
+        current_section = ""
+        out = []
+        for line in lines:
+            stripped = line.strip()
+            if stripped.startswith("[") and stripped.endswith("]"):
+                current_section = stripped[1:-1]
+            if current_section == section and stripped.split("=")[0].strip() == name:
+                out.append(f"{name} = {coerced}")
+                replaced = True
+            else:
+                out.append(line)
+        if not replaced:
+            sections = [ln.strip()[1:-1] for ln in out if ln.strip().startswith("[")]
+            if section in sections:
+                insert_at = max(i for i, ln in enumerate(out)
+                                if ln.strip() == f"[{section}]") + 1
+                out.insert(insert_at, f"{name} = {coerced}")
+            else:
+                out += ["", f"[{section}]", f"{name} = {coerced}"]
+        candidate = "\n".join(out) + "\n"
     tmp = path.with_name(path.name + ".tmp")
-    tmp.write_text("\n".join(out) + "\n", encoding="utf-8")
+    tmp.write_text(candidate, encoding="utf-8")
     try:
         CortexConfig.load_from(tmp)  # full parse + range/enum validation
     except CortexConfigError as exc:

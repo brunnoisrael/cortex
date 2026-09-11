@@ -135,6 +135,17 @@ cd seu-projeto
 cortex init
 ```
 
+Para ativar as integrações aprimoradas opcionais, instale o extra:
+
+```bash
+pip install -e ".[enhanced]"
+```
+
+Os extras mantêm os fallbacks locais. Embeddings densos são opt-in com
+`CORTEX_ENABLE_DENSE_EMBEDDINGS=1`, pois o primeiro uso pode baixar pesos;
+TOMLKit, detect-secrets, o cliente OpenAI-compatível do Ollama, tree-sitter e
+pyvis são carregados sob demanda quando disponíveis.
+
 Saída esperada:
 
 ```text

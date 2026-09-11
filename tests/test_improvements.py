@@ -259,11 +259,15 @@ def test_contradiction_handles_version_variants(store):
     assert len(store.edges_of(rel="CONTRADICTS")) == len(edges), "unrelated decision not flagged"
 
 
-# ---------- Onda 2: word-based token estimate (P2.2) ----------
+# ---------- Token estimate uses the production tiktoken encoder ----------
 
 def test_token_estimate_word_based():
     text = "palavra " * 100
-    assert _tokens(text) == 140  # 100 words * 1.4
+    # The exact count is encoder-dependent; the important contract is that
+    # the compatibility alias and production estimator agree.
+    assert _tokens(text) > 0
+    from cortex.compiler.compiler import token_estimate
+    assert _tokens(text) == token_estimate(text)
 
 
 # ---------- Onda 1.1: search respects requested limit ----------

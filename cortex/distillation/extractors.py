@@ -6,6 +6,8 @@ statement > code/git evidence > pattern > LLM inference.
 
 from __future__ import annotations
 
+import functools
+import os
 import re
 from dataclasses import dataclass, field
 
@@ -18,7 +20,7 @@ from cortex.knowledge.models import (
 # ---- language patterns (PT + EN, per PRD examples) ----
 
 DECISION_RE = re.compile(
-    r"\b(vamos usar|usaremos|decidimos|decisão|escolhemos|optamos|adotaremos|"
+    r"\b(vamos usar|usaremos|decidimos|decisão|escolhemos|adotaremos|"
     r"migrar para|migração para|switch to|trocar para|"
     r"we (?:will|'ll) use|we use|we decided|decision|chose|let's use|going with)\b",
     re.IGNORECASE,
@@ -262,7 +264,7 @@ def extract_fixes(events: list[dict]) -> list[Candidate]:
 
 def normalize_root_cause(text: str) -> frozenset[str]:
     stop = {"the", "a", "o", "de", "da", "do", "was", "for", "com", "em", "of", "is",
-            "not", "não", "missing", "erro", "error", "unknown", "see", "evidence"}
+            "não", "nao", "missing", "erro", "error", "unknown", "see", "evidence"}
     tokens = re.split(r"[^a-z0-9á-ú]+", text.lower())
     return frozenset(t for t in tokens if t and t not in stop and len(t) > 2)
 
@@ -295,11 +297,81 @@ def statement_similarity(a: str, b: str) -> float:
     return len(sa & sb) / min(len(sa), len(sb))
 
 
+@functools.lru_cache(maxsize=1)
+def _semantic_model():
+    """Load the optional model2vec model once per process.
+
+    The import and model loading are isolated so the normal local fallback is
+    unaffected when the optional extra is not installed or its model cannot be
+    loaded.
+    """
+    try:
+        from model2vec import StaticModel
+
+        model_name = os.getenv("CORTEX_SEMANTIC_MODEL", "minishlab/potion-base-8M")
+        return StaticModel.from_pretrained(model_name)
+    except Exception:
+        return None
+
+
+def _model2vec_similarity(a: str, b: str) -> float | None:
+    model = _semantic_model()
+    if model is None:
+        return None
+    try:
+        vectors = model.encode([a, b])
+        first, second = vectors[0], vectors[1]
+        sqlite_score = _sqlite_vec_similarity(first, second)
+        if sqlite_score is not None:
+            return sqlite_score
+        dot = float(first @ second)
+        norm = float((first @ first) ** 0.5 * (second @ second) ** 0.5)
+        if norm <= 0:
+            return None
+        # Cosine is [-1, 1]; expose a conventional [0, 1] relevance score.
+        return round(max(0.0, min(1.0, (dot / norm + 1.0) / 2.0)), 4)
+    except Exception:
+        return None
+
+
+def _sqlite_vec_similarity(first, second) -> float | None:
+    """Use sqlite-vec when installed; return ``None`` for graceful fallback."""
+    try:
+        import sqlite3
+
+        import sqlite_vec
+
+        first_values = first.tolist() if hasattr(first, "tolist") else list(first)
+        second_values = second.tolist() if hasattr(second, "tolist") else list(second)
+        conn = sqlite3.connect(":memory:")
+        sqlite_vec.load(conn)
+        conn.execute(
+            f"CREATE VIRTUAL TABLE vectors USING vec0(embedding float[{len(first_values)}] distance_metric=cosine)"
+        )
+        serialize = sqlite_vec.serialize_float32
+        conn.execute("INSERT INTO vectors(rowid, embedding) VALUES (?, ?)",
+                     (1, serialize(first_values)))
+        conn.execute("INSERT INTO vectors(rowid, embedding) VALUES (?, ?)",
+                     (2, serialize(second_values)))
+        row = conn.execute(
+            "SELECT distance FROM vectors WHERE embedding MATCH ? AND k = 2 AND rowid = 1",
+            (serialize(second_values),),
+        ).fetchone()
+        conn.close()
+        if row is None:
+            return None
+        return round(max(0.0, min(1.0, 1.0 - float(row[0]))), 4)
+    except Exception:
+        return None
+
+
 def dense_semantic_similarity(a: str, b: str) -> float:
-    """Character n-gram (3-gram & 4-gram) subword TF-IDF cosine similarity
-    plus token similarity providing dense semantic matching for paraphrases local-first.
-    
-    Optimized to avoid redundant calculations and early exit for edge cases."""
+    """Return semantic similarity, using optional local embeddings when enabled.
+
+    ``model2vec`` is deliberately opt-in because its first use may download
+    model weights.  When it is unavailable or disabled, the deterministic
+    local n-gram/token implementation remains the zero-network fallback.
+    """
     if not a.strip() or not b.strip():
         return 0.0
     
@@ -307,6 +379,14 @@ def dense_semantic_similarity(a: str, b: str) -> float:
     if a.strip().lower() == b.strip().lower():
         return 1.0
     
+    # Embeddings are opt-in: importing model2vec alone is harmless, loading a
+    # model is not (weights may be fetched on first use).
+    if os.getenv("CORTEX_ENABLE_DENSE_EMBEDDINGS", "").lower() in {"1", "true", "yes"}:
+        embedded = _model2vec_similarity(a, b)
+        if embedded is not None:
+            return embedded
+
+    # Fallback: n-gram TF-IDF cosine similarity + token similarity
     toks_a = statement_tokens(a)
     toks_b = statement_tokens(b)
     token_sim = (len(toks_a & toks_b) / min(len(toks_a), len(toks_b))) if (toks_a and toks_b) else 0.0
@@ -335,7 +415,6 @@ def dense_semantic_similarity(a: str, b: str) -> float:
     ngram_sim = (dot_product / (norm_a * norm_b)) if (norm_a > 0 and norm_b > 0) else 0.0
 
     return round(max(ngram_sim, token_sim, 0.5 * ngram_sim + 0.5 * token_sim), 4)
-
 
 
 NEGATION_TERMS = {
@@ -391,4 +470,3 @@ def detect_negation_conflict(text_a: str, text_b: str) -> bool:
 
     # One is affirmative and one is negative on the same core subject
     return (has_neg_a and not has_neg_b and has_aff_b) or (has_neg_b and not has_neg_a and has_aff_a)
-

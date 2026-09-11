@@ -8,6 +8,7 @@ Missing scope paths flag staleness. No evidence -> no promotion.
 from __future__ import annotations
 
 import ast
+import importlib
 import re
 from pathlib import Path
 
@@ -27,6 +28,13 @@ IDENT_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]{2,}")
 
 MAX_FILES = 200
 MAX_BYTES = 512 * 1024
+
+TREE_SITTER_LANGUAGES = {
+    ".c": "c", ".h": "c", ".cc": "cpp", ".cpp": "cpp", ".cxx": "cpp",
+    ".go": "go", ".java": "java", ".js": "javascript", ".jsx": "javascript",
+    ".mjs": "javascript", ".ts": "typescript", ".tsx": "tsx", ".rs": "rust",
+    ".rb": "ruby", ".php": "php", ".swift": "swift", ".kt": "kotlin",
+}
 
 
 def evidence_tokens(entity: Entity) -> list[str]:
@@ -83,6 +91,65 @@ def _scan_ast(root: Path, scope: list[str], tokens: list[str]) -> set[str]:
                 if tok in ast_names or tok.lower() in ast_names_lower:
                     found_ast.add(tok)
     return found_ast
+
+
+def _tree_sitter_parser(language_name: str):
+    """Return a parser from the optional grammar pack or language bindings."""
+    try:
+        from tree_sitter_language_pack import get_parser
+
+        return get_parser(language_name)
+    except Exception:
+        module = importlib.import_module(f"tree_sitter_{language_name}")
+        from tree_sitter import Language, Parser
+
+        grammar = getattr(module, "language")
+        language = Language(grammar())
+        try:
+            return Parser(language)
+        except TypeError:  # tree-sitter < 0.22
+            parser = Parser()
+            parser.set_language(language)
+            return parser
+
+
+def _scan_tree_sitter(root: Path, scope: list[str], tokens: list[str]) -> set[str]:
+    """Find cited identifiers in non-Python languages using tree-sitter.
+
+    Grammars are optional per language.  An absent grammar only skips that
+    language and never weakens the existing text fallback.
+    """
+    wanted = set(tokens)
+    wanted_lower = {token.lower() for token in wanted}
+    found: set[str] = set()
+    for s in scope:
+        base = root / s
+        if base.is_file():
+            files = [base]
+        elif base.is_dir():
+            files = [p for p in base.rglob("*") if p.is_file()]
+        else:
+            parent = root / s.split("/")[0]
+            files = [p for p in parent.rglob("*") if p.is_file() and s in p.as_posix()] if parent.exists() else []
+        for file_path in files:
+            language_name = TREE_SITTER_LANGUAGES.get(file_path.suffix.lower())
+            if not language_name:
+                continue
+            try:
+                source = file_path.read_bytes()
+                parser = _tree_sitter_parser(language_name)
+                tree = parser.parse(source)
+            except Exception:
+                continue
+            stack = [tree.root_node]
+            while stack:
+                node = stack.pop()
+                if node.child_count == 0:
+                    value = source[node.start_byte:node.end_byte].decode("utf-8", errors="ignore")
+                    if value in wanted or value.lower() in wanted_lower:
+                        found.add(value)
+                stack.extend(node.children)
+    return found
 
 
 def _scan(root: Path, scope: list[str], tokens: list[str]) -> set[str]:
@@ -142,16 +209,21 @@ def verify_entity(store: KnowledgeStore, root: Path, entity: Entity) -> dict:
 
     tokens = evidence_tokens(entity)
     found_ast = _scan_ast(root, entity.scope, tokens)
-    found = found_ast or _scan(root, entity.scope, tokens)
+    found_tree = _scan_tree_sitter(root, entity.scope, tokens)
+    found = found_ast or found_tree or _scan(root, entity.scope, tokens)
     
     if tokens and found:
         store.set_status(entity.id, entity.status, authority=Authority.REPOSITORY_VERIFIED)
         ent = store.get(entity.id)
         ent.freshness.last_verified_at = _utcnow()
-        ent.freshness.verification_source = "ast" if found_ast else "repository"
+        ent.freshness.verification_source = (
+            "ast" if found_ast else "tree-sitter" if found_tree else "repository"
+        )
         ent.freshness.stale = False
         store.upsert(ent)
-        verifier_type = "AST Tier 0" if found_ast else "Grep text"
+        verifier_type = (
+            "AST Tier 0" if found_ast else "tree-sitter" if found_tree else "Grep text"
+        )
         return {"status": "verified",
                 "detail": f"symbols found in code ({verifier_type}): {sorted(found)[:5]}",
                 "authority": Authority.REPOSITORY_VERIFIED.value,
@@ -160,4 +232,3 @@ def verify_entity(store: KnowledgeStore, root: Path, entity: Entity) -> dict:
     return {"status": "unverified",
             "detail": "no cited symbols found in scope files (authority unchanged)",
             "authority": entity.authority.value}
-

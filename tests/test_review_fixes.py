@@ -5,8 +5,6 @@ Each section names the fix it pins; see docs/adr/ for the decisions.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import cortex.server.mcp_server as mcp_server
 from cortex.capture.recorder import capture_event
 from cortex.distillation.extractors import extract_decisions, extract_negative_knowledge
@@ -48,7 +46,7 @@ def test_affirmative_decision_still_extracts():
 # ---------- store: tolerant ISO-8601 timestamp parsing ----------
 
 def test_parse_utc_accepts_iso_variants():
-    from datetime import UTC, datetime
+    from datetime import UTC
 
     from cortex.knowledge.models import parse_utc
 

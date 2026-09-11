@@ -39,11 +39,26 @@ class OllamaDistiller:
         self.model = model
         self.timeout = timeout
 
+    def _openai_client(self):
+        """Build an OpenAI-compatible client for Ollama lazily."""
+        from openai import OpenAI
+
+        base_url = self.url if self.url.endswith("/v1") else self.url + "/v1"
+        return OpenAI(api_key="ollama", base_url=base_url, timeout=self.timeout)
+
     def available(self) -> bool:
         try:
-            req = urllib.request.Request(self.url + "/api/tags", method="GET")
-            urllib.request.urlopen(req, timeout=2.0)
+            client = self._openai_client()
+            client.models.list()
             return True
+        except Exception:
+            try:
+                req = urllib.request.Request(self.url + "/api/tags", method="GET")
+                urllib.request.urlopen(req, timeout=2.0)
+                return True
+            except Exception:
+                _log.info("ollama unavailable at %s", self.url)
+                return False
         except Exception:
             _log.info("ollama unavailable at %s", self.url)
             return False
@@ -68,6 +83,13 @@ class OllamaDistiller:
             ],
         }).encode()
         try:
+            return self._extract_openai(transcript)
+        except ImportError:
+            pass
+        except Exception:
+            _log.info("OpenAI-compatible Ollama client failed; trying urllib fallback", exc_info=True)
+
+        try:
             req = urllib.request.Request(
                 self.url + "/api/chat", data=body,
                 headers={"Content-Type": "application/json"},
@@ -81,6 +103,30 @@ class OllamaDistiller:
         except Exception:
             _log.warning("ollama extract failed (model=%s)", self.model, exc_info=True)
             return None
+
+    def _extract_openai(self, transcript: str) -> list[dict[str, Any]]:
+        client = self._openai_client()
+        messages = [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": transcript},
+        ]
+        try:
+            response = client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                temperature=0,
+                response_format={"type": "json_object"},
+            )
+        except TypeError:
+            # Older Ollama OpenAI-compatible servers do not accept
+            # response_format; the prompt still requires JSON.
+            response = client.chat.completions.create(
+                model=self.model, messages=messages, temperature=0
+            )
+        content = response.choices[0].message.content or ""
+        parsed = json.loads(content)
+        items = parsed if isinstance(parsed, list) else parsed.get("candidates", [])
+        return [item for item in items if isinstance(item, dict) and item.get("statement")]
 
 
 VALID_TYPES = {"intention", "adr", "fix", "negative_knowledge"}

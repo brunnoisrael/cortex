@@ -9,8 +9,55 @@ from pathlib import Path
 from cortex.storage.store import KnowledgeStore
 
 
+def _generate_pyvis_html(store: KnowledgeStore, focus_id: str | None = None) -> str | None:
+    """Render an interactive graph with optional pyvis.
+
+    Pyvis is intentionally imported only at render time.  Its output is
+    treated as untrusted HTML, so all knowledge fields are escaped before
+    being passed as labels/titles.  Any incompatibility falls back to the
+    deterministic standalone renderer below.
+    """
+    try:
+        from pyvis.network import Network
+
+        network = Network(
+            height="800px", width="100%", directed=True,
+            bgcolor="#0f172a", font_color="#f8fafc",
+        )
+        network.set_options(
+            '{"interaction":{"hover":true,"navigationButtons":true},'
+            '"physics":{"stabilization":{"iterations":150}}}'
+        )
+        for entity in store.all_entities():
+            entity_id = str(entity.id or "")
+            statement = _html.escape(str(entity.statement or ""), quote=True)
+            title = _html.escape(
+                f"{entity.type.value} | {entity.authority.value} | "
+                f"confidence={entity.confidence} | status={entity.status.value}",
+                quote=True,
+            )
+            network.add_node(
+                entity_id,
+                label=statement[:120],
+                title=title,
+                color="#38bdf8" if entity_id == focus_id else None,
+            )
+            for rel_type, source_entity in store.related(entity.id, direction="in"):
+                network.add_edge(
+                    str(source_entity.id), entity_id,
+                    label=_html.escape(str(rel_type), quote=True),
+                )
+        return network.generate_html(notebook=False)
+    except Exception:
+        return None
+
+
 def generate_provenance_graph_html(store: KnowledgeStore, focus_id: str | None = None) -> str:
     """Generate standalone HTML string displaying provenance graph nodes and edges (Onda 9)."""
+    pyvis_html = _generate_pyvis_html(store, focus_id)
+    if pyvis_html is not None:
+        return pyvis_html
+
     entities = store.all_entities()
     nodes = []
     links = []

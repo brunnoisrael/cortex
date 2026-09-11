@@ -6,6 +6,7 @@ score = semantic_relevance x scope_match x authority_weight x confidence
 
 from __future__ import annotations
 
+import functools
 import logging
 from dataclasses import dataclass
 
@@ -236,17 +237,35 @@ def rank(
     return items[:limit]
 
 
+def _get_encoding():
+    """Lazy-load tiktoken encoding for cl100k_base (GPT-4/3.5-turbo compatible)."""
+    try:
+        import tiktoken
+        return tiktoken.get_encoding("cl100k_base")
+    except Exception:
+        return None
+
+
+@functools.lru_cache(maxsize=1)
+def _get_encoding_cached():
+    return _get_encoding()
 
 
 def token_estimate(text: str) -> int:
-    """Rough token estimate used for context-budget accounting (PRD §18.4).
+    """Accurate token estimate using tiktoken cl100k_base (GPT-4/3.5-turbo).
 
-    ~1.4 tokens/word accounts for PT/EN morphology better than chars/4.
-    Public (renamed from `_tokens`, item 5.2) so tests can assert against
-    the actual estimator production uses, instead of duplicating a
-    different one and asserting on that."""
+    Falls back to ~1.4 tokens/word heuristic if tiktoken unavailable.
+    Public so tests can assert against the actual estimator production uses.
+    """
     if not text or not isinstance(text, str):
         return 0
+    enc = _get_encoding_cached()
+    if enc is not None:
+        try:
+            return max(1, len(enc.encode(text)))
+        except Exception:
+            pass
+    # Fallback: ~1.4 tokens/word for PT/EN morphology
     return max(1, int(len(text.split()) * 1.4))
 
 
@@ -265,19 +284,18 @@ def compile_context(store: KnowledgeStore, inp: CompileInput,
 
     END_MARKER = "<!-- END CORTEX CONTEXT -->"
     block = ["<!-- CORTEX CONTEXT -->"]
-    used = sum(token_estimate(ln) for ln in block)
-    # The end marker is appended unconditionally below, after every fits()
-    # check has already run — reserve its cost up front so the last body
-    # line admitted still leaves room for it (item: END-marker budget).
-    end_marker_cost = token_estimate(END_MARKER)
 
     def fits(line: str) -> bool:
-        return used + token_estimate(line) + end_marker_cost <= max_tokens
+        # Estimate the exact rendered block.  Tokenizers can encode a line
+        # differently when it is adjacent to a newline, so summing per-line
+        # estimates is not sufficient for a hard budget.
+        return token_estimate("\n".join(block + [line, END_MARKER])) <= max_tokens
 
     def add(line: str) -> None:
-        nonlocal used
         block.append(line)
-        used += token_estimate(line)
+
+    if token_estimate("\n".join(block + [END_MARKER])) > max_tokens:
+        return END_MARKER
 
     emit_directive = "[DIRECTIVE] When making architectural decisions, rejecting alternatives, or fixing bugs, invoke `cortex_emit` to record structured knowledge."
     if fits(emit_directive):
@@ -289,7 +307,7 @@ def compile_context(store: KnowledgeStore, inp: CompileInput,
             add(line)
 
     intentions = [r for r in ranked if r.entity.type == ArtifactType.INTENTION][:max_intentions]
-    if intentions:
+    if intentions and fits("ACTIVE INTENTIONS"):
         add("ACTIVE INTENTIONS")
         for r in intentions:
             line = f"- [{r.entity.id}] {r.entity.statement}"
@@ -298,7 +316,7 @@ def compile_context(store: KnowledgeStore, inp: CompileInput,
             add(line)
 
     adrs = [r for r in ranked if r.entity.type == ArtifactType.ADR][:max_adrs]
-    if adrs:
+    if adrs and fits("RELEVANT ADRS"):
         add("RELEVANT ADRS")
         for r in adrs:
             decision = r.entity.details.get("decision") or r.entity.statement
@@ -311,7 +329,7 @@ def compile_context(store: KnowledgeStore, inp: CompileInput,
             add(line)
 
     correndas = [r for r in ranked if r.entity.type == ArtifactType.CORRENDA][:max_correndas]
-    if correndas:
+    if correndas and fits("ACTIVE CORRENDAS"):
         add("ACTIVE CORRENDAS")
         for r in correndas:
             suffix = "" if r.entity.status == Status.ACTIVE else f" (status: {r.entity.status.value})"
@@ -321,7 +339,7 @@ def compile_context(store: KnowledgeStore, inp: CompileInput,
             add(line)
 
     negatives = [r for r in ranked if r.entity.type == ArtifactType.NEGATIVE_KNOWLEDGE]
-    if negatives:
+    if negatives and fits("NEGATIVE KNOWLEDGE (do not repeat)"):
         add("NEGATIVE KNOWLEDGE (do not repeat)")
         for r in negatives:
             line = f"- [{r.entity.id}] {r.entity.statement}"
@@ -331,7 +349,7 @@ def compile_context(store: KnowledgeStore, inp: CompileInput,
 
     if include_recent_fixes:
         fixes = [r for r in ranked if r.entity.type == ArtifactType.FIX][:3]
-        if fixes:
+        if fixes and fits("RECENT FIXES"):
             add("RECENT FIXES")
             for r in fixes:
                 line = f"- [{r.entity.id}] {r.entity.details.get('symptom', r.entity.statement)}"
@@ -347,7 +365,7 @@ def compile_context(store: KnowledgeStore, inp: CompileInput,
         if reviews:
             last = reviews[-1]
             threads = last.details.get("open_threads") or []
-            if threads:
+            if threads and fits("OPEN THREADS"):
                 add("OPEN THREADS")
                 for t in threads[:3]:
                     line = f"- {t}"
@@ -355,8 +373,7 @@ def compile_context(store: KnowledgeStore, inp: CompileInput,
                         break
                     add(line)
 
-    block.append(END_MARKER)  # reserved above; never re-checked against fits()
-    used += end_marker_cost
+    block.append(END_MARKER)
     return "\n".join(block)
 
 

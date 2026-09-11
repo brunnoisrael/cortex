@@ -13,6 +13,7 @@ dependencies = [
     "typer>=0.12",
     "pydantic>=2.5",
     "mcp>=1.0,<3.0",
+    "tiktoken>=0.5",  # Accurate token estimation for context budget (vs len(split()) * 1.4)
 ]
 
 [project.optional-dependencies]
@@ -22,6 +23,17 @@ dev = [
     "pytest-cov>=5.0",
     "mypy>=1.11",
     "pip-audit",
+]
+# Optional extras for enhanced functionality (item: reinventing the wheel)
+enhanced = [
+    "tomlkit>=0.12",  # Robust TOML round-trip editing (preserves comments, handles inline tables)
+    "detect-secrets>=1.4",  # Industry-standard secret detection (JWT, connection strings, .env)
+    "openai>=1.0",  # Unified SDK for Ollama/LM Studio/vLLM (replaces hand-rolled HTTP client)
+    "model2vec>=0.2",  # Small local embedding model for opt-in semantic similarity
+    "sqlite-vec>=0.1",  # Vector search within SQLite (better than n-gram similarity)
+    "tree-sitter>=0.21",  # Multi-language AST parsing for verification (not just .py)
+    "tree-sitter-language-pack>=0.7",  # Prebuilt grammars for common languages
+    "pyvis>=0.3",  # Better graph visualization (optional, preserves HTML standalone requirement)
 ]
 
 [project.scripts]
