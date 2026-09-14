@@ -1,0 +1,31 @@
+{
+  "corpus": "../normalized/engineering_memory_v1.nofiller.jsonl",
+  "corpus_hash": "sha256:dba8b3025fd7ed03e861a3b98cc5c97beda63648c4ad8a6d2d523bf78835a689",
+  "cortex_version": "0.1.0",
+  "dataset_revisions": {
+    "internal": "engineering-memory-v1"
+  },
+  "embedding_cache_dir": "outside-repository",
+  "embedding_model": "none",
+  "embedding_version": "none",
+  "expected_endpoint_digest": "sha256:0d69469181fe12d5e5ad9f13389662f344926102d83f4fffbda5143dc474252e",
+  "filler_variants": {
+    "adversarial": "adversarial\\superseded_abstention.jsonl",
+    "filler32k": "normalized\\engineering_memory_v1.filler32k.jsonl",
+    "nofiller": "normalized\\engineering_memory_v1.nofiller.jsonl"
+  },
+  "hardware": "portable",
+  "license": "internal synthetic corpus; no third-party transcripts committed",
+  "network_enabled": false,
+  "os": "portable",
+  "python_version": "3.11+",
+  "retry_policy": "deterministic",
+  "schema": "cortex_memory_benchmark_manifest/v1",
+  "seed": 0,
+  "splits": [
+    "dev",
+    "eval",
+    "regression"
+  ],
+  "tokenizer": "cortex.compiler.token_estimate/cl100k_base"
+}

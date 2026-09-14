@@ -45,6 +45,9 @@ class Event(_BenchmarkModel):
     timestamp: str | None = None
     # Loaders may preserve source-local identifiers without changing content.
     id: str | None = None
+    # Engineering events carry the paths they touch; scope is part of the
+    # observable input, never part of gold.
+    files: list[str] = Field(default_factory=list)
 
 
 class Session(_BenchmarkModel):
@@ -97,6 +100,9 @@ class BenchmarkInstance(_BenchmarkModel):
     gold: Gold
     constraints: Constraints
     checksums: Checksums
+    # Loaders record provenance of their transformation here (plan §9.1); it is
+    # never written back into history.
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def validate_contract(self) -> BenchmarkInstance:
@@ -162,8 +168,32 @@ def validate_checksums(instance: BenchmarkInstance) -> None:
         raise SchemaError(f"gold checksum mismatch for {instance.id}")
 
 
-def instance_from_dict(raw: dict[str, Any]) -> BenchmarkInstance:
+def materialize_checksums(instance: BenchmarkInstance) -> BenchmarkInstance:
+    """Recompute ``checksums`` from the instance content.
+
+    Only the internal normalized corpus uses this convenience: the build step
+    derives the frozen hashes from the exact bytes that are committed.  Any
+    corpus that ships checksums from an external source keeps them as declared
+    so ``validate_checksums`` can detect drift.
+    """
+    return instance.model_copy(
+        update={
+            "checksums": Checksums(
+                history=sha256_prefixed([s.model_dump(by_alias=True, mode="json") for s in instance.history_until_cutoff()]),
+                gold=sha256_prefixed(instance.gold.model_dump(mode="json")),
+            )
+        }
+    )
+
+
+def has_placeholder_checksums(instance: BenchmarkInstance) -> bool:
+    zeros = "sha256:" + "0" * 64
+    return instance.checksums.history == zeros or instance.checksums.gold == zeros
+
+
+def instance_from_dict(raw: dict[str, Any], *, materialize: bool = False) -> BenchmarkInstance:
     try:
-        return BenchmarkInstance.model_validate(raw)
+        instance = BenchmarkInstance.model_validate(raw)
     except Exception as exc:
         raise SchemaError(str(exc)) from exc
+    return materialize_checksums(instance) if materialize else instance
