@@ -34,7 +34,7 @@ from cortex.knowledge.models import (
     _utcnow,
 )
 
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 6
 
 # Maps ArtifactType -> short id prefix used by reserve_entity_id.
 _PREFIX_BY_TYPE: dict[ArtifactType, str] = {
@@ -124,11 +124,62 @@ def _migration_005_entity_branch(conn: sqlite3.Connection) -> None:
         conn.execute("ALTER TABLE entities ADD COLUMN branch TEXT")
 
 
+def _migration_006_team_memory(conn: sqlite3.Connection) -> None:
+    """006 (additive): explicit team-memory membership, sharing and audit.
+
+    Team metadata is deliberately separate from ``entities``: the default
+    individual compiler remains unchanged, while a collaboration client can
+    apply a principal/project/branch policy without making shared knowledge
+    silently authoritative.
+    """
+    conn.executescript("""
+        CREATE TABLE IF NOT EXISTS team_members (
+            project TEXT NOT NULL,
+            principal TEXT NOT NULL,
+            role TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            revoked_at TEXT,
+            PRIMARY KEY (project, principal)
+        );
+        CREATE TABLE IF NOT EXISTS team_acl (
+            entity_id TEXT NOT NULL,
+            project TEXT NOT NULL,
+            principal TEXT NOT NULL,
+            permission TEXT NOT NULL,
+            branch TEXT,
+            granted_by TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            revoked_at TEXT,
+            PRIMARY KEY (entity_id, project, principal, permission, branch)
+        );
+        CREATE INDEX IF NOT EXISTS idx_team_acl_lookup
+            ON team_acl(project, principal, branch, revoked_at);
+        CREATE TABLE IF NOT EXISTS team_receipts (
+            id TEXT PRIMARY KEY,
+            action TEXT NOT NULL,
+            entity_id TEXT,
+            project TEXT NOT NULL,
+            actor TEXT NOT NULL,
+            payload TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            idempotency_key TEXT NOT NULL UNIQUE
+        );
+        CREATE TABLE IF NOT EXISTS team_retention (
+            project TEXT PRIMARY KEY,
+            retention_days INTEGER NOT NULL,
+            delete_private INTEGER NOT NULL DEFAULT 0,
+            updated_at TEXT NOT NULL,
+            updated_by TEXT NOT NULL
+        );
+    """)
+
+
 MIGRATIONS: dict[int, Callable[[sqlite3.Connection], None]] = {
     2: _migration_002_events_host,
     3: _migration_003_entities_quarantine,
     4: _migration_004_evidence_governance,
     5: _migration_005_entity_branch,
+    6: _migration_006_team_memory,
 }
 
 SCHEMA = """
@@ -243,6 +294,27 @@ CREATE TABLE IF NOT EXISTS governance_receipts (
     idempotency_key TEXT NOT NULL UNIQUE
 );
 CREATE INDEX IF NOT EXISTS idx_governance_entity ON governance_receipts(entity_id);
+CREATE TABLE IF NOT EXISTS team_members (
+    project TEXT NOT NULL, principal TEXT NOT NULL, role TEXT NOT NULL,
+    created_at TEXT NOT NULL, revoked_at TEXT,
+    PRIMARY KEY (project, principal)
+);
+CREATE TABLE IF NOT EXISTS team_acl (
+    entity_id TEXT NOT NULL, project TEXT NOT NULL, principal TEXT NOT NULL,
+    permission TEXT NOT NULL, branch TEXT, granted_by TEXT NOT NULL,
+    created_at TEXT NOT NULL, revoked_at TEXT,
+    PRIMARY KEY (entity_id, project, principal, permission, branch)
+);
+CREATE TABLE IF NOT EXISTS team_receipts (
+    id TEXT PRIMARY KEY, action TEXT NOT NULL, entity_id TEXT, project TEXT NOT NULL,
+    actor TEXT NOT NULL, payload TEXT NOT NULL, created_at TEXT NOT NULL,
+    idempotency_key TEXT NOT NULL UNIQUE
+);
+CREATE TABLE IF NOT EXISTS team_retention (
+    project TEXT PRIMARY KEY, retention_days INTEGER NOT NULL,
+    delete_private INTEGER NOT NULL DEFAULT 0, updated_at TEXT NOT NULL,
+    updated_by TEXT NOT NULL
+);
 """
 
 
