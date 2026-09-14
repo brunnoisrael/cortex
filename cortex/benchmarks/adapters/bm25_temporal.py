@@ -6,9 +6,18 @@ from .base import Adapter, case_events, result_for, token_count, tokenize
 
 
 class BM25TemporalAdapter(Adapter):
+    """BM25 plus a freshness window: items older than the window are dropped.
+
+    The window is measured backwards from the cutoff (plan §6).  The default
+    covers a 30-day horizon, which is the strongest temporal claim a session
+    history of this size can support without discarding the whole history.
+    """
+
     name = "bm25_temporal"
 
-    def __init__(self, freshness_window_seconds: int = 0):
+    DEFAULT_FRESHNESS_WINDOW_SECONDS = 30 * 24 * 60 * 60
+
+    def __init__(self, freshness_window_seconds: int = DEFAULT_FRESHNESS_WINDOW_SECONDS):
         super().__init__()
         self.freshness_window_seconds = freshness_window_seconds
 

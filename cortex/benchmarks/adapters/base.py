@@ -52,13 +52,19 @@ class Adapter(ABC):
     def query(self, instance: BenchmarkInstance) -> AdapterResult:
         """Return a complete, serialisable result envelope."""
 
+    def teardown(self) -> None:
+        """Release per-case state.  Stores are ephemeral and never shared."""
+
     def run(self, instance: BenchmarkInstance) -> AdapterResult:
         started = time.perf_counter()
-        self.setup(instance)
-        ingest_start = time.perf_counter()
-        self.ingest(instance)
-        ingest_ms = (time.perf_counter() - ingest_start) * 1000
-        result = self.query(instance)
+        try:
+            self.setup(instance)
+            ingest_start = time.perf_counter()
+            self.ingest(instance)
+            ingest_ms = (time.perf_counter() - ingest_start) * 1000
+            result = self.query(instance)
+        finally:
+            self.teardown()
         result.latency_ms.setdefault("ingest", round(ingest_ms, 3))
         result.latency_ms.setdefault("query", round((time.perf_counter() - ingest_start) * 1000, 3))
         result.latency_ms.setdefault("compile", result.latency_ms.get("query", 0.0))

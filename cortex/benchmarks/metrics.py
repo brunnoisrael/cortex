@@ -43,8 +43,42 @@ def ndcg_at_k(retrieved: list[str], gold: Iterable[str], k: int) -> float:
     return dcg / ideal if ideal else 0.0
 
 
+def set_f1(result: AdapterResult, instance: BenchmarkInstance) -> float:
+    """Endpoint primário de ``aggregation`` (plano §4): F1 sobre o conjunto."""
+    expected, selected = set(_gold(instance)), set(result.selected)
+    if not expected and not selected:
+        return 1.0
+    if not expected or not selected:
+        return 0.0
+    overlap = len(expected & selected)
+    precision, recall = overlap / len(selected), overlap / len(expected)
+    return 2 * precision * recall / (precision + recall) if (precision + recall) else 0.0
+
+
 def answer_support_recall(result: AdapterResult, instance: BenchmarkInstance) -> float:
     return recall_at_k(result.evidence, instance.gold.gold_evidence, len(result.evidence))
+
+
+def _extracted_ids(result: AdapterResult) -> set[str]:
+    return set(result.trace.get("extracted_ids", []))
+
+
+def extraction_recall(result: AdapterResult, instance: BenchmarkInstance) -> float:
+    """Share of gold evidence that distillation ever turned into knowledge.
+
+    Mede extração isolada do ranking: um item pode estar destilado e ainda
+    assim não ser recuperado para a query.
+    """
+    gold = set(instance.gold.gold_evidence)
+    return len(gold & _extracted_ids(result)) / len(gold) if gold else 1.0
+
+
+def extraction_spurious_rate(result: AdapterResult, instance: BenchmarkInstance) -> float:
+    """Share of distilled items that are not gold evidence for this case."""
+    extracted = _extracted_ids(result)
+    if not extracted:
+        return 0.0
+    return len(extracted - set(instance.gold.gold_evidence)) / len(extracted)
 
 
 def scope_accuracy(result: AdapterResult, instance: BenchmarkInstance) -> float:
@@ -139,7 +173,18 @@ def case_metrics(result: AdapterResult, instance: BenchmarkInstance, k: int = 5)
               "abstention_recall": abstention_recall(result, instance),
               "false_certainty_rate": false_certainty_rate(result, instance),
               "unsupported_claim_rate": unsupported_claim_rate(result, instance),
-              "lineage_completeness": lineage_completeness(result, instance)}
+              "lineage_completeness": lineage_completeness(result, instance),
+              "set_f1": set_f1(result, instance),
+              "scope_accuracy": scope_accuracy(result, instance),
+              "current_state_accuracy": current_state_accuracy(result, instance),
+              "supersession_accuracy": supersession_accuracy(result, instance),
+              "answer_support_recall": answer_support_recall(result, instance),
+              "provenance_coverage": provenance_coverage(result, instance)}
+    # Extraction is measured only where the adapter reports what distillation
+    # produced; for the baselines it is not applicable, never a zero.
+    if "extracted_ids" in result.trace:
+        values["extraction_recall"] = extraction_recall(result, instance)
+        values["extraction_spurious_rate"] = extraction_spurious_rate(result, instance)
     if instance.task_type == "cascade":
         values["cascade_correctness_hop1"] = cascade_correctness(result, instance, 1)
         values["cascade_correctness_hop2"] = cascade_correctness(result, instance, 2)
