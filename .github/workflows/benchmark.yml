@@ -1,0 +1,62 @@
+name: Benchmark (full)
+
+# Onda 5: the complete benchmark does not belong on every PR — the filler32k
+# corpus takes minutes and the adversarial corpus is a diagnostic, not a gate.
+# This workflow runs both, nightly and on demand.
+
+on:
+  schedule:
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+
+jobs:
+  full-benchmark:
+    name: memory_v1 (filler32k) + adversarial + ablations
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Cortex
+        run: pip install -e ".[dev]"
+
+      - name: Corpus is in sync with its generator
+        run: |
+          python -m cortex.benchmarks.corpora.build_internal
+          git diff --exit-code -- cortex/benchmarks/corpora
+
+      - name: Filler32k run (Onda 1)
+        run: |
+          python -m cortex.benchmarks.runner \
+            --manifest cortex/benchmarks/corpora/manifests/memory_v1_filler32k.json \
+            --adapter cortex bm25 bm25_temporal raw_context no_memory oracle \
+            --report-out artifacts/benchmark-memory-v1-filler32k
+
+      - name: Ablations (Onda 3)
+        run: |
+          python -m cortex.benchmarks.runner \
+            --manifest cortex/benchmarks/corpora/manifests/memory_v1.json \
+            --adapter cortex bm25 bm25_temporal raw_context no_memory oracle \
+            --ablation \
+            --report-out artifacts/benchmark-ablations
+
+      - name: Adversarial diagnostic (not a gate)
+        if: always()
+        run: |
+          python -m cortex.benchmarks.runner \
+            --manifest cortex/benchmarks/corpora/manifests/memory_v1_adversarial.json \
+            --adapter cortex bm25 raw_context no_memory oracle \
+            --report-out artifacts/benchmark-adversarial
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-full
+          path: artifacts/
+          retention-days: 90

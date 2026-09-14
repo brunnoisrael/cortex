@@ -1,0 +1,69 @@
+{
+  "cases": null,
+  "corpus": "C:\\Users\\Sergio\\Documents\\GitHub\\cortex\\cortex\\benchmarks\\corpora\\normalized\\engineering_memory_v1.nofiller.jsonl",
+  "corpus_hash": "sha256:dba8b3025fd7ed03e861a3b98cc5c97beda63648c4ad8a6d2d523bf78835a689",
+  "cortex_version": "0.1.0",
+  "dataset_revisions": {
+    "internal": "engineering-memory-v1"
+  },
+  "embedding_cache_dir": "outside-repository",
+  "embedding_model": "none",
+  "embedding_version": "none",
+  "expected_endpoint_digest": "sha256:0d69469181fe12d5e5ad9f13389662f344926102d83f4fffbda5143dc474252e",
+  "filler_variants": {
+    "adversarial": "adversarial\\superseded_abstention.jsonl",
+    "filler32k": "normalized\\engineering_memory_v1.filler32k.jsonl",
+    "nofiller": "normalized\\engineering_memory_v1.nofiller.jsonl"
+  },
+  "frozen": {
+    "case_hashes": {
+      "mem-absence-provider": "sha256:bf5b2c3c58308be763997c833e23e746827ee11c2d72ea279dd68aab67c11ff8",
+      "mem-absence-queue": "sha256:403313b66ce9362e6147ed96987219eb5162419c8ba28e3d775534d158297451",
+      "mem-aggregation-ci": "sha256:725ce55cd2e728487f357b2f7d59f653d22959f0b5f9abbe65a31b0bc29ec12a",
+      "mem-cache-global": "sha256:b88b68e970fa6b82f66a7b63c1afe2f7c5ffef0b557fa8118c6e1f4ae6eef472",
+      "mem-cascade-auth": "sha256:af3358676406a46ae2d8da45751c63a38fbbae656d45768c5dda3bfb06ae59d7",
+      "mem-db-postgres": "sha256:88ec6005fe0d86af5889b490322d147e12c2930fe3ea2aa59c73a86c46b15d72",
+      "mem-deletion-logs": "sha256:1e39ea1f083b791d80670f650aba79d0f69b197ee1c36d79c1654ec87268ede1",
+      "mem-recall-tests": "sha256:1d19b01b91908245e4ec46ce00a4579fa7ea58252c6653f563d02e9713e86fc2",
+      "mem-tracking-api": "sha256:ecd19c84ef353b41466289c5f9b55b7bc82ff01a2da323ae8801e8382735425b",
+      "mem-tracking-version": "sha256:4b71e6f3a8fc1df7348bca919681daeb642484c2fc80b1670592dcd988f2eda3"
+    },
+    "corpus_hash": "sha256:04f8ba2f81f99eadebf938f06648537eb2aff0f2f2e4f2398baa337fd4d6be32",
+    "revisions": {
+      "internal": "engineering-memory-v1"
+    },
+    "schema": "cortex_memory_benchmark_freeze/v1",
+    "splits": {
+      "dev": [
+        "mem-aggregation-ci",
+        "mem-cache-global",
+        "mem-db-postgres"
+      ],
+      "eval": [
+        "mem-absence-provider",
+        "mem-deletion-logs",
+        "mem-tracking-api"
+      ],
+      "regression": [
+        "mem-absence-queue",
+        "mem-cascade-auth",
+        "mem-recall-tests",
+        "mem-tracking-version"
+      ]
+    }
+  },
+  "hardware": "portable",
+  "license": "internal synthetic corpus; no third-party transcripts committed",
+  "network_enabled": false,
+  "os": "portable",
+  "python_version": "3.11+",
+  "retry_policy": "deterministic",
+  "schema": "cortex_memory_benchmark_manifest/v1",
+  "seed": 0,
+  "splits": [
+    "dev",
+    "eval",
+    "regression"
+  ],
+  "tokenizer": "cortex.compiler.token_estimate/cl100k_base"
+}

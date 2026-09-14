@@ -1,0 +1,53 @@
+{
+  "cases": null,
+  "corpus": "C:\\Users\\Sergio\\Documents\\GitHub\\cortex\\cortex\\benchmarks\\corpora\\adversarial\\superseded_abstention.jsonl",
+  "corpus_hash": "sha256:b30c04e44a7f1aa9dad812b698a6f0df15bb6bab7ff7a956b845d68df77523d1",
+  "cortex_version": "0.1.0",
+  "dataset_revisions": {
+    "internal": "engineering-memory-v1"
+  },
+  "embedding_cache_dir": "outside-repository",
+  "embedding_model": "none",
+  "embedding_version": "none",
+  "expected_endpoint_digest": "sha256:0d69469181fe12d5e5ad9f13389662f344926102d83f4fffbda5143dc474252e",
+  "filler_variants": {
+    "adversarial": "adversarial\\superseded_abstention.jsonl",
+    "filler32k": "normalized\\engineering_memory_v1.filler32k.jsonl",
+    "nofiller": "normalized\\engineering_memory_v1.nofiller.jsonl"
+  },
+  "frozen": {
+    "case_hashes": {
+      "adv-contradiction-open": "sha256:effb32e3791d952648050b3d15875d73be6350d1117a5da537aaf638f721092d",
+      "adv-dedup-absorbs-update": "sha256:0fdb550f972d3b16f33b1c781a43cf852a55158b660456a1da2c312062f53830",
+      "adv-filler-drowning": "sha256:915824a375247161f4c225f922e443bf82489a34f6c28e40e180c1e2118d49cd",
+      "adv-superseded-reassert": "sha256:de03e83b219016b6b60b04e41ebba5a2af9ad1ca86a187d4a4bcd58c1eab0dd9"
+    },
+    "corpus_hash": "sha256:1090eb5f126858511c1fd94b4824edf0565b7015937ded5ea6d51215e7465021",
+    "revisions": {
+      "internal": "engineering-memory-v1"
+    },
+    "schema": "cortex_memory_benchmark_freeze/v1",
+    "splits": {
+      "regression": [
+        "adv-contradiction-open",
+        "adv-dedup-absorbs-update",
+        "adv-filler-drowning",
+        "adv-superseded-reassert"
+      ]
+    }
+  },
+  "hardware": "portable",
+  "license": "internal synthetic corpus; no third-party transcripts committed",
+  "network_enabled": false,
+  "os": "portable",
+  "python_version": "3.11+",
+  "retry_policy": "deterministic",
+  "schema": "cortex_memory_benchmark_manifest/v1",
+  "seed": 0,
+  "splits": [
+    "dev",
+    "eval",
+    "regression"
+  ],
+  "tokenizer": "cortex.compiler.token_estimate/cl100k_base"
+}

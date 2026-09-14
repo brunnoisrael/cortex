@@ -1,0 +1,69 @@
+{
+  "cases": null,
+  "corpus": "C:\\Users\\Sergio\\Documents\\GitHub\\cortex\\cortex\\benchmarks\\corpora\\normalized\\engineering_memory_v1.filler32k.jsonl",
+  "corpus_hash": "sha256:6bc77dde594c782ccd986909dedee03521628e430e343e63aaf10c692ae6124a",
+  "cortex_version": "0.1.0",
+  "dataset_revisions": {
+    "internal": "engineering-memory-v1"
+  },
+  "embedding_cache_dir": "outside-repository",
+  "embedding_model": "none",
+  "embedding_version": "none",
+  "expected_endpoint_digest": "sha256:0d69469181fe12d5e5ad9f13389662f344926102d83f4fffbda5143dc474252e",
+  "filler_variants": {
+    "adversarial": "adversarial\\superseded_abstention.jsonl",
+    "filler32k": "normalized\\engineering_memory_v1.filler32k.jsonl",
+    "nofiller": "normalized\\engineering_memory_v1.nofiller.jsonl"
+  },
+  "frozen": {
+    "case_hashes": {
+      "mem-absence-provider-filler32k": "sha256:773aee1a16e9721b3edf85852153c321a520923d8baff14737ff2480fe9ac23c",
+      "mem-absence-queue-filler32k": "sha256:b7fa1ceb900790025d9d0df223a19ac6d28af68c456431baa118f033d1278e65",
+      "mem-aggregation-ci-filler32k": "sha256:8f6cc5fb150fc67aff320419aa8f96d409c1181b7271cc0fab8d95d50c326b3c",
+      "mem-cache-global-filler32k": "sha256:8f50b32a8c0f51f33f2c3862d0c82ddb30da6c3f0d69a12ebd8632d0faa3ffcb",
+      "mem-cascade-auth-filler32k": "sha256:5c5fb66cfd9ae6dd43d74b5c175c195369dafd28aac3dce6b60f9c213eef00af",
+      "mem-db-postgres-filler32k": "sha256:9a5aa3f21bf8ec1d15872b2c880541c9352dd3b38ecd16b9a4a8377b20be8dcd",
+      "mem-deletion-logs-filler32k": "sha256:323f9cf1641510673de6374d0e0b976391726e3d805109035b8f4385fcbd8b2f",
+      "mem-recall-tests-filler32k": "sha256:037c9f7a7737d0ec84fe248ce76d2656dfd6e2de21edeea24b578ecc9dd7486b",
+      "mem-tracking-api-filler32k": "sha256:367a1f349e07d00ab484d61b4c8022be6e4f6097af18fa9e55ca83fda15e9bc7",
+      "mem-tracking-version-filler32k": "sha256:7dcbb7476883461b63e7363e0cd3db0aa0750da67f7f006c1718ecdf9f6785f3"
+    },
+    "corpus_hash": "sha256:5bc1bdb35e41ce22cade79971a1dd7f996e6589f9678f062f7d42d52ac58cd60",
+    "revisions": {
+      "internal": "engineering-memory-v1"
+    },
+    "schema": "cortex_memory_benchmark_freeze/v1",
+    "splits": {
+      "dev": [
+        "mem-aggregation-ci-filler32k",
+        "mem-cache-global-filler32k",
+        "mem-db-postgres-filler32k"
+      ],
+      "eval": [
+        "mem-absence-provider-filler32k",
+        "mem-deletion-logs-filler32k",
+        "mem-tracking-api-filler32k"
+      ],
+      "regression": [
+        "mem-absence-queue-filler32k",
+        "mem-cascade-auth-filler32k",
+        "mem-recall-tests-filler32k",
+        "mem-tracking-version-filler32k"
+      ]
+    }
+  },
+  "hardware": "portable",
+  "license": "internal synthetic corpus; no third-party transcripts committed",
+  "network_enabled": false,
+  "os": "portable",
+  "python_version": "3.11+",
+  "retry_policy": "deterministic",
+  "schema": "cortex_memory_benchmark_manifest/v1",
+  "seed": 0,
+  "splits": [
+    "dev",
+    "eval",
+    "regression"
+  ],
+  "tokenizer": "cortex.compiler.token_estimate/cl100k_base"
+}

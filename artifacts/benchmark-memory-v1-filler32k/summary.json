@@ -223,7 +223,7 @@
         },
         "extraction_spurious_rate": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 2
         },
         "false_certainty_rate": {
@@ -618,7 +618,7 @@
         },
         "precision_at_k": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.6,
           "n": 1
         },
         "provenance_coverage": {
@@ -633,12 +633,12 @@
         },
         "scope_accuracy": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "set_f1": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.75,
           "n": 1
         },
         "stale_leak_rate": {
@@ -710,7 +710,7 @@
         },
         "precision_at_k": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.6,
           "n": 1
         },
         "provenance_coverage": {
@@ -725,12 +725,12 @@
         },
         "scope_accuracy": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "set_f1": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.75,
           "n": 1
         },
         "stale_leak_rate": {
@@ -752,12 +752,12 @@
       "cortex": {
         "abstention_recall": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "answer_support_recall": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "contradiction_exposure_rate": {
@@ -767,7 +767,7 @@
         },
         "current_state_accuracy": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "deletion_compliance": {
@@ -782,7 +782,7 @@
         },
         "extraction_recall": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "extraction_spurious_rate": {
@@ -802,37 +802,37 @@
         },
         "mrr": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "ndcg_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "precision_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "provenance_coverage": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "recall_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "scope_accuracy": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "set_f1": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "stale_leak_rate": {
@@ -1043,7 +1043,7 @@
         },
         "answer_support_recall": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "contradiction_exposure_rate": {
@@ -1053,7 +1053,7 @@
         },
         "current_state_accuracy": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "deletion_compliance": {
@@ -1078,37 +1078,37 @@
         },
         "mrr": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "ndcg_at_k": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "precision_at_k": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "provenance_coverage": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "recall_at_k": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "scope_accuracy": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "set_f1": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "stale_leak_rate": {
@@ -1182,17 +1182,17 @@
         },
         "mrr": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.5,
           "n": 1
         },
         "ndcg_at_k": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.63092975,
           "n": 1
         },
         "precision_at_k": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 0.2,
           "n": 1
         },
         "provenance_coverage": {
@@ -1212,7 +1212,7 @@
         },
         "set_f1": {
           "confirmatory": false,
-          "mean": 0.66666667,
+          "mean": 0.33333333,
           "n": 1
         },
         "stale_leak_rate": {
@@ -1232,424 +1232,6 @@
         }
       },
       "bm25_temporal": {
-        "abstention_recall": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "answer_support_recall": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "cascade_correctness_hop1": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "cascade_correctness_hop2": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "contradiction_exposure_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "current_state_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "deletion_compliance": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "evidence_resolution_rate": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "false_certainty_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "lineage_completeness": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "mrr": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "ndcg_at_k": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "precision_at_k": {
-          "confirmatory": false,
-          "mean": 0.5,
-          "n": 1
-        },
-        "provenance_coverage": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "recall_at_k": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "scope_accuracy": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "set_f1": {
-          "confirmatory": false,
-          "mean": 0.66666667,
-          "n": 1
-        },
-        "stale_leak_rate": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "supersession_accuracy": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "unsupported_claim_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        }
-      },
-      "cortex": {
-        "abstention_recall": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "answer_support_recall": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "cascade_correctness_hop1": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "cascade_correctness_hop2": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "contradiction_exposure_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "current_state_accuracy": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "deletion_compliance": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "evidence_resolution_rate": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "extraction_recall": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "extraction_spurious_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "false_certainty_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "lineage_completeness": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "mrr": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "ndcg_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "precision_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "provenance_coverage": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "recall_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "scope_accuracy": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "set_f1": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "stale_leak_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "supersession_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "unsupported_claim_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        }
-      },
-      "no_memory": {
-        "abstention_recall": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "answer_support_recall": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "cascade_correctness_hop1": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "cascade_correctness_hop2": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "contradiction_exposure_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "current_state_accuracy": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "deletion_compliance": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "evidence_resolution_rate": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "false_certainty_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "lineage_completeness": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "mrr": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "ndcg_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "precision_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "provenance_coverage": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "recall_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "scope_accuracy": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "set_f1": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "stale_leak_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "supersession_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "unsupported_claim_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        }
-      },
-      "oracle": {
-        "abstention_recall": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "answer_support_recall": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "cascade_correctness_hop1": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "cascade_correctness_hop2": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "contradiction_exposure_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "current_state_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "deletion_compliance": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "evidence_resolution_rate": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "false_certainty_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "lineage_completeness": {
-          "confirmatory": false,
-          "mean": 0.5,
-          "n": 1
-        },
-        "mrr": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "ndcg_at_k": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "precision_at_k": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "provenance_coverage": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "recall_at_k": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "scope_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "set_f1": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "stale_leak_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "supersession_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "unsupported_claim_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        }
-      },
-      "raw_context": {
         "abstention_recall": {
           "confirmatory": false,
           "mean": 1.0,
@@ -1712,6 +1294,118 @@
         },
         "precision_at_k": {
           "confirmatory": false,
+          "mean": 0.2,
+          "n": 1
+        },
+        "provenance_coverage": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "recall_at_k": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "scope_accuracy": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "set_f1": {
+          "confirmatory": false,
+          "mean": 0.33333333,
+          "n": 1
+        },
+        "stale_leak_rate": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "supersession_accuracy": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "unsupported_claim_rate": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        }
+      },
+      "cortex": {
+        "abstention_recall": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "answer_support_recall": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "cascade_correctness_hop1": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "cascade_correctness_hop2": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "contradiction_exposure_rate": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "current_state_accuracy": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "deletion_compliance": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "evidence_resolution_rate": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "extraction_recall": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "extraction_spurious_rate": {
+          "confirmatory": false,
+          "mean": 0.33333333,
+          "n": 1
+        },
+        "false_certainty_rate": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "lineage_completeness": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "mrr": {
+          "confirmatory": false,
+          "mean": 0.5,
+          "n": 1
+        },
+        "ndcg_at_k": {
+          "confirmatory": false,
+          "mean": 0.63092975,
+          "n": 1
+        },
+        "precision_at_k": {
+          "confirmatory": false,
           "mean": 0.5,
           "n": 1
         },
@@ -1737,12 +1431,318 @@
         },
         "stale_leak_rate": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "supersession_accuracy": {
           "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "unsupported_claim_rate": {
+          "confirmatory": false,
           "mean": 0.0,
+          "n": 1
+        }
+      },
+      "no_memory": {
+        "abstention_recall": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "answer_support_recall": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "cascade_correctness_hop1": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "cascade_correctness_hop2": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "contradiction_exposure_rate": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "current_state_accuracy": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "deletion_compliance": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "evidence_resolution_rate": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "false_certainty_rate": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "lineage_completeness": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "mrr": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "ndcg_at_k": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "precision_at_k": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "provenance_coverage": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "recall_at_k": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "scope_accuracy": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "set_f1": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "stale_leak_rate": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "supersession_accuracy": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "unsupported_claim_rate": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        }
+      },
+      "oracle": {
+        "abstention_recall": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "answer_support_recall": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "cascade_correctness_hop1": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "cascade_correctness_hop2": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "contradiction_exposure_rate": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "current_state_accuracy": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "deletion_compliance": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "evidence_resolution_rate": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "false_certainty_rate": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "lineage_completeness": {
+          "confirmatory": false,
+          "mean": 0.5,
+          "n": 1
+        },
+        "mrr": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "ndcg_at_k": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "precision_at_k": {
+          "confirmatory": false,
+          "mean": 0.5,
+          "n": 1
+        },
+        "provenance_coverage": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "recall_at_k": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "scope_accuracy": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "set_f1": {
+          "confirmatory": false,
+          "mean": 0.66666667,
+          "n": 1
+        },
+        "stale_leak_rate": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "supersession_accuracy": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "unsupported_claim_rate": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        }
+      },
+      "raw_context": {
+        "abstention_recall": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "answer_support_recall": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "cascade_correctness_hop1": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "cascade_correctness_hop2": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "contradiction_exposure_rate": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "current_state_accuracy": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "deletion_compliance": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "evidence_resolution_rate": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "false_certainty_rate": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "lineage_completeness": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "mrr": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "ndcg_at_k": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "precision_at_k": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "provenance_coverage": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "recall_at_k": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "scope_accuracy": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "set_f1": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "stale_leak_rate": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "supersession_accuracy": {
+          "confirmatory": false,
+          "mean": 1.0,
           "n": 1
         },
         "unsupported_claim_rate": {
@@ -1756,12 +1756,12 @@
       "bm25": {
         "abstention_recall": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "answer_support_recall": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "contradiction_exposure_rate": {
@@ -1796,17 +1796,17 @@
         },
         "mrr": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 0.5,
           "n": 1
         },
         "ndcg_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 0.63092975,
           "n": 1
         },
         "precision_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 0.2,
           "n": 1
         },
         "provenance_coverage": {
@@ -1816,7 +1816,7 @@
         },
         "recall_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "scope_accuracy": {
@@ -1826,7 +1826,7 @@
         },
         "set_f1": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 0.33333333,
           "n": 1
         },
         "stale_leak_rate": {
@@ -1848,12 +1848,12 @@
       "bm25_temporal": {
         "abstention_recall": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "answer_support_recall": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "contradiction_exposure_rate": {
@@ -1888,17 +1888,17 @@
         },
         "mrr": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 0.5,
           "n": 1
         },
         "ndcg_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 0.63092975,
           "n": 1
         },
         "precision_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 0.2,
           "n": 1
         },
         "provenance_coverage": {
@@ -1908,7 +1908,7 @@
         },
         "recall_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "scope_accuracy": {
@@ -1918,7 +1918,7 @@
         },
         "set_f1": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 0.33333333,
           "n": 1
         },
         "stale_leak_rate": {
@@ -1955,7 +1955,7 @@
         },
         "current_state_accuracy": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "deletion_compliance": {
@@ -1975,7 +1975,7 @@
         },
         "extraction_spurious_rate": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 0.66666667,
           "n": 1
         },
         "false_certainty_rate": {
@@ -2005,7 +2005,7 @@
         },
         "provenance_coverage": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "recall_at_k": {
@@ -2015,12 +2015,12 @@
         },
         "scope_accuracy": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "set_f1": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "stale_leak_rate": {
@@ -2042,7 +2042,7 @@
       "no_memory": {
         "abstention_recall": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "answer_support_recall": {
@@ -2057,7 +2057,7 @@
         },
         "current_state_accuracy": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "deletion_compliance": {
@@ -2077,7 +2077,7 @@
         },
         "lineage_completeness": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "mrr": {
@@ -2097,7 +2097,7 @@
         },
         "provenance_coverage": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "recall_at_k": {
@@ -2107,12 +2107,12 @@
         },
         "scope_accuracy": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "set_f1": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "stale_leak_rate": {
@@ -2139,7 +2139,7 @@
         },
         "answer_support_recall": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "contradiction_exposure_rate": {
@@ -2169,22 +2169,22 @@
         },
         "lineage_completeness": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.5,
           "n": 1
         },
         "mrr": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "ndcg_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "precision_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "provenance_coverage": {
@@ -2194,7 +2194,7 @@
         },
         "recall_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "scope_accuracy": {
@@ -2226,7 +2226,7 @@
       "raw_context": {
         "abstention_recall": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "answer_support_recall": {
@@ -2241,12 +2241,12 @@
         },
         "current_state_accuracy": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "deletion_compliance": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "evidence_resolution_rate": {
@@ -2261,7 +2261,7 @@
         },
         "lineage_completeness": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "mrr": {
@@ -2281,7 +2281,7 @@
         },
         "provenance_coverage": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "recall_at_k": {
@@ -2301,12 +2301,12 @@
         },
         "stale_leak_rate": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "supersession_accuracy": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "unsupported_claim_rate": {
@@ -2370,7 +2370,7 @@
         },
         "precision_at_k": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.7333333333333334,
           "n": 3
         },
         "provenance_coverage": {
@@ -2385,12 +2385,12 @@
         },
         "scope_accuracy": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.6666666666666666,
           "n": 3
         },
         "set_f1": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.7777777766666666,
           "n": 3
         },
         "stale_leak_rate": {
@@ -2462,7 +2462,7 @@
         },
         "precision_at_k": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.7333333333333334,
           "n": 3
         },
         "provenance_coverage": {
@@ -2477,12 +2477,12 @@
         },
         "scope_accuracy": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.6666666666666666,
           "n": 3
         },
         "set_f1": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.7777777766666666,
           "n": 3
         },
         "stale_leak_rate": {
@@ -2504,12 +2504,12 @@
       "cortex": {
         "abstention_recall": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 3
         },
         "answer_support_recall": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 3
         },
         "contradiction_exposure_rate": {
@@ -2519,7 +2519,7 @@
         },
         "current_state_accuracy": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 3
         },
         "deletion_compliance": {
@@ -2534,7 +2534,7 @@
         },
         "extraction_recall": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 3
         },
         "extraction_spurious_rate": {
@@ -2554,37 +2554,37 @@
         },
         "mrr": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 3
         },
         "ndcg_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 3
         },
         "precision_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 3
         },
         "provenance_coverage": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 3
         },
         "recall_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 3
         },
         "scope_accuracy": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 3
         },
         "set_f1": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 3
         },
         "stale_leak_rate": {
@@ -2795,7 +2795,7 @@
         },
         "answer_support_recall": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 3
         },
         "contradiction_exposure_rate": {
@@ -2805,7 +2805,7 @@
         },
         "current_state_accuracy": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 3
         },
         "deletion_compliance": {
@@ -2830,37 +2830,37 @@
         },
         "mrr": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 3
         },
         "ndcg_at_k": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 3
         },
         "precision_at_k": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 3
         },
         "provenance_coverage": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 3
         },
         "recall_at_k": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 3
         },
         "scope_accuracy": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 3
         },
         "set_f1": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 3
         },
         "stale_leak_rate": {
@@ -2924,17 +2924,17 @@
         },
         "mrr": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 1.0,
           "n": 2
         },
         "ndcg_at_k": {
           "confirmatory": false,
-          "mean": 0.63092975,
+          "mean": 1.0,
           "n": 2
         },
         "precision_at_k": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 0.2,
           "n": 2
         },
         "provenance_coverage": {
@@ -2954,7 +2954,7 @@
         },
         "set_f1": {
           "confirmatory": false,
-          "mean": 0.66666667,
+          "mean": 0.33333333,
           "n": 2
         },
         "stale_leak_rate": {
@@ -3016,17 +3016,17 @@
         },
         "mrr": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 1.0,
           "n": 2
         },
         "ndcg_at_k": {
           "confirmatory": false,
-          "mean": 0.63092975,
+          "mean": 1.0,
           "n": 2
         },
         "precision_at_k": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 0.2,
           "n": 2
         },
         "provenance_coverage": {
@@ -3046,7 +3046,7 @@
         },
         "set_f1": {
           "confirmatory": false,
-          "mean": 0.66666667,
+          "mean": 0.33333333,
           "n": 2
         },
         "stale_leak_rate": {
@@ -3068,12 +3068,12 @@
       "cortex": {
         "abstention_recall": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 1.0,
           "n": 2
         },
         "answer_support_recall": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 1.0,
           "n": 2
         },
         "contradiction_exposure_rate": {
@@ -3083,7 +3083,7 @@
         },
         "current_state_accuracy": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 1.0,
           "n": 2
         },
         "deletion_compliance": {
@@ -3098,12 +3098,12 @@
         },
         "extraction_recall": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 1.0,
           "n": 2
         },
         "extraction_spurious_rate": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 0.5,
           "n": 2
         },
         "false_certainty_rate": {
@@ -3113,42 +3113,42 @@
         },
         "lineage_completeness": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 2
         },
         "mrr": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 1.0,
           "n": 2
         },
         "ndcg_at_k": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 1.0,
           "n": 2
         },
         "precision_at_k": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 1.0,
           "n": 2
         },
         "provenance_coverage": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 1.0,
           "n": 2
         },
         "recall_at_k": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 1.0,
           "n": 2
         },
         "scope_accuracy": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 1.0,
           "n": 2
         },
         "set_f1": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 1.0,
           "n": 2
         },
         "stale_leak_rate": {
@@ -3359,7 +3359,7 @@
         },
         "answer_support_recall": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 2
         },
         "contradiction_exposure_rate": {
@@ -3369,12 +3369,12 @@
         },
         "current_state_accuracy": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 2
         },
         "deletion_compliance": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 2
         },
         "evidence_resolution_rate": {
@@ -3389,32 +3389,32 @@
         },
         "lineage_completeness": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 2
         },
         "mrr": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 0.0,
           "n": 2
         },
         "ndcg_at_k": {
           "confirmatory": false,
-          "mean": 0.63092975,
+          "mean": 0.0,
           "n": 2
         },
         "precision_at_k": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 0.0,
           "n": 2
         },
         "provenance_coverage": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 2
         },
         "recall_at_k": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 2
         },
         "scope_accuracy": {
@@ -3424,17 +3424,17 @@
         },
         "set_f1": {
           "confirmatory": false,
-          "mean": 0.66666667,
+          "mean": 0.0,
           "n": 2
         },
         "stale_leak_rate": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 2
         },
         "supersession_accuracy": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 2
         },
         "unsupported_claim_rate": {
@@ -3445,22 +3445,22 @@
       }
     }
   },
-  "corpus_hash": "sha256:d7d76799351f3e8a695b44db8a37ed2b5f52369544360f5ce9b2e5e8fecb5055",
+  "corpus_hash": "sha256:6bc77dde594c782ccd986909dedee03521628e430e343e63aaf10c692ae6124a",
   "cortex_version": "0.1.0",
   "dataset_revisions": {
-    "meme": "mvp"
+    "internal": "engineering-memory-v1"
   },
   "decision": "promover_com_reservas",
   "endpoints": {
     "bm25": {
       "abstention_recall": {
         "confirmatory": true,
-        "mean": 0.7,
+        "mean": 0.8,
         "n": 10
       },
       "answer_support_recall": {
         "confirmatory": true,
-        "mean": 0.7,
+        "mean": 0.8,
         "n": 10
       },
       "cascade_correctness_hop1": {
@@ -3505,17 +3505,17 @@
       },
       "mrr": {
         "confirmatory": true,
-        "mean": 0.6,
+        "mean": 0.7,
         "n": 10
       },
       "ndcg_at_k": {
         "confirmatory": true,
-        "mean": 0.62618595,
+        "mean": 0.72618595,
         "n": 10
       },
       "precision_at_k": {
         "confirmatory": true,
-        "mean": 0.55,
+        "mean": 0.36,
         "n": 10
       },
       "provenance_coverage": {
@@ -3525,17 +3525,17 @@
       },
       "recall_at_k": {
         "confirmatory": true,
-        "mean": 0.7,
+        "mean": 0.8,
         "n": 10
       },
       "scope_accuracy": {
         "confirmatory": true,
-        "mean": 0.4,
+        "mean": 0.2,
         "n": 10
       },
       "set_f1": {
         "confirmatory": true,
-        "mean": 0.600000001,
+        "mean": 0.44166666499999996,
         "n": 10
       },
       "stale_leak_rate": {
@@ -3557,12 +3557,12 @@
     "bm25_temporal": {
       "abstention_recall": {
         "confirmatory": true,
-        "mean": 0.7,
+        "mean": 0.8,
         "n": 10
       },
       "answer_support_recall": {
         "confirmatory": true,
-        "mean": 0.7,
+        "mean": 0.8,
         "n": 10
       },
       "cascade_correctness_hop1": {
@@ -3607,17 +3607,17 @@
       },
       "mrr": {
         "confirmatory": true,
-        "mean": 0.6,
+        "mean": 0.7,
         "n": 10
       },
       "ndcg_at_k": {
         "confirmatory": true,
-        "mean": 0.62618595,
+        "mean": 0.72618595,
         "n": 10
       },
       "precision_at_k": {
         "confirmatory": true,
-        "mean": 0.55,
+        "mean": 0.36,
         "n": 10
       },
       "provenance_coverage": {
@@ -3627,17 +3627,17 @@
       },
       "recall_at_k": {
         "confirmatory": true,
-        "mean": 0.7,
+        "mean": 0.8,
         "n": 10
       },
       "scope_accuracy": {
         "confirmatory": true,
-        "mean": 0.4,
+        "mean": 0.2,
         "n": 10
       },
       "set_f1": {
         "confirmatory": true,
-        "mean": 0.600000001,
+        "mean": 0.44166666499999996,
         "n": 10
       },
       "stale_leak_rate": {
@@ -3659,22 +3659,22 @@
     "cortex": {
       "abstention_recall": {
         "confirmatory": true,
-        "mean": 0.4,
+        "mean": 1.0,
         "n": 10
       },
       "answer_support_recall": {
         "confirmatory": true,
-        "mean": 0.1,
+        "mean": 0.7,
         "n": 10
       },
       "cascade_correctness_hop1": {
         "confirmatory": false,
-        "mean": 0.0,
+        "mean": 1.0,
         "n": 1
       },
       "cascade_correctness_hop2": {
         "confirmatory": false,
-        "mean": 0.0,
+        "mean": 1.0,
         "n": 1
       },
       "contradiction_exposure_rate": {
@@ -3684,7 +3684,7 @@
       },
       "current_state_accuracy": {
         "confirmatory": true,
-        "mean": 0.4,
+        "mean": 0.9,
         "n": 10
       },
       "deletion_compliance": {
@@ -3699,12 +3699,12 @@
       },
       "extraction_recall": {
         "confirmatory": true,
-        "mean": 0.4,
+        "mean": 1.0,
         "n": 10
       },
       "extraction_spurious_rate": {
         "confirmatory": true,
-        "mean": 0.0,
+        "mean": 0.4,
         "n": 10
       },
       "false_certainty_rate": {
@@ -3714,42 +3714,42 @@
       },
       "lineage_completeness": {
         "confirmatory": true,
-        "mean": 0.7,
+        "mean": 1.0,
         "n": 10
       },
       "mrr": {
         "confirmatory": true,
-        "mean": 0.1,
+        "mean": 0.65,
         "n": 10
       },
       "ndcg_at_k": {
         "confirmatory": true,
-        "mean": 0.1,
+        "mean": 0.663092975,
         "n": 10
       },
       "precision_at_k": {
         "confirmatory": true,
-        "mean": 0.1,
+        "mean": 0.65,
         "n": 10
       },
       "provenance_coverage": {
         "confirmatory": true,
-        "mean": 0.4,
+        "mean": 0.9,
         "n": 10
       },
       "recall_at_k": {
         "confirmatory": true,
-        "mean": 0.1,
+        "mean": 0.7,
         "n": 10
       },
       "scope_accuracy": {
         "confirmatory": true,
-        "mean": 0.4,
+        "mean": 0.8,
         "n": 10
       },
       "set_f1": {
         "confirmatory": true,
-        "mean": 0.4,
+        "mean": 0.866666667,
         "n": 10
       },
       "stale_leak_rate": {
@@ -3771,7 +3771,7 @@
     "no_memory": {
       "abstention_recall": {
         "confirmatory": true,
-        "mean": 0.3,
+        "mean": 0.2,
         "n": 10
       },
       "answer_support_recall": {
@@ -3796,7 +3796,7 @@
       },
       "current_state_accuracy": {
         "confirmatory": true,
-        "mean": 0.3,
+        "mean": 0.2,
         "n": 10
       },
       "deletion_compliance": {
@@ -3816,7 +3816,7 @@
       },
       "lineage_completeness": {
         "confirmatory": true,
-        "mean": 0.7,
+        "mean": 0.6,
         "n": 10
       },
       "mrr": {
@@ -3836,7 +3836,7 @@
       },
       "provenance_coverage": {
         "confirmatory": true,
-        "mean": 0.3,
+        "mean": 0.2,
         "n": 10
       },
       "recall_at_k": {
@@ -3846,12 +3846,12 @@
       },
       "scope_accuracy": {
         "confirmatory": true,
-        "mean": 0.3,
+        "mean": 0.2,
         "n": 10
       },
       "set_f1": {
         "confirmatory": true,
-        "mean": 0.3,
+        "mean": 0.2,
         "n": 10
       },
       "stale_leak_rate": {
@@ -3878,7 +3878,7 @@
       },
       "answer_support_recall": {
         "confirmatory": true,
-        "mean": 0.7,
+        "mean": 0.8,
         "n": 10
       },
       "cascade_correctness_hop1": {
@@ -3918,22 +3918,22 @@
       },
       "lineage_completeness": {
         "confirmatory": true,
-        "mean": 0.85,
+        "mean": 0.8,
         "n": 10
       },
       "mrr": {
         "confirmatory": true,
-        "mean": 0.7,
+        "mean": 0.8,
         "n": 10
       },
       "ndcg_at_k": {
         "confirmatory": true,
-        "mean": 0.7,
+        "mean": 0.8,
         "n": 10
       },
       "precision_at_k": {
         "confirmatory": true,
-        "mean": 0.7,
+        "mean": 0.75,
         "n": 10
       },
       "provenance_coverage": {
@@ -3943,17 +3943,17 @@
       },
       "recall_at_k": {
         "confirmatory": true,
-        "mean": 0.7,
+        "mean": 0.8,
         "n": 10
       },
       "scope_accuracy": {
         "confirmatory": true,
-        "mean": 1.0,
+        "mean": 0.9,
         "n": 10
       },
       "set_f1": {
         "confirmatory": true,
-        "mean": 1.0,
+        "mean": 0.9666666669999999,
         "n": 10
       },
       "stale_leak_rate": {
@@ -3975,12 +3975,12 @@
     "raw_context": {
       "abstention_recall": {
         "confirmatory": true,
-        "mean": 0.7,
+        "mean": 0.8,
         "n": 10
       },
       "answer_support_recall": {
         "confirmatory": true,
-        "mean": 0.7,
+        "mean": 0.0,
         "n": 10
       },
       "cascade_correctness_hop1": {
@@ -4000,12 +4000,12 @@
       },
       "current_state_accuracy": {
         "confirmatory": true,
-        "mean": 1.0,
+        "mean": 0.2,
         "n": 10
       },
       "deletion_compliance": {
         "confirmatory": true,
-        "mean": 0.6,
+        "mean": 1.0,
         "n": 10
       },
       "evidence_resolution_rate": {
@@ -4020,52 +4020,52 @@
       },
       "lineage_completeness": {
         "confirmatory": true,
-        "mean": 1.0,
+        "mean": 0.6,
         "n": 10
       },
       "mrr": {
         "confirmatory": true,
-        "mean": 0.55,
+        "mean": 0.0,
         "n": 10
       },
       "ndcg_at_k": {
         "confirmatory": true,
-        "mean": 0.589278925,
+        "mean": 0.0,
         "n": 10
       },
       "precision_at_k": {
         "confirmatory": true,
-        "mean": 0.55,
+        "mean": 0.0,
         "n": 10
       },
       "provenance_coverage": {
         "confirmatory": true,
-        "mean": 1.0,
+        "mean": 0.2,
         "n": 10
       },
       "recall_at_k": {
         "confirmatory": true,
-        "mean": 0.7,
+        "mean": 0.0,
         "n": 10
       },
       "scope_accuracy": {
         "confirmatory": true,
-        "mean": 0.4,
+        "mean": 0.0,
         "n": 10
       },
       "set_f1": {
         "confirmatory": true,
-        "mean": 0.600000001,
+        "mean": 0.0,
         "n": 10
       },
       "stale_leak_rate": {
         "confirmatory": true,
-        "mean": 0.4,
+        "mean": 0.0,
         "n": 10
       },
       "supersession_accuracy": {
         "confirmatory": true,
-        "mean": 0.6,
+        "mean": 1.0,
         "n": 10
       },
       "unsupported_claim_rate": {
@@ -4088,25 +4088,25 @@
       "stale_leak_not_worse_than_raw_context": true,
       "stale_leak_rate_bm25": 0.4,
       "stale_leak_rate_cortex": 0.0,
-      "stale_leak_rate_raw_context": 0.4
+      "stale_leak_rate_raw_context": 0.0
     },
     "G2_relative_value": {
       "abstention_recall": {
-        "ci_high": 0.3,
+        "ci_high": 0.5,
         "ci_includes_zero": true,
-        "ci_low": -0.8,
+        "ci_low": 0.0,
         "comparison": "cortex_vs_bm25",
         "confirmatory": true,
-        "diff": -0.3,
+        "diff": 0.2,
         "n": 10
       },
       "current_state_accuracy": {
-        "ci_high": -0.3,
-        "ci_includes_zero": false,
-        "ci_low": -0.9,
+        "ci_high": 0.0,
+        "ci_includes_zero": true,
+        "ci_low": -0.3,
         "comparison": "cortex_vs_bm25",
         "confirmatory": true,
-        "diff": -0.6,
+        "diff": -0.1,
         "n": 10
       },
       "deletion_compliance": {
@@ -4119,21 +4119,21 @@
         "n": 10
       },
       "recall_at_k": {
-        "ci_high": -0.3,
-        "ci_includes_zero": false,
-        "ci_low": -0.9,
+        "ci_high": 0.0,
+        "ci_includes_zero": true,
+        "ci_low": -0.3,
         "comparison": "cortex_vs_bm25",
         "confirmatory": true,
-        "diff": -0.6,
+        "diff": -0.1,
         "n": 10
       },
       "set_f1": {
-        "ci_high": 0.366666666,
-        "ci_includes_zero": true,
-        "ci_low": -0.733333334,
+        "ci_high": 1.0,
+        "ci_includes_zero": false,
+        "ci_low": 0.633333334,
         "comparison": "cortex_vs_raw_context",
         "confirmatory": true,
-        "diff": -0.20000000099999998,
+        "diff": 0.866666667,
         "n": 10
       }
     },
@@ -4145,19 +4145,19 @@
   },
   "paired_comparisons": {
     "cortex_vs_bm25:abstention_recall": {
-      "ci_high": 0.3,
+      "ci_high": 0.5,
       "ci_includes_zero": true,
-      "ci_low": -0.8,
+      "ci_low": 0.0,
       "confirmatory": true,
-      "diff": -0.3,
+      "diff": 0.2,
       "n": 10
     },
     "cortex_vs_bm25:answer_support_recall": {
-      "ci_high": -0.3,
-      "ci_includes_zero": false,
-      "ci_low": -0.9,
+      "ci_high": 0.0,
+      "ci_includes_zero": true,
+      "ci_low": -0.3,
       "confirmatory": true,
-      "diff": -0.6,
+      "diff": -0.1,
       "n": 10
     },
     "cortex_vs_bm25:contradiction_exposure_rate": {
@@ -4169,11 +4169,11 @@
       "n": 10
     },
     "cortex_vs_bm25:current_state_accuracy": {
-      "ci_high": -0.3,
-      "ci_includes_zero": false,
-      "ci_low": -0.9,
+      "ci_high": 0.0,
+      "ci_includes_zero": true,
+      "ci_low": -0.3,
       "confirmatory": true,
-      "diff": -0.6,
+      "diff": -0.1,
       "n": 10
     },
     "cortex_vs_bm25:deletion_compliance": {
@@ -4203,65 +4203,65 @@
     "cortex_vs_bm25:lineage_completeness": {
       "ci_high": 0.0,
       "ci_includes_zero": true,
-      "ci_low": -0.6,
-      "confirmatory": true,
-      "diff": -0.3,
-      "n": 10
-    },
-    "cortex_vs_bm25:mrr": {
-      "ci_high": -0.2,
-      "ci_includes_zero": false,
-      "ci_low": -0.8,
-      "confirmatory": true,
-      "diff": -0.5,
-      "n": 10
-    },
-    "cortex_vs_bm25:ndcg_at_k": {
-      "ci_high": -0.22618595,
-      "ci_includes_zero": false,
-      "ci_low": -0.82618595,
-      "confirmatory": true,
-      "diff": -0.52618595,
-      "n": 10
-    },
-    "cortex_vs_bm25:precision_at_k": {
-      "ci_high": -0.15,
-      "ci_includes_zero": false,
-      "ci_low": -0.75,
-      "confirmatory": true,
-      "diff": -0.45,
-      "n": 10
-    },
-    "cortex_vs_bm25:provenance_coverage": {
-      "ci_high": -0.3,
-      "ci_includes_zero": false,
-      "ci_low": -0.9,
-      "confirmatory": true,
-      "diff": -0.6,
-      "n": 10
-    },
-    "cortex_vs_bm25:recall_at_k": {
-      "ci_high": -0.3,
-      "ci_includes_zero": false,
-      "ci_low": -0.9,
-      "confirmatory": true,
-      "diff": -0.6,
-      "n": 10
-    },
-    "cortex_vs_bm25:scope_accuracy": {
-      "ci_high": 0.5,
-      "ci_includes_zero": true,
-      "ci_low": -0.6,
+      "ci_low": 0.0,
       "confirmatory": true,
       "diff": 0.0,
       "n": 10
     },
-    "cortex_vs_bm25:set_f1": {
-      "ci_high": 0.366666666,
+    "cortex_vs_bm25:mrr": {
+      "ci_high": 0.0,
       "ci_includes_zero": true,
-      "ci_low": -0.733333334,
+      "ci_low": -0.15,
       "confirmatory": true,
-      "diff": -0.20000000099999998,
+      "diff": -0.05,
+      "n": 10
+    },
+    "cortex_vs_bm25:ndcg_at_k": {
+      "ci_high": 0.0,
+      "ci_includes_zero": true,
+      "ci_low": -0.189278925,
+      "confirmatory": true,
+      "diff": -0.063092975,
+      "n": 10
+    },
+    "cortex_vs_bm25:precision_at_k": {
+      "ci_high": 0.5,
+      "ci_includes_zero": false,
+      "ci_low": 0.05,
+      "confirmatory": true,
+      "diff": 0.29000000000000004,
+      "n": 10
+    },
+    "cortex_vs_bm25:provenance_coverage": {
+      "ci_high": 0.0,
+      "ci_includes_zero": true,
+      "ci_low": -0.3,
+      "confirmatory": true,
+      "diff": -0.1,
+      "n": 10
+    },
+    "cortex_vs_bm25:recall_at_k": {
+      "ci_high": 0.0,
+      "ci_includes_zero": true,
+      "ci_low": -0.3,
+      "confirmatory": true,
+      "diff": -0.1,
+      "n": 10
+    },
+    "cortex_vs_bm25:scope_accuracy": {
+      "ci_high": 0.9,
+      "ci_includes_zero": false,
+      "ci_low": 0.3,
+      "confirmatory": true,
+      "diff": 0.6,
+      "n": 10
+    },
+    "cortex_vs_bm25:set_f1": {
+      "ci_high": 0.6916666680000001,
+      "ci_includes_zero": false,
+      "ci_low": 0.15833333600000002,
+      "confirmatory": true,
+      "diff": 0.425000002,
       "n": 10
     },
     "cortex_vs_bm25:stale_leak_rate": {
@@ -4289,19 +4289,19 @@
       "n": 10
     },
     "cortex_vs_bm25_temporal:abstention_recall": {
-      "ci_high": 0.3,
+      "ci_high": 0.5,
       "ci_includes_zero": true,
-      "ci_low": -0.8,
+      "ci_low": 0.0,
       "confirmatory": true,
-      "diff": -0.3,
+      "diff": 0.2,
       "n": 10
     },
     "cortex_vs_bm25_temporal:answer_support_recall": {
-      "ci_high": -0.3,
-      "ci_includes_zero": false,
-      "ci_low": -0.9,
+      "ci_high": 0.0,
+      "ci_includes_zero": true,
+      "ci_low": -0.3,
       "confirmatory": true,
-      "diff": -0.6,
+      "diff": -0.1,
       "n": 10
     },
     "cortex_vs_bm25_temporal:contradiction_exposure_rate": {
@@ -4313,11 +4313,11 @@
       "n": 10
     },
     "cortex_vs_bm25_temporal:current_state_accuracy": {
-      "ci_high": -0.3,
-      "ci_includes_zero": false,
-      "ci_low": -0.9,
+      "ci_high": 0.0,
+      "ci_includes_zero": true,
+      "ci_low": -0.3,
       "confirmatory": true,
-      "diff": -0.6,
+      "diff": -0.1,
       "n": 10
     },
     "cortex_vs_bm25_temporal:deletion_compliance": {
@@ -4347,65 +4347,65 @@
     "cortex_vs_bm25_temporal:lineage_completeness": {
       "ci_high": 0.0,
       "ci_includes_zero": true,
-      "ci_low": -0.6,
-      "confirmatory": true,
-      "diff": -0.3,
-      "n": 10
-    },
-    "cortex_vs_bm25_temporal:mrr": {
-      "ci_high": -0.2,
-      "ci_includes_zero": false,
-      "ci_low": -0.8,
-      "confirmatory": true,
-      "diff": -0.5,
-      "n": 10
-    },
-    "cortex_vs_bm25_temporal:ndcg_at_k": {
-      "ci_high": -0.22618595,
-      "ci_includes_zero": false,
-      "ci_low": -0.82618595,
-      "confirmatory": true,
-      "diff": -0.52618595,
-      "n": 10
-    },
-    "cortex_vs_bm25_temporal:precision_at_k": {
-      "ci_high": -0.15,
-      "ci_includes_zero": false,
-      "ci_low": -0.75,
-      "confirmatory": true,
-      "diff": -0.45,
-      "n": 10
-    },
-    "cortex_vs_bm25_temporal:provenance_coverage": {
-      "ci_high": -0.3,
-      "ci_includes_zero": false,
-      "ci_low": -0.9,
-      "confirmatory": true,
-      "diff": -0.6,
-      "n": 10
-    },
-    "cortex_vs_bm25_temporal:recall_at_k": {
-      "ci_high": -0.3,
-      "ci_includes_zero": false,
-      "ci_low": -0.9,
-      "confirmatory": true,
-      "diff": -0.6,
-      "n": 10
-    },
-    "cortex_vs_bm25_temporal:scope_accuracy": {
-      "ci_high": 0.5,
-      "ci_includes_zero": true,
-      "ci_low": -0.6,
+      "ci_low": 0.0,
       "confirmatory": true,
       "diff": 0.0,
       "n": 10
     },
-    "cortex_vs_bm25_temporal:set_f1": {
-      "ci_high": 0.366666666,
+    "cortex_vs_bm25_temporal:mrr": {
+      "ci_high": 0.0,
       "ci_includes_zero": true,
-      "ci_low": -0.733333334,
+      "ci_low": -0.15,
       "confirmatory": true,
-      "diff": -0.20000000099999998,
+      "diff": -0.05,
+      "n": 10
+    },
+    "cortex_vs_bm25_temporal:ndcg_at_k": {
+      "ci_high": 0.0,
+      "ci_includes_zero": true,
+      "ci_low": -0.189278925,
+      "confirmatory": true,
+      "diff": -0.063092975,
+      "n": 10
+    },
+    "cortex_vs_bm25_temporal:precision_at_k": {
+      "ci_high": 0.5,
+      "ci_includes_zero": false,
+      "ci_low": 0.05,
+      "confirmatory": true,
+      "diff": 0.29000000000000004,
+      "n": 10
+    },
+    "cortex_vs_bm25_temporal:provenance_coverage": {
+      "ci_high": 0.0,
+      "ci_includes_zero": true,
+      "ci_low": -0.3,
+      "confirmatory": true,
+      "diff": -0.1,
+      "n": 10
+    },
+    "cortex_vs_bm25_temporal:recall_at_k": {
+      "ci_high": 0.0,
+      "ci_includes_zero": true,
+      "ci_low": -0.3,
+      "confirmatory": true,
+      "diff": -0.1,
+      "n": 10
+    },
+    "cortex_vs_bm25_temporal:scope_accuracy": {
+      "ci_high": 0.9,
+      "ci_includes_zero": false,
+      "ci_low": 0.3,
+      "confirmatory": true,
+      "diff": 0.6,
+      "n": 10
+    },
+    "cortex_vs_bm25_temporal:set_f1": {
+      "ci_high": 0.6916666680000001,
+      "ci_includes_zero": false,
+      "ci_low": 0.15833333600000002,
+      "confirmatory": true,
+      "diff": 0.425000002,
       "n": 10
     },
     "cortex_vs_bm25_temporal:stale_leak_rate": {
@@ -4433,19 +4433,19 @@
       "n": 10
     },
     "cortex_vs_no_memory:abstention_recall": {
-      "ci_high": 0.3,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
+      "ci_high": 1.0,
+      "ci_includes_zero": false,
+      "ci_low": 0.5,
       "confirmatory": true,
-      "diff": 0.1,
+      "diff": 0.8,
       "n": 10
     },
     "cortex_vs_no_memory:answer_support_recall": {
-      "ci_high": 0.3,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
+      "ci_high": 0.9,
+      "ci_includes_zero": false,
+      "ci_low": 0.4,
       "confirmatory": true,
-      "diff": 0.1,
+      "diff": 0.7,
       "n": 10
     },
     "cortex_vs_no_memory:contradiction_exposure_rate": {
@@ -4457,11 +4457,11 @@
       "n": 10
     },
     "cortex_vs_no_memory:current_state_accuracy": {
-      "ci_high": 0.3,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
+      "ci_high": 0.9,
+      "ci_includes_zero": false,
+      "ci_low": 0.4,
       "confirmatory": true,
-      "diff": 0.1,
+      "diff": 0.7,
       "n": 10
     },
     "cortex_vs_no_memory:deletion_compliance": {
@@ -4489,67 +4489,67 @@
       "n": 10
     },
     "cortex_vs_no_memory:lineage_completeness": {
-      "ci_high": 0.0,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
+      "ci_high": 0.7,
+      "ci_includes_zero": false,
+      "ci_low": 0.1,
       "confirmatory": true,
-      "diff": 0.0,
+      "diff": 0.4,
       "n": 10
     },
     "cortex_vs_no_memory:mrr": {
-      "ci_high": 0.3,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
+      "ci_high": 0.9,
+      "ci_includes_zero": false,
+      "ci_low": 0.35,
       "confirmatory": true,
-      "diff": 0.1,
+      "diff": 0.65,
       "n": 10
     },
     "cortex_vs_no_memory:ndcg_at_k": {
-      "ci_high": 0.3,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
+      "ci_high": 0.9,
+      "ci_includes_zero": false,
+      "ci_low": 0.363092975,
       "confirmatory": true,
-      "diff": 0.1,
+      "diff": 0.663092975,
       "n": 10
     },
     "cortex_vs_no_memory:precision_at_k": {
-      "ci_high": 0.3,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
+      "ci_high": 0.9,
+      "ci_includes_zero": false,
+      "ci_low": 0.35,
       "confirmatory": true,
-      "diff": 0.1,
+      "diff": 0.65,
       "n": 10
     },
     "cortex_vs_no_memory:provenance_coverage": {
-      "ci_high": 0.3,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
+      "ci_high": 0.9,
+      "ci_includes_zero": false,
+      "ci_low": 0.4,
       "confirmatory": true,
-      "diff": 0.1,
+      "diff": 0.7,
       "n": 10
     },
     "cortex_vs_no_memory:recall_at_k": {
-      "ci_high": 0.3,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
+      "ci_high": 0.9,
+      "ci_includes_zero": false,
+      "ci_low": 0.4,
       "confirmatory": true,
-      "diff": 0.1,
+      "diff": 0.7,
       "n": 10
     },
     "cortex_vs_no_memory:scope_accuracy": {
-      "ci_high": 0.3,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
+      "ci_high": 0.9,
+      "ci_includes_zero": false,
+      "ci_low": 0.3,
       "confirmatory": true,
-      "diff": 0.1,
+      "diff": 0.6,
       "n": 10
     },
     "cortex_vs_no_memory:set_f1": {
-      "ci_high": 0.3,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
+      "ci_high": 0.9,
+      "ci_includes_zero": false,
+      "ci_low": 0.366666667,
       "confirmatory": true,
-      "diff": 0.1,
+      "diff": 0.666666667,
       "n": 10
     },
     "cortex_vs_no_memory:stale_leak_rate": {
@@ -4577,19 +4577,19 @@
       "n": 10
     },
     "cortex_vs_raw_context:abstention_recall": {
-      "ci_high": 0.3,
+      "ci_high": 0.5,
       "ci_includes_zero": true,
-      "ci_low": -0.8,
+      "ci_low": 0.0,
       "confirmatory": true,
-      "diff": -0.3,
+      "diff": 0.2,
       "n": 10
     },
     "cortex_vs_raw_context:answer_support_recall": {
-      "ci_high": -0.3,
+      "ci_high": 0.9,
       "ci_includes_zero": false,
-      "ci_low": -0.9,
+      "ci_low": 0.4,
       "confirmatory": true,
-      "diff": -0.6,
+      "diff": 0.7,
       "n": 10
     },
     "cortex_vs_raw_context:contradiction_exposure_rate": {
@@ -4601,19 +4601,19 @@
       "n": 10
     },
     "cortex_vs_raw_context:current_state_accuracy": {
-      "ci_high": -0.3,
+      "ci_high": 0.9,
       "ci_includes_zero": false,
-      "ci_low": -0.9,
+      "ci_low": 0.4,
       "confirmatory": true,
-      "diff": -0.6,
+      "diff": 0.7,
       "n": 10
     },
     "cortex_vs_raw_context:deletion_compliance": {
-      "ci_high": 0.7,
-      "ci_includes_zero": false,
-      "ci_low": 0.1,
+      "ci_high": 0.0,
+      "ci_includes_zero": true,
+      "ci_low": 0.0,
       "confirmatory": true,
-      "diff": 0.4,
+      "diff": 0.0,
       "n": 10
     },
     "cortex_vs_raw_context:evidence_resolution_rate": {
@@ -4633,83 +4633,83 @@
       "n": 10
     },
     "cortex_vs_raw_context:lineage_completeness": {
-      "ci_high": 0.0,
-      "ci_includes_zero": true,
-      "ci_low": -0.6,
-      "confirmatory": true,
-      "diff": -0.3,
-      "n": 10
-    },
-    "cortex_vs_raw_context:mrr": {
-      "ci_high": -0.15,
-      "ci_includes_zero": false,
-      "ci_low": -0.75,
-      "confirmatory": true,
-      "diff": -0.45,
-      "n": 10
-    },
-    "cortex_vs_raw_context:ndcg_at_k": {
-      "ci_high": -0.189278925,
-      "ci_includes_zero": false,
-      "ci_low": -0.789278925,
-      "confirmatory": true,
-      "diff": -0.489278925,
-      "n": 10
-    },
-    "cortex_vs_raw_context:precision_at_k": {
-      "ci_high": -0.15,
-      "ci_includes_zero": false,
-      "ci_low": -0.75,
-      "confirmatory": true,
-      "diff": -0.45,
-      "n": 10
-    },
-    "cortex_vs_raw_context:provenance_coverage": {
-      "ci_high": -0.3,
-      "ci_includes_zero": false,
-      "ci_low": -0.9,
-      "confirmatory": true,
-      "diff": -0.6,
-      "n": 10
-    },
-    "cortex_vs_raw_context:recall_at_k": {
-      "ci_high": -0.3,
-      "ci_includes_zero": false,
-      "ci_low": -0.9,
-      "confirmatory": true,
-      "diff": -0.6,
-      "n": 10
-    },
-    "cortex_vs_raw_context:scope_accuracy": {
-      "ci_high": 0.5,
-      "ci_includes_zero": true,
-      "ci_low": -0.6,
-      "confirmatory": true,
-      "diff": 0.0,
-      "n": 10
-    },
-    "cortex_vs_raw_context:set_f1": {
-      "ci_high": 0.366666666,
-      "ci_includes_zero": true,
-      "ci_low": -0.733333334,
-      "confirmatory": true,
-      "diff": -0.20000000099999998,
-      "n": 10
-    },
-    "cortex_vs_raw_context:stale_leak_rate": {
-      "ci_high": -0.1,
-      "ci_includes_zero": false,
-      "ci_low": -0.7,
-      "confirmatory": true,
-      "diff": -0.4,
-      "n": 10
-    },
-    "cortex_vs_raw_context:supersession_accuracy": {
       "ci_high": 0.7,
       "ci_includes_zero": false,
       "ci_low": 0.1,
       "confirmatory": true,
       "diff": 0.4,
+      "n": 10
+    },
+    "cortex_vs_raw_context:mrr": {
+      "ci_high": 0.9,
+      "ci_includes_zero": false,
+      "ci_low": 0.35,
+      "confirmatory": true,
+      "diff": 0.65,
+      "n": 10
+    },
+    "cortex_vs_raw_context:ndcg_at_k": {
+      "ci_high": 0.9,
+      "ci_includes_zero": false,
+      "ci_low": 0.363092975,
+      "confirmatory": true,
+      "diff": 0.663092975,
+      "n": 10
+    },
+    "cortex_vs_raw_context:precision_at_k": {
+      "ci_high": 0.9,
+      "ci_includes_zero": false,
+      "ci_low": 0.35,
+      "confirmatory": true,
+      "diff": 0.65,
+      "n": 10
+    },
+    "cortex_vs_raw_context:provenance_coverage": {
+      "ci_high": 0.9,
+      "ci_includes_zero": false,
+      "ci_low": 0.4,
+      "confirmatory": true,
+      "diff": 0.7,
+      "n": 10
+    },
+    "cortex_vs_raw_context:recall_at_k": {
+      "ci_high": 0.9,
+      "ci_includes_zero": false,
+      "ci_low": 0.4,
+      "confirmatory": true,
+      "diff": 0.7,
+      "n": 10
+    },
+    "cortex_vs_raw_context:scope_accuracy": {
+      "ci_high": 1.0,
+      "ci_includes_zero": false,
+      "ci_low": 0.5,
+      "confirmatory": true,
+      "diff": 0.8,
+      "n": 10
+    },
+    "cortex_vs_raw_context:set_f1": {
+      "ci_high": 1.0,
+      "ci_includes_zero": false,
+      "ci_low": 0.633333334,
+      "confirmatory": true,
+      "diff": 0.866666667,
+      "n": 10
+    },
+    "cortex_vs_raw_context:stale_leak_rate": {
+      "ci_high": 0.0,
+      "ci_includes_zero": true,
+      "ci_low": 0.0,
+      "confirmatory": true,
+      "diff": 0.0,
+      "n": 10
+    },
+    "cortex_vs_raw_context:supersession_accuracy": {
+      "ci_high": 0.0,
+      "ci_includes_zero": true,
+      "ci_low": 0.0,
+      "confirmatory": true,
+      "diff": 0.0,
       "n": 10
     },
     "cortex_vs_raw_context:unsupported_claim_rate": {

@@ -223,7 +223,7 @@
         },
         "extraction_spurious_rate": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 2
         },
         "false_certainty_rate": {
@@ -752,12 +752,12 @@
       "cortex": {
         "abstention_recall": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "answer_support_recall": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "contradiction_exposure_rate": {
@@ -767,7 +767,7 @@
         },
         "current_state_accuracy": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "deletion_compliance": {
@@ -782,7 +782,7 @@
         },
         "extraction_recall": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "extraction_spurious_rate": {
@@ -802,37 +802,37 @@
         },
         "mrr": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "ndcg_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "precision_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "provenance_coverage": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "recall_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "scope_accuracy": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "set_f1": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "stale_leak_rate": {
@@ -1182,17 +1182,17 @@
         },
         "mrr": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.5,
           "n": 1
         },
         "ndcg_at_k": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.63092975,
           "n": 1
         },
         "precision_at_k": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 0.33333333,
           "n": 1
         },
         "provenance_coverage": {
@@ -1212,7 +1212,7 @@
         },
         "set_f1": {
           "confirmatory": false,
-          "mean": 0.66666667,
+          "mean": 0.5,
           "n": 1
         },
         "stale_leak_rate": {
@@ -1284,12 +1284,124 @@
         },
         "mrr": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.5,
           "n": 1
         },
         "ndcg_at_k": {
           "confirmatory": false,
+          "mean": 0.63092975,
+          "n": 1
+        },
+        "precision_at_k": {
+          "confirmatory": false,
+          "mean": 0.33333333,
+          "n": 1
+        },
+        "provenance_coverage": {
+          "confirmatory": false,
           "mean": 1.0,
+          "n": 1
+        },
+        "recall_at_k": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "scope_accuracy": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "set_f1": {
+          "confirmatory": false,
+          "mean": 0.5,
+          "n": 1
+        },
+        "stale_leak_rate": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "supersession_accuracy": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "unsupported_claim_rate": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        }
+      },
+      "cortex": {
+        "abstention_recall": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "answer_support_recall": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "cascade_correctness_hop1": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "cascade_correctness_hop2": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "contradiction_exposure_rate": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "current_state_accuracy": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "deletion_compliance": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "evidence_resolution_rate": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "extraction_recall": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "extraction_spurious_rate": {
+          "confirmatory": false,
+          "mean": 0.33333333,
+          "n": 1
+        },
+        "false_certainty_rate": {
+          "confirmatory": false,
+          "mean": 0.0,
+          "n": 1
+        },
+        "lineage_completeness": {
+          "confirmatory": false,
+          "mean": 1.0,
+          "n": 1
+        },
+        "mrr": {
+          "confirmatory": false,
+          "mean": 0.5,
+          "n": 1
+        },
+        "ndcg_at_k": {
+          "confirmatory": false,
+          "mean": 0.63092975,
           "n": 1
         },
         "precision_at_k": {
@@ -1315,118 +1427,6 @@
         "set_f1": {
           "confirmatory": false,
           "mean": 0.66666667,
-          "n": 1
-        },
-        "stale_leak_rate": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "supersession_accuracy": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "unsupported_claim_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        }
-      },
-      "cortex": {
-        "abstention_recall": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "answer_support_recall": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "cascade_correctness_hop1": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "cascade_correctness_hop2": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "contradiction_exposure_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "current_state_accuracy": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "deletion_compliance": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "evidence_resolution_rate": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "extraction_recall": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "extraction_spurious_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "false_certainty_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "lineage_completeness": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "mrr": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "ndcg_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "precision_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "provenance_coverage": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "recall_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "scope_accuracy": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "set_f1": {
-          "confirmatory": false,
-          "mean": 0.0,
           "n": 1
         },
         "stale_leak_rate": {
@@ -1610,7 +1610,7 @@
         },
         "precision_at_k": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.5,
           "n": 1
         },
         "provenance_coverage": {
@@ -1625,12 +1625,12 @@
         },
         "scope_accuracy": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "set_f1": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.66666667,
           "n": 1
         },
         "stale_leak_rate": {
@@ -1712,7 +1712,7 @@
         },
         "precision_at_k": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 0.33333333,
           "n": 1
         },
         "provenance_coverage": {
@@ -1732,7 +1732,7 @@
         },
         "set_f1": {
           "confirmatory": false,
-          "mean": 0.66666667,
+          "mean": 0.5,
           "n": 1
         },
         "stale_leak_rate": {
@@ -1756,12 +1756,12 @@
       "bm25": {
         "abstention_recall": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "answer_support_recall": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "contradiction_exposure_rate": {
@@ -1796,17 +1796,17 @@
         },
         "mrr": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 0.5,
           "n": 1
         },
         "ndcg_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 0.63092975,
           "n": 1
         },
         "precision_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 0.33333333,
           "n": 1
         },
         "provenance_coverage": {
@@ -1816,7 +1816,7 @@
         },
         "recall_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "scope_accuracy": {
@@ -1826,7 +1826,7 @@
         },
         "set_f1": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 0.5,
           "n": 1
         },
         "stale_leak_rate": {
@@ -1848,12 +1848,12 @@
       "bm25_temporal": {
         "abstention_recall": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "answer_support_recall": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "contradiction_exposure_rate": {
@@ -1888,17 +1888,17 @@
         },
         "mrr": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 0.5,
           "n": 1
         },
         "ndcg_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 0.63092975,
           "n": 1
         },
         "precision_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 0.33333333,
           "n": 1
         },
         "provenance_coverage": {
@@ -1908,7 +1908,7 @@
         },
         "recall_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "scope_accuracy": {
@@ -1918,7 +1918,7 @@
         },
         "set_f1": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 0.5,
           "n": 1
         },
         "stale_leak_rate": {
@@ -1955,7 +1955,7 @@
         },
         "current_state_accuracy": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "deletion_compliance": {
@@ -1975,7 +1975,7 @@
         },
         "extraction_spurious_rate": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 0.66666667,
           "n": 1
         },
         "false_certainty_rate": {
@@ -2005,7 +2005,7 @@
         },
         "provenance_coverage": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "recall_at_k": {
@@ -2015,12 +2015,12 @@
         },
         "scope_accuracy": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "set_f1": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "stale_leak_rate": {
@@ -2042,7 +2042,7 @@
       "no_memory": {
         "abstention_recall": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "answer_support_recall": {
@@ -2057,7 +2057,7 @@
         },
         "current_state_accuracy": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "deletion_compliance": {
@@ -2077,7 +2077,7 @@
         },
         "lineage_completeness": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "mrr": {
@@ -2097,7 +2097,7 @@
         },
         "provenance_coverage": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "recall_at_k": {
@@ -2107,12 +2107,12 @@
         },
         "scope_accuracy": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "set_f1": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.0,
           "n": 1
         },
         "stale_leak_rate": {
@@ -2139,7 +2139,7 @@
         },
         "answer_support_recall": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "contradiction_exposure_rate": {
@@ -2169,22 +2169,22 @@
         },
         "lineage_completeness": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.5,
           "n": 1
         },
         "mrr": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "ndcg_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "precision_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "provenance_coverage": {
@@ -2194,7 +2194,7 @@
         },
         "recall_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "scope_accuracy": {
@@ -2226,12 +2226,12 @@
       "raw_context": {
         "abstention_recall": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "answer_support_recall": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "contradiction_exposure_rate": {
@@ -2266,17 +2266,17 @@
         },
         "mrr": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 0.5,
           "n": 1
         },
         "ndcg_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 0.63092975,
           "n": 1
         },
         "precision_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 0.33333333,
           "n": 1
         },
         "provenance_coverage": {
@@ -2286,7 +2286,7 @@
         },
         "recall_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 1
         },
         "scope_accuracy": {
@@ -2296,7 +2296,7 @@
         },
         "set_f1": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 0.5,
           "n": 1
         },
         "stale_leak_rate": {
@@ -2504,12 +2504,12 @@
       "cortex": {
         "abstention_recall": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 3
         },
         "answer_support_recall": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 3
         },
         "contradiction_exposure_rate": {
@@ -2519,7 +2519,7 @@
         },
         "current_state_accuracy": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 3
         },
         "deletion_compliance": {
@@ -2534,7 +2534,7 @@
         },
         "extraction_recall": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 3
         },
         "extraction_spurious_rate": {
@@ -2554,37 +2554,37 @@
         },
         "mrr": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 3
         },
         "ndcg_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 3
         },
         "precision_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 3
         },
         "provenance_coverage": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 3
         },
         "recall_at_k": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 3
         },
         "scope_accuracy": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 3
         },
         "set_f1": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 3
         },
         "stale_leak_rate": {
@@ -2840,7 +2840,7 @@
         },
         "precision_at_k": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.8333333333333334,
           "n": 3
         },
         "provenance_coverage": {
@@ -2855,12 +2855,12 @@
         },
         "scope_accuracy": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.6666666666666666,
           "n": 3
         },
         "set_f1": {
           "confirmatory": false,
-          "mean": 1.0,
+          "mean": 0.88888889,
           "n": 3
         },
         "stale_leak_rate": {
@@ -2924,12 +2924,12 @@
         },
         "mrr": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 1.0,
           "n": 2
         },
         "ndcg_at_k": {
           "confirmatory": false,
-          "mean": 0.63092975,
+          "mean": 1.0,
           "n": 2
         },
         "precision_at_k": {
@@ -3016,12 +3016,12 @@
         },
         "mrr": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 1.0,
           "n": 2
         },
         "ndcg_at_k": {
           "confirmatory": false,
-          "mean": 0.63092975,
+          "mean": 1.0,
           "n": 2
         },
         "precision_at_k": {
@@ -3068,12 +3068,12 @@
       "cortex": {
         "abstention_recall": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 1.0,
           "n": 2
         },
         "answer_support_recall": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 1.0,
           "n": 2
         },
         "contradiction_exposure_rate": {
@@ -3083,7 +3083,7 @@
         },
         "current_state_accuracy": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 1.0,
           "n": 2
         },
         "deletion_compliance": {
@@ -3098,12 +3098,12 @@
         },
         "extraction_recall": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 1.0,
           "n": 2
         },
         "extraction_spurious_rate": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 0.5,
           "n": 2
         },
         "false_certainty_rate": {
@@ -3113,42 +3113,42 @@
         },
         "lineage_completeness": {
           "confirmatory": false,
-          "mean": 0.0,
+          "mean": 1.0,
           "n": 2
         },
         "mrr": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 1.0,
           "n": 2
         },
         "ndcg_at_k": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 1.0,
           "n": 2
         },
         "precision_at_k": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 1.0,
           "n": 2
         },
         "provenance_coverage": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 1.0,
           "n": 2
         },
         "recall_at_k": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 1.0,
           "n": 2
         },
         "scope_accuracy": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 1.0,
           "n": 2
         },
         "set_f1": {
           "confirmatory": false,
-          "mean": 0.5,
+          "mean": 1.0,
           "n": 2
         },
         "stale_leak_rate": {
@@ -3445,22 +3445,22 @@
       }
     }
   },
-  "corpus_hash": "sha256:d7d76799351f3e8a695b44db8a37ed2b5f52369544360f5ce9b2e5e8fecb5055",
+  "corpus_hash": "sha256:dba8b3025fd7ed03e861a3b98cc5c97beda63648c4ad8a6d2d523bf78835a689",
   "cortex_version": "0.1.0",
   "dataset_revisions": {
-    "meme": "mvp"
+    "internal": "engineering-memory-v1"
   },
   "decision": "promover_com_reservas",
   "endpoints": {
     "bm25": {
       "abstention_recall": {
         "confirmatory": true,
-        "mean": 0.7,
+        "mean": 0.8,
         "n": 10
       },
       "answer_support_recall": {
         "confirmatory": true,
-        "mean": 0.7,
+        "mean": 0.8,
         "n": 10
       },
       "cascade_correctness_hop1": {
@@ -3505,17 +3505,17 @@
       },
       "mrr": {
         "confirmatory": true,
-        "mean": 0.6,
+        "mean": 0.7,
         "n": 10
       },
       "ndcg_at_k": {
         "confirmatory": true,
-        "mean": 0.62618595,
+        "mean": 0.72618595,
         "n": 10
       },
       "precision_at_k": {
         "confirmatory": true,
-        "mean": 0.55,
+        "mean": 0.5666666659999999,
         "n": 10
       },
       "provenance_coverage": {
@@ -3525,7 +3525,7 @@
       },
       "recall_at_k": {
         "confirmatory": true,
-        "mean": 0.7,
+        "mean": 0.8,
         "n": 10
       },
       "scope_accuracy": {
@@ -3535,7 +3535,7 @@
       },
       "set_f1": {
         "confirmatory": true,
-        "mean": 0.600000001,
+        "mean": 0.633333334,
         "n": 10
       },
       "stale_leak_rate": {
@@ -3557,12 +3557,12 @@
     "bm25_temporal": {
       "abstention_recall": {
         "confirmatory": true,
-        "mean": 0.7,
+        "mean": 0.8,
         "n": 10
       },
       "answer_support_recall": {
         "confirmatory": true,
-        "mean": 0.7,
+        "mean": 0.8,
         "n": 10
       },
       "cascade_correctness_hop1": {
@@ -3607,17 +3607,17 @@
       },
       "mrr": {
         "confirmatory": true,
-        "mean": 0.6,
+        "mean": 0.7,
         "n": 10
       },
       "ndcg_at_k": {
         "confirmatory": true,
-        "mean": 0.62618595,
+        "mean": 0.72618595,
         "n": 10
       },
       "precision_at_k": {
         "confirmatory": true,
-        "mean": 0.55,
+        "mean": 0.5666666659999999,
         "n": 10
       },
       "provenance_coverage": {
@@ -3627,7 +3627,7 @@
       },
       "recall_at_k": {
         "confirmatory": true,
-        "mean": 0.7,
+        "mean": 0.8,
         "n": 10
       },
       "scope_accuracy": {
@@ -3637,7 +3637,7 @@
       },
       "set_f1": {
         "confirmatory": true,
-        "mean": 0.600000001,
+        "mean": 0.633333334,
         "n": 10
       },
       "stale_leak_rate": {
@@ -3659,22 +3659,22 @@
     "cortex": {
       "abstention_recall": {
         "confirmatory": true,
-        "mean": 0.4,
+        "mean": 1.0,
         "n": 10
       },
       "answer_support_recall": {
         "confirmatory": true,
-        "mean": 0.1,
+        "mean": 0.7,
         "n": 10
       },
       "cascade_correctness_hop1": {
         "confirmatory": false,
-        "mean": 0.0,
+        "mean": 1.0,
         "n": 1
       },
       "cascade_correctness_hop2": {
         "confirmatory": false,
-        "mean": 0.0,
+        "mean": 1.0,
         "n": 1
       },
       "contradiction_exposure_rate": {
@@ -3684,7 +3684,7 @@
       },
       "current_state_accuracy": {
         "confirmatory": true,
-        "mean": 0.4,
+        "mean": 0.9,
         "n": 10
       },
       "deletion_compliance": {
@@ -3699,12 +3699,12 @@
       },
       "extraction_recall": {
         "confirmatory": true,
-        "mean": 0.4,
+        "mean": 1.0,
         "n": 10
       },
       "extraction_spurious_rate": {
         "confirmatory": true,
-        "mean": 0.0,
+        "mean": 0.4,
         "n": 10
       },
       "false_certainty_rate": {
@@ -3714,42 +3714,42 @@
       },
       "lineage_completeness": {
         "confirmatory": true,
-        "mean": 0.7,
+        "mean": 1.0,
         "n": 10
       },
       "mrr": {
         "confirmatory": true,
-        "mean": 0.1,
+        "mean": 0.65,
         "n": 10
       },
       "ndcg_at_k": {
         "confirmatory": true,
-        "mean": 0.1,
+        "mean": 0.663092975,
         "n": 10
       },
       "precision_at_k": {
         "confirmatory": true,
-        "mean": 0.1,
+        "mean": 0.65,
         "n": 10
       },
       "provenance_coverage": {
         "confirmatory": true,
-        "mean": 0.4,
+        "mean": 0.9,
         "n": 10
       },
       "recall_at_k": {
         "confirmatory": true,
-        "mean": 0.1,
+        "mean": 0.7,
         "n": 10
       },
       "scope_accuracy": {
         "confirmatory": true,
-        "mean": 0.4,
+        "mean": 0.8,
         "n": 10
       },
       "set_f1": {
         "confirmatory": true,
-        "mean": 0.4,
+        "mean": 0.866666667,
         "n": 10
       },
       "stale_leak_rate": {
@@ -3771,7 +3771,7 @@
     "no_memory": {
       "abstention_recall": {
         "confirmatory": true,
-        "mean": 0.3,
+        "mean": 0.2,
         "n": 10
       },
       "answer_support_recall": {
@@ -3796,7 +3796,7 @@
       },
       "current_state_accuracy": {
         "confirmatory": true,
-        "mean": 0.3,
+        "mean": 0.2,
         "n": 10
       },
       "deletion_compliance": {
@@ -3816,7 +3816,7 @@
       },
       "lineage_completeness": {
         "confirmatory": true,
-        "mean": 0.7,
+        "mean": 0.6,
         "n": 10
       },
       "mrr": {
@@ -3836,7 +3836,7 @@
       },
       "provenance_coverage": {
         "confirmatory": true,
-        "mean": 0.3,
+        "mean": 0.2,
         "n": 10
       },
       "recall_at_k": {
@@ -3846,12 +3846,12 @@
       },
       "scope_accuracy": {
         "confirmatory": true,
-        "mean": 0.3,
+        "mean": 0.2,
         "n": 10
       },
       "set_f1": {
         "confirmatory": true,
-        "mean": 0.3,
+        "mean": 0.2,
         "n": 10
       },
       "stale_leak_rate": {
@@ -3878,7 +3878,7 @@
       },
       "answer_support_recall": {
         "confirmatory": true,
-        "mean": 0.7,
+        "mean": 0.8,
         "n": 10
       },
       "cascade_correctness_hop1": {
@@ -3918,22 +3918,22 @@
       },
       "lineage_completeness": {
         "confirmatory": true,
-        "mean": 0.85,
+        "mean": 0.8,
         "n": 10
       },
       "mrr": {
         "confirmatory": true,
-        "mean": 0.7,
+        "mean": 0.8,
         "n": 10
       },
       "ndcg_at_k": {
         "confirmatory": true,
-        "mean": 0.7,
+        "mean": 0.8,
         "n": 10
       },
       "precision_at_k": {
         "confirmatory": true,
-        "mean": 0.7,
+        "mean": 0.75,
         "n": 10
       },
       "provenance_coverage": {
@@ -3943,17 +3943,17 @@
       },
       "recall_at_k": {
         "confirmatory": true,
-        "mean": 0.7,
+        "mean": 0.8,
         "n": 10
       },
       "scope_accuracy": {
         "confirmatory": true,
-        "mean": 1.0,
+        "mean": 0.9,
         "n": 10
       },
       "set_f1": {
         "confirmatory": true,
-        "mean": 1.0,
+        "mean": 0.9666666669999999,
         "n": 10
       },
       "stale_leak_rate": {
@@ -3975,12 +3975,12 @@
     "raw_context": {
       "abstention_recall": {
         "confirmatory": true,
-        "mean": 0.7,
+        "mean": 0.8,
         "n": 10
       },
       "answer_support_recall": {
         "confirmatory": true,
-        "mean": 0.7,
+        "mean": 0.8,
         "n": 10
       },
       "cascade_correctness_hop1": {
@@ -4025,17 +4025,17 @@
       },
       "mrr": {
         "confirmatory": true,
-        "mean": 0.55,
+        "mean": 0.6,
         "n": 10
       },
       "ndcg_at_k": {
         "confirmatory": true,
-        "mean": 0.589278925,
+        "mean": 0.6523719,
         "n": 10
       },
       "precision_at_k": {
         "confirmatory": true,
-        "mean": 0.55,
+        "mean": 0.516666666,
         "n": 10
       },
       "provenance_coverage": {
@@ -4045,12 +4045,12 @@
       },
       "recall_at_k": {
         "confirmatory": true,
-        "mean": 0.7,
+        "mean": 0.8,
         "n": 10
       },
       "scope_accuracy": {
         "confirmatory": true,
-        "mean": 0.4,
+        "mean": 0.3,
         "n": 10
       },
       "set_f1": {
@@ -4092,21 +4092,21 @@
     },
     "G2_relative_value": {
       "abstention_recall": {
-        "ci_high": 0.3,
+        "ci_high": 0.5,
         "ci_includes_zero": true,
-        "ci_low": -0.8,
+        "ci_low": 0.0,
         "comparison": "cortex_vs_bm25",
         "confirmatory": true,
-        "diff": -0.3,
+        "diff": 0.2,
         "n": 10
       },
       "current_state_accuracy": {
-        "ci_high": -0.3,
-        "ci_includes_zero": false,
-        "ci_low": -0.9,
+        "ci_high": 0.0,
+        "ci_includes_zero": true,
+        "ci_low": -0.3,
         "comparison": "cortex_vs_bm25",
         "confirmatory": true,
-        "diff": -0.6,
+        "diff": -0.1,
         "n": 10
       },
       "deletion_compliance": {
@@ -4119,21 +4119,21 @@
         "n": 10
       },
       "recall_at_k": {
-        "ci_high": -0.3,
-        "ci_includes_zero": false,
-        "ci_low": -0.9,
+        "ci_high": 0.0,
+        "ci_includes_zero": true,
+        "ci_low": -0.3,
         "comparison": "cortex_vs_bm25",
         "confirmatory": true,
-        "diff": -0.6,
+        "diff": -0.1,
         "n": 10
       },
       "set_f1": {
-        "ci_high": 0.366666666,
+        "ci_high": 0.55,
         "ci_includes_zero": true,
-        "ci_low": -0.733333334,
+        "ci_low": 0.0,
         "comparison": "cortex_vs_raw_context",
         "confirmatory": true,
-        "diff": -0.20000000099999998,
+        "diff": 0.266666666,
         "n": 10
       }
     },
@@ -4145,19 +4145,19 @@
   },
   "paired_comparisons": {
     "cortex_vs_bm25:abstention_recall": {
-      "ci_high": 0.3,
+      "ci_high": 0.5,
       "ci_includes_zero": true,
-      "ci_low": -0.8,
+      "ci_low": 0.0,
       "confirmatory": true,
-      "diff": -0.3,
+      "diff": 0.2,
       "n": 10
     },
     "cortex_vs_bm25:answer_support_recall": {
-      "ci_high": -0.3,
-      "ci_includes_zero": false,
-      "ci_low": -0.9,
+      "ci_high": 0.0,
+      "ci_includes_zero": true,
+      "ci_low": -0.3,
       "confirmatory": true,
-      "diff": -0.6,
+      "diff": -0.1,
       "n": 10
     },
     "cortex_vs_bm25:contradiction_exposure_rate": {
@@ -4169,11 +4169,11 @@
       "n": 10
     },
     "cortex_vs_bm25:current_state_accuracy": {
-      "ci_high": -0.3,
-      "ci_includes_zero": false,
-      "ci_low": -0.9,
+      "ci_high": 0.0,
+      "ci_includes_zero": true,
+      "ci_low": -0.3,
       "confirmatory": true,
-      "diff": -0.6,
+      "diff": -0.1,
       "n": 10
     },
     "cortex_vs_bm25:deletion_compliance": {
@@ -4203,65 +4203,65 @@
     "cortex_vs_bm25:lineage_completeness": {
       "ci_high": 0.0,
       "ci_includes_zero": true,
-      "ci_low": -0.6,
-      "confirmatory": true,
-      "diff": -0.3,
-      "n": 10
-    },
-    "cortex_vs_bm25:mrr": {
-      "ci_high": -0.2,
-      "ci_includes_zero": false,
-      "ci_low": -0.8,
-      "confirmatory": true,
-      "diff": -0.5,
-      "n": 10
-    },
-    "cortex_vs_bm25:ndcg_at_k": {
-      "ci_high": -0.22618595,
-      "ci_includes_zero": false,
-      "ci_low": -0.82618595,
-      "confirmatory": true,
-      "diff": -0.52618595,
-      "n": 10
-    },
-    "cortex_vs_bm25:precision_at_k": {
-      "ci_high": -0.15,
-      "ci_includes_zero": false,
-      "ci_low": -0.75,
-      "confirmatory": true,
-      "diff": -0.45,
-      "n": 10
-    },
-    "cortex_vs_bm25:provenance_coverage": {
-      "ci_high": -0.3,
-      "ci_includes_zero": false,
-      "ci_low": -0.9,
-      "confirmatory": true,
-      "diff": -0.6,
-      "n": 10
-    },
-    "cortex_vs_bm25:recall_at_k": {
-      "ci_high": -0.3,
-      "ci_includes_zero": false,
-      "ci_low": -0.9,
-      "confirmatory": true,
-      "diff": -0.6,
-      "n": 10
-    },
-    "cortex_vs_bm25:scope_accuracy": {
-      "ci_high": 0.5,
-      "ci_includes_zero": true,
-      "ci_low": -0.6,
+      "ci_low": 0.0,
       "confirmatory": true,
       "diff": 0.0,
       "n": 10
     },
-    "cortex_vs_bm25:set_f1": {
-      "ci_high": 0.366666666,
+    "cortex_vs_bm25:mrr": {
+      "ci_high": 0.0,
       "ci_includes_zero": true,
-      "ci_low": -0.733333334,
+      "ci_low": -0.15,
       "confirmatory": true,
-      "diff": -0.20000000099999998,
+      "diff": -0.05,
+      "n": 10
+    },
+    "cortex_vs_bm25:ndcg_at_k": {
+      "ci_high": 0.0,
+      "ci_includes_zero": true,
+      "ci_low": -0.189278925,
+      "confirmatory": true,
+      "diff": -0.063092975,
+      "n": 10
+    },
+    "cortex_vs_bm25:precision_at_k": {
+      "ci_high": 0.216666667,
+      "ci_includes_zero": true,
+      "ci_low": -0.06666666499999999,
+      "confirmatory": true,
+      "diff": 0.08333333400000001,
+      "n": 10
+    },
+    "cortex_vs_bm25:provenance_coverage": {
+      "ci_high": 0.0,
+      "ci_includes_zero": true,
+      "ci_low": -0.3,
+      "confirmatory": true,
+      "diff": -0.1,
+      "n": 10
+    },
+    "cortex_vs_bm25:recall_at_k": {
+      "ci_high": 0.0,
+      "ci_includes_zero": true,
+      "ci_low": -0.3,
+      "confirmatory": true,
+      "diff": -0.1,
+      "n": 10
+    },
+    "cortex_vs_bm25:scope_accuracy": {
+      "ci_high": 0.7,
+      "ci_includes_zero": false,
+      "ci_low": 0.1,
+      "confirmatory": true,
+      "diff": 0.4,
+      "n": 10
+    },
+    "cortex_vs_bm25:set_f1": {
+      "ci_high": 0.5333333330000001,
+      "ci_includes_zero": true,
+      "ci_low": -0.033333333,
+      "confirmatory": true,
+      "diff": 0.23333333299999998,
       "n": 10
     },
     "cortex_vs_bm25:stale_leak_rate": {
@@ -4289,19 +4289,19 @@
       "n": 10
     },
     "cortex_vs_bm25_temporal:abstention_recall": {
-      "ci_high": 0.3,
+      "ci_high": 0.5,
       "ci_includes_zero": true,
-      "ci_low": -0.8,
+      "ci_low": 0.0,
       "confirmatory": true,
-      "diff": -0.3,
+      "diff": 0.2,
       "n": 10
     },
     "cortex_vs_bm25_temporal:answer_support_recall": {
-      "ci_high": -0.3,
-      "ci_includes_zero": false,
-      "ci_low": -0.9,
+      "ci_high": 0.0,
+      "ci_includes_zero": true,
+      "ci_low": -0.3,
       "confirmatory": true,
-      "diff": -0.6,
+      "diff": -0.1,
       "n": 10
     },
     "cortex_vs_bm25_temporal:contradiction_exposure_rate": {
@@ -4313,11 +4313,11 @@
       "n": 10
     },
     "cortex_vs_bm25_temporal:current_state_accuracy": {
-      "ci_high": -0.3,
-      "ci_includes_zero": false,
-      "ci_low": -0.9,
+      "ci_high": 0.0,
+      "ci_includes_zero": true,
+      "ci_low": -0.3,
       "confirmatory": true,
-      "diff": -0.6,
+      "diff": -0.1,
       "n": 10
     },
     "cortex_vs_bm25_temporal:deletion_compliance": {
@@ -4347,65 +4347,65 @@
     "cortex_vs_bm25_temporal:lineage_completeness": {
       "ci_high": 0.0,
       "ci_includes_zero": true,
-      "ci_low": -0.6,
-      "confirmatory": true,
-      "diff": -0.3,
-      "n": 10
-    },
-    "cortex_vs_bm25_temporal:mrr": {
-      "ci_high": -0.2,
-      "ci_includes_zero": false,
-      "ci_low": -0.8,
-      "confirmatory": true,
-      "diff": -0.5,
-      "n": 10
-    },
-    "cortex_vs_bm25_temporal:ndcg_at_k": {
-      "ci_high": -0.22618595,
-      "ci_includes_zero": false,
-      "ci_low": -0.82618595,
-      "confirmatory": true,
-      "diff": -0.52618595,
-      "n": 10
-    },
-    "cortex_vs_bm25_temporal:precision_at_k": {
-      "ci_high": -0.15,
-      "ci_includes_zero": false,
-      "ci_low": -0.75,
-      "confirmatory": true,
-      "diff": -0.45,
-      "n": 10
-    },
-    "cortex_vs_bm25_temporal:provenance_coverage": {
-      "ci_high": -0.3,
-      "ci_includes_zero": false,
-      "ci_low": -0.9,
-      "confirmatory": true,
-      "diff": -0.6,
-      "n": 10
-    },
-    "cortex_vs_bm25_temporal:recall_at_k": {
-      "ci_high": -0.3,
-      "ci_includes_zero": false,
-      "ci_low": -0.9,
-      "confirmatory": true,
-      "diff": -0.6,
-      "n": 10
-    },
-    "cortex_vs_bm25_temporal:scope_accuracy": {
-      "ci_high": 0.5,
-      "ci_includes_zero": true,
-      "ci_low": -0.6,
+      "ci_low": 0.0,
       "confirmatory": true,
       "diff": 0.0,
       "n": 10
     },
-    "cortex_vs_bm25_temporal:set_f1": {
-      "ci_high": 0.366666666,
+    "cortex_vs_bm25_temporal:mrr": {
+      "ci_high": 0.0,
       "ci_includes_zero": true,
-      "ci_low": -0.733333334,
+      "ci_low": -0.15,
       "confirmatory": true,
-      "diff": -0.20000000099999998,
+      "diff": -0.05,
+      "n": 10
+    },
+    "cortex_vs_bm25_temporal:ndcg_at_k": {
+      "ci_high": 0.0,
+      "ci_includes_zero": true,
+      "ci_low": -0.189278925,
+      "confirmatory": true,
+      "diff": -0.063092975,
+      "n": 10
+    },
+    "cortex_vs_bm25_temporal:precision_at_k": {
+      "ci_high": 0.216666667,
+      "ci_includes_zero": true,
+      "ci_low": -0.06666666499999999,
+      "confirmatory": true,
+      "diff": 0.08333333400000001,
+      "n": 10
+    },
+    "cortex_vs_bm25_temporal:provenance_coverage": {
+      "ci_high": 0.0,
+      "ci_includes_zero": true,
+      "ci_low": -0.3,
+      "confirmatory": true,
+      "diff": -0.1,
+      "n": 10
+    },
+    "cortex_vs_bm25_temporal:recall_at_k": {
+      "ci_high": 0.0,
+      "ci_includes_zero": true,
+      "ci_low": -0.3,
+      "confirmatory": true,
+      "diff": -0.1,
+      "n": 10
+    },
+    "cortex_vs_bm25_temporal:scope_accuracy": {
+      "ci_high": 0.7,
+      "ci_includes_zero": false,
+      "ci_low": 0.1,
+      "confirmatory": true,
+      "diff": 0.4,
+      "n": 10
+    },
+    "cortex_vs_bm25_temporal:set_f1": {
+      "ci_high": 0.5333333330000001,
+      "ci_includes_zero": true,
+      "ci_low": -0.033333333,
+      "confirmatory": true,
+      "diff": 0.23333333299999998,
       "n": 10
     },
     "cortex_vs_bm25_temporal:stale_leak_rate": {
@@ -4433,19 +4433,19 @@
       "n": 10
     },
     "cortex_vs_no_memory:abstention_recall": {
-      "ci_high": 0.3,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
+      "ci_high": 1.0,
+      "ci_includes_zero": false,
+      "ci_low": 0.5,
       "confirmatory": true,
-      "diff": 0.1,
+      "diff": 0.8,
       "n": 10
     },
     "cortex_vs_no_memory:answer_support_recall": {
-      "ci_high": 0.3,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
+      "ci_high": 0.9,
+      "ci_includes_zero": false,
+      "ci_low": 0.4,
       "confirmatory": true,
-      "diff": 0.1,
+      "diff": 0.7,
       "n": 10
     },
     "cortex_vs_no_memory:contradiction_exposure_rate": {
@@ -4457,11 +4457,11 @@
       "n": 10
     },
     "cortex_vs_no_memory:current_state_accuracy": {
-      "ci_high": 0.3,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
+      "ci_high": 0.9,
+      "ci_includes_zero": false,
+      "ci_low": 0.4,
       "confirmatory": true,
-      "diff": 0.1,
+      "diff": 0.7,
       "n": 10
     },
     "cortex_vs_no_memory:deletion_compliance": {
@@ -4489,67 +4489,67 @@
       "n": 10
     },
     "cortex_vs_no_memory:lineage_completeness": {
-      "ci_high": 0.0,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
+      "ci_high": 0.7,
+      "ci_includes_zero": false,
+      "ci_low": 0.1,
       "confirmatory": true,
-      "diff": 0.0,
+      "diff": 0.4,
       "n": 10
     },
     "cortex_vs_no_memory:mrr": {
-      "ci_high": 0.3,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
+      "ci_high": 0.9,
+      "ci_includes_zero": false,
+      "ci_low": 0.35,
       "confirmatory": true,
-      "diff": 0.1,
+      "diff": 0.65,
       "n": 10
     },
     "cortex_vs_no_memory:ndcg_at_k": {
-      "ci_high": 0.3,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
+      "ci_high": 0.9,
+      "ci_includes_zero": false,
+      "ci_low": 0.363092975,
       "confirmatory": true,
-      "diff": 0.1,
+      "diff": 0.663092975,
       "n": 10
     },
     "cortex_vs_no_memory:precision_at_k": {
-      "ci_high": 0.3,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
+      "ci_high": 0.9,
+      "ci_includes_zero": false,
+      "ci_low": 0.35,
       "confirmatory": true,
-      "diff": 0.1,
+      "diff": 0.65,
       "n": 10
     },
     "cortex_vs_no_memory:provenance_coverage": {
-      "ci_high": 0.3,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
+      "ci_high": 0.9,
+      "ci_includes_zero": false,
+      "ci_low": 0.4,
       "confirmatory": true,
-      "diff": 0.1,
+      "diff": 0.7,
       "n": 10
     },
     "cortex_vs_no_memory:recall_at_k": {
-      "ci_high": 0.3,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
+      "ci_high": 0.9,
+      "ci_includes_zero": false,
+      "ci_low": 0.4,
       "confirmatory": true,
-      "diff": 0.1,
+      "diff": 0.7,
       "n": 10
     },
     "cortex_vs_no_memory:scope_accuracy": {
-      "ci_high": 0.3,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
+      "ci_high": 0.9,
+      "ci_includes_zero": false,
+      "ci_low": 0.3,
       "confirmatory": true,
-      "diff": 0.1,
+      "diff": 0.6,
       "n": 10
     },
     "cortex_vs_no_memory:set_f1": {
-      "ci_high": 0.3,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
+      "ci_high": 0.9,
+      "ci_includes_zero": false,
+      "ci_low": 0.366666667,
       "confirmatory": true,
-      "diff": 0.1,
+      "diff": 0.666666667,
       "n": 10
     },
     "cortex_vs_no_memory:stale_leak_rate": {
@@ -4577,19 +4577,19 @@
       "n": 10
     },
     "cortex_vs_raw_context:abstention_recall": {
-      "ci_high": 0.3,
+      "ci_high": 0.5,
       "ci_includes_zero": true,
-      "ci_low": -0.8,
+      "ci_low": 0.0,
       "confirmatory": true,
-      "diff": -0.3,
+      "diff": 0.2,
       "n": 10
     },
     "cortex_vs_raw_context:answer_support_recall": {
-      "ci_high": -0.3,
-      "ci_includes_zero": false,
-      "ci_low": -0.9,
+      "ci_high": 0.0,
+      "ci_includes_zero": true,
+      "ci_low": -0.3,
       "confirmatory": true,
-      "diff": -0.6,
+      "diff": -0.1,
       "n": 10
     },
     "cortex_vs_raw_context:contradiction_exposure_rate": {
@@ -4601,11 +4601,11 @@
       "n": 10
     },
     "cortex_vs_raw_context:current_state_accuracy": {
-      "ci_high": -0.3,
-      "ci_includes_zero": false,
-      "ci_low": -0.9,
+      "ci_high": 0.0,
+      "ci_includes_zero": true,
+      "ci_low": -0.3,
       "confirmatory": true,
-      "diff": -0.6,
+      "diff": -0.1,
       "n": 10
     },
     "cortex_vs_raw_context:deletion_compliance": {
@@ -4635,65 +4635,65 @@
     "cortex_vs_raw_context:lineage_completeness": {
       "ci_high": 0.0,
       "ci_includes_zero": true,
-      "ci_low": -0.6,
-      "confirmatory": true,
-      "diff": -0.3,
-      "n": 10
-    },
-    "cortex_vs_raw_context:mrr": {
-      "ci_high": -0.15,
-      "ci_includes_zero": false,
-      "ci_low": -0.75,
-      "confirmatory": true,
-      "diff": -0.45,
-      "n": 10
-    },
-    "cortex_vs_raw_context:ndcg_at_k": {
-      "ci_high": -0.189278925,
-      "ci_includes_zero": false,
-      "ci_low": -0.789278925,
-      "confirmatory": true,
-      "diff": -0.489278925,
-      "n": 10
-    },
-    "cortex_vs_raw_context:precision_at_k": {
-      "ci_high": -0.15,
-      "ci_includes_zero": false,
-      "ci_low": -0.75,
-      "confirmatory": true,
-      "diff": -0.45,
-      "n": 10
-    },
-    "cortex_vs_raw_context:provenance_coverage": {
-      "ci_high": -0.3,
-      "ci_includes_zero": false,
-      "ci_low": -0.9,
-      "confirmatory": true,
-      "diff": -0.6,
-      "n": 10
-    },
-    "cortex_vs_raw_context:recall_at_k": {
-      "ci_high": -0.3,
-      "ci_includes_zero": false,
-      "ci_low": -0.9,
-      "confirmatory": true,
-      "diff": -0.6,
-      "n": 10
-    },
-    "cortex_vs_raw_context:scope_accuracy": {
-      "ci_high": 0.5,
-      "ci_includes_zero": true,
-      "ci_low": -0.6,
+      "ci_low": 0.0,
       "confirmatory": true,
       "diff": 0.0,
       "n": 10
     },
-    "cortex_vs_raw_context:set_f1": {
-      "ci_high": 0.366666666,
+    "cortex_vs_raw_context:mrr": {
+      "ci_high": 0.2,
       "ci_includes_zero": true,
-      "ci_low": -0.733333334,
+      "ci_low": -0.1,
       "confirmatory": true,
-      "diff": -0.20000000099999998,
+      "diff": 0.05,
+      "n": 10
+    },
+    "cortex_vs_raw_context:ndcg_at_k": {
+      "ci_high": 0.1476281,
+      "ci_includes_zero": true,
+      "ci_low": -0.15237189999999998,
+      "confirmatory": true,
+      "diff": 0.010721075000000014,
+      "n": 10
+    },
+    "cortex_vs_raw_context:precision_at_k": {
+      "ci_high": 0.28333333400000005,
+      "ci_includes_zero": true,
+      "ci_low": -0.03333333199999999,
+      "confirmatory": true,
+      "diff": 0.133333334,
+      "n": 10
+    },
+    "cortex_vs_raw_context:provenance_coverage": {
+      "ci_high": 0.0,
+      "ci_includes_zero": true,
+      "ci_low": -0.3,
+      "confirmatory": true,
+      "diff": -0.1,
+      "n": 10
+    },
+    "cortex_vs_raw_context:recall_at_k": {
+      "ci_high": 0.0,
+      "ci_includes_zero": true,
+      "ci_low": -0.3,
+      "confirmatory": true,
+      "diff": -0.1,
+      "n": 10
+    },
+    "cortex_vs_raw_context:scope_accuracy": {
+      "ci_high": 0.8,
+      "ci_includes_zero": false,
+      "ci_low": 0.2,
+      "confirmatory": true,
+      "diff": 0.5,
+      "n": 10
+    },
+    "cortex_vs_raw_context:set_f1": {
+      "ci_high": 0.55,
+      "ci_includes_zero": true,
+      "ci_low": 0.0,
+      "confirmatory": true,
+      "diff": 0.266666666,
       "n": 10
     },
     "cortex_vs_raw_context:stale_leak_rate": {
