@@ -47,5 +47,18 @@ PATCH_NOTES.md
 *.patch
 
 #memory
+data/
+cortex/benchmarks/corpora/external/
 
-longmemeval_s_cleaned.json
+# Dogfooding data (development sessions)
+dev/sessions/*.json
+dev/queries/*.json
+dev/annotations/*.json
+
+# Temporary analysis files
+LONGMEMEVAL_ANALYSIS.md
+DOGFOODING_PLAN.md
+analyze_*.py
+
+# Benchmark artifacts (results should be regenerated)
+artifacts/

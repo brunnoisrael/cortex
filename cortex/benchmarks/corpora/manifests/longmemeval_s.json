@@ -1,0 +1,30 @@
+{
+  "schema": "cortex_memory_benchmark_manifest/v1",
+  "cortex_version": "0.1.0",
+  "python_version": "3.11",
+  "os": "any",
+  "hardware": "any",
+  "tokenizer": "whitespace/v1",
+  "embedding_model": "none",
+  "embedding_version": "none",
+  "embedding_cache_dir": "outside-repository",
+  "seed": 0,
+  "retry_policy": "off",
+  "network_enabled": false,
+  "corpus_hash": "sha256:68c77f138f29589d0fb04e32ce3ce5e8c73a125cc125470e4c3b2ea30de71584",
+  "dataset_revisions": {
+    "longmemeval": "longmemeval_s_cleaned"
+  },
+  "corpus": "../external/longmemeval_s.jsonl",
+
+  "_comment": [
+    "External control corpus — LongMemEval-S (xiaowu0162/LongMemEval, ICLR 2025).",
+    "500 questions over multi-session chat histories in the general-chat domain.",
+    "All cases are annotation_quality=exploratory (no kappa score available).",
+    "Results here are DIAGNOSTIC only and cannot back confirmatory claims.",
+    "The corpus file is NOT committed (data/ is gitignored); regenerate with:",
+    "  python -m cortex.benchmarks.loaders.longmemeval_native \\",
+    "    data/longmemeval_s_cleaned.json \\",
+    "    cortex/benchmarks/corpora/external/longmemeval_s.jsonl"
+  ]
+}
