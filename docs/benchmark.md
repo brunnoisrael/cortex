@@ -31,6 +31,17 @@ python -m cortex.benchmarks.runner \
   --adapter cortex bm25 raw_context no_memory oracle \
   --report-out artifacts/benchmark-memory-adversarial
 
+# Controle externo LongMemEval-S (diagnóstico; annotation_quality=exploratory)
+# Requer data/longmemeval_s_cleaned.json (gitignored) normalizado uma vez:
+#   python -m cortex.benchmarks.loaders.longmemeval_native \
+#     data/longmemeval_s_cleaned.json \
+#     cortex/benchmarks/corpora/external/longmemeval_s.jsonl
+python -m cortex.benchmarks.runner \
+  --manifest cortex/benchmarks/corpora/manifests/longmemeval_s.json \
+  --adapter cortex bm25 raw_context \
+  --report-out artifacts/benchmark-longmemeval-s
+python -m cortex.benchmarks.analyze_lme --report-out artifacts/benchmark-longmemeval-s
+
 # MVP congelado (Onda −1) e benchmark legado
 python -m cortex.benchmarks.runner --manifest cortex/benchmarks/corpora/manifests/mvp.json \
   --adapter cortex bm25 oracle --report-out artifacts/benchmark-mvp
@@ -68,6 +79,7 @@ isso latência vive em arquivo separado (plano §7).
 | `corpora/normalized/engineering_memory_v1.nofiller.jsonl` | corpus principal (PR/CI) |
 | `corpora/normalized/engineering_memory_v1.filler32k.jsonl` | mesmo gold, ~32k tokens de ruído por caso |
 | `corpora/adversarial/superseded_abstention.jsonl` | sondas de falha conhecidas |
+| `corpora/external/longmemeval_s.jsonl` | LongMemEval-S normalizado (gitignored; diagnostic only) |
 | `corpora/manifests/*.json` | manifests que pinam revisões, hash e a tabela de endpoints |
 
 Os corpora internos são **sintéticos e autorais** (sem transcript de

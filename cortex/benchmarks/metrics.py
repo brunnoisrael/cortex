@@ -21,6 +21,46 @@ def _gold(instance: BenchmarkInstance) -> list[str]:
     return instance.gold.current_entities or instance.gold.gold_evidence
 
 
+def _session_grain(value: str) -> str:
+    return value.split(":", 1)[0]
+
+
+def _project_ids(ids: list[str], instance: BenchmarkInstance) -> list[str]:
+    """Collapse ``session:event`` IDs to session IDs when the gold is session-grained.
+
+    LongMemEval's cleaned files only name the sessions that contain the answer.
+    Adapters still retrieve event IDs.  Without this projection every LME
+    retrieval score would be identically zero even when the right session was
+    retrieved.
+    """
+    if instance.metadata.get("evidence_grain") != "session":
+        return ids
+    projected: list[str] = []
+    seen: set[str] = set()
+    for item in ids:
+        grain = _session_grain(item)
+        if grain not in seen:
+            seen.add(grain)
+            projected.append(grain)
+    return projected
+
+
+def _project_result(result: AdapterResult, instance: BenchmarkInstance) -> AdapterResult:
+    if instance.metadata.get("evidence_grain") != "session":
+        return result
+    trace = dict(result.trace)
+    if "extracted_ids" in trace:
+        trace["extracted_ids"] = _project_ids(list(trace["extracted_ids"]), instance)
+    return result.model_copy(
+        update={
+            "retrieved": _project_ids(result.retrieved, instance),
+            "selected": _project_ids(result.selected, instance),
+            "evidence": _project_ids(result.evidence, instance),
+            "trace": trace,
+        }
+    )
+
+
 def recall_at_k(retrieved: list[str], gold: Iterable[str], k: int) -> float:
     expected = set(gold)
     return len(expected & set(retrieved[:k])) / len(expected) if expected else 0.0
@@ -162,6 +202,7 @@ def unsupported_claim_rate(result, instance) -> float:
 
 
 def case_metrics(result: AdapterResult, instance: BenchmarkInstance, k: int = 5) -> dict[str, float]:
+    result = _project_result(result, instance)
     gold = _gold(instance)
     values = {"recall_at_k": recall_at_k(result.retrieved, gold, k),
               "precision_at_k": precision_at_k(result.retrieved, gold, k),

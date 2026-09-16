@@ -12,11 +12,14 @@ from pathlib import Path
 from typing import Any
 
 
+DEFAULT_SESSIONS_DIR = Path(__file__).parent / "sessions"
+
+
 class SessionCapture:
     """Captura eventos de uma sessão de desenvolvimento em formato estruturado."""
     
-    def __init__(self, output_dir: Path | str = "dev/sessions"):
-        self.output_dir = Path(output_dir)
+    def __init__(self, output_dir: Path | str | None = None):
+        self.output_dir = Path(output_dir) if output_dir is not None else DEFAULT_SESSIONS_DIR
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.current_session = {
             "session_id": datetime.now().strftime("%Y%m%d_%H%M%S"),
@@ -67,7 +70,7 @@ class SessionCapture:
         }
 
 
-def create_capture(output_dir: str = "dev/sessions") -> SessionCapture:
+def create_capture(output_dir: Path | str | None = None) -> SessionCapture:
     """Factory function para criar uma instância de SessionCapture."""
     return SessionCapture(output_dir)
 

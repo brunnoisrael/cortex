@@ -119,8 +119,9 @@ def batch_generate_questions(sessions_dir: Path, output_dir: Path) -> list[dict[
 
 if __name__ == "__main__":
     # Exemplo de uso
-    sessions_dir = Path("dev/sessions")
-    output_dir = Path("dev/queries")
+    script_dir = Path(__file__).parent
+    sessions_dir = script_dir / "sessions"
+    output_dir = script_dir / "queries"
     
     if sessions_dir.exists():
         questions = batch_generate_questions(sessions_dir, output_dir)

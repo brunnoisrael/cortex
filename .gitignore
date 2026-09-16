@@ -51,14 +51,17 @@ data/
 cortex/benchmarks/corpora/external/
 
 # Dogfooding data (development sessions)
-dev/sessions/*.json
-dev/queries/*.json
-dev/annotations/*.json
+cortex/dev/sessions/*
+!cortex/dev/sessions/.gitkeep
+cortex/dev/queries/*
+!cortex/dev/queries/.gitkeep
+cortex/dev/annotations/*
+!cortex/dev/annotations/.gitkeep
 
 # Temporary analysis files
 LONGMEMEVAL_ANALYSIS.md
 DOGFOODING_PLAN.md
-analyze_*.py
+/analyze_*.py
 
 # Benchmark artifacts (results should be regenerated)
 artifacts/

@@ -200,9 +200,28 @@ def _summary(manifest: dict[str, Any], rows: list[dict[str, Any]], errors: list[
     }
     # Efficiency and the G4 cost gate live in pareto.json: summary.json is part
     # of the deterministic payload (plan §7/§11), latency is not.
+    summary["claim_class"] = "exploratory" if _exploratory_run(rows) else "confirmatory"
+    if summary["claim_class"] == "exploratory":
+        for adapter_metrics in endpoints.values():
+            for entry in adapter_metrics.values():
+                entry["confirmatory"] = False
+        for task_adapters in task_types.values():
+            for adapter_metrics in task_adapters.values():
+                for entry in adapter_metrics.values():
+                    entry["confirmatory"] = False
+        for key, entry in comparisons.items():
+            if key.startswith("__"):
+                continue
+            entry["confirmatory"] = False
     summary["gates"] = _gates(endpoints, comparisons, rows, errors, leakage)
     summary["decision"] = _decision(summary)
     return summary
+
+
+def _exploratory_run(rows: list[dict[str, Any]]) -> bool:
+    """True when every annotated row is exploratory (LongMemEval / no kappa)."""
+    qualities = [row["annotation_quality"] for row in rows if row.get("annotation_quality")]
+    return bool(qualities) and all(quality == "exploratory" for quality in qualities)
 
 
 def _apply_holm_bonferroni(comparisons: dict[str, Any]) -> None:
@@ -327,6 +346,10 @@ def _decision(summary: dict[str, Any]) -> str:
     gates = summary["gates"]
     if not gates["G0_reproducibility"]["clean"]:
         return "bloquear_expansao"
+    # Exploratory corpora (no kappa) cannot back a product promotion even when
+    # n is large enough to look confirmatory on sample-size grounds alone.
+    if summary.get("claim_class") == "exploratory":
+        return "diagnostico"
     safety = gates["G1_cortex_integrity"]
     stale = safety["stale_leak_rate_cortex"]
     if stale is None:
@@ -375,6 +398,7 @@ def _markdown(summary: dict[str, Any], errors: list[dict[str, Any]], leakage: li
     lines = ["# Cortex memory benchmark v1", "",
              f"- Corpus: `{summary.get('corpus_hash')}`",
              f"- Revisões: `{json.dumps(summary.get('dataset_revisions', {}), sort_keys=True)}`",
+             f"- Classe de claim: `{summary.get('claim_class', 'confirmatory')}`",
              "", "## Endpoints por task type", "",
              "| Task type | Adapter | Endpoint | Mean | n / req n | Confirmatório |", "|---|---|---|---:|---|---|"]
     for task, adapters in summary["by_task_type"].items():
@@ -416,6 +440,6 @@ def _markdown(summary: dict[str, Any], errors: list[dict[str, Any]], leakage: li
     lines += ["", "## Segurança", "", f"- Erros explícitos: {len(errors)}", f"- Eventos de leakage: {len(leakage)}",
               "", "## Decisão de produto", "",
               f"`{summary['decision']}`", "",
-              "Decisões possíveis (plano §17): promover, recalibrar, reduzir_claim, bloquear_expansao.",
+              "Decisões possíveis (plano §17): promover, recalibrar, reduzir_claim, bloquear_expansao, diagnostico.",
               "Uma média única nunca é o resultado final; ver `summary.json` por task type e split.", ""]
     return "\n".join(lines)

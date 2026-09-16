@@ -45,7 +45,7 @@ def load_instances(manifest: RunManifest, manifest_path: Path) -> list[Benchmark
     elif manifest.corpus:
         corpus = corpus_path(manifest, manifest_path)
         assert corpus is not None
-        raw = [json.loads(line) for line in corpus.read_text(encoding="utf-8").splitlines() if line.strip()]
+        raw = [json.loads(line) for line in corpus.read_text(encoding="utf-8").split('\n') if line.strip()]
     else:
         raise ValueError("manifest needs cases or corpus")
     if not raw:
@@ -142,7 +142,11 @@ def run_benchmark(manifest_path: Path, adapters: list[str], report_out: Path,
                                  "split": instance.split,
                                  "hop": instance.metadata.get("hop", 0),
                                  "history_size": len(instance.history),
-                                 "filler": instance.metadata.get("filler", "nofiller")})
+                                 "filler": instance.metadata.get("filler", "nofiller"),
+                                 "annotation_quality": instance.gold.annotation_quality,
+                                 "source": instance.source,
+                                 "question_type": instance.metadata.get(
+                                     "lme_question_type", instance.task_type)})
                 latency.append({"case_id": instance.id, "adapter": label,
                                 "phase_ms": {key: round(value, 3) for key, value in sorted(result.latency_ms.items())},
                                 "tokens": dict(sorted(result.tokens.items()))})

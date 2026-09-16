@@ -334,6 +334,13 @@ python -m cortex.benchmarks.runner \
   --adapter cortex oracle \
   --report-out artifacts/benchmark-memory-v1-regression
 
+# Controle externo LongMemEval-S (diagnóstico; não confirma produto)
+python -m cortex.benchmarks.runner \
+  --manifest cortex/benchmarks/corpora/manifests/longmemeval_s.json \
+  --adapter cortex bm25 raw_context \
+  --report-out artifacts/benchmark-longmemeval-s
+python -m cortex.benchmarks.analyze_lme --report-out artifacts/benchmark-longmemeval-s
+
 # Regenerar corpora e manifestos com validação de invariantes
 python -m cortex.benchmarks.corpora.build_internal
 ```
