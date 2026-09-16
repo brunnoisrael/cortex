@@ -45,3 +45,7 @@ AUDITORIA_EXTERNA_*.md
 PLANO_*
 PATCH_NOTES.md
 *.patch
+
+#memory
+
+longmemeval_s_cleaned.json
