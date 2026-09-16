@@ -37,6 +37,7 @@ from cortex.knowledge.models import (
     _utcnow,
     parse_utc,
 )
+from cortex.knowledge.evidence import evidence_id
 from cortex.storage.store import KnowledgeStore
 
 DEDUP_SIMILARITY = 0.75
@@ -273,11 +274,13 @@ class DistillationEngine:
                 existing.provenance.source_files + cand.files))
         event_map = {event["id"]: event for event in self.store.all_events(cand.session_id)}
         known = {item.id for item in existing.evidence}
-        for event_id in cand.event_ids:
-            if f"ev-{event_id}" in known:
+        for event_id in dict.fromkeys(cand.event_ids):
+            ev_id = evidence_id(existing.id, EvidenceType.EVENT, event_id)
+            if ev_id in known:
                 continue
+            known.add(ev_id)
             existing.evidence.append(Evidence(
-                id=f"ev-{event_id}", type=EvidenceType.EVENT, location=event_id,
+                id=ev_id, type=EvidenceType.EVENT, location=event_id,
                 fingerprint=_event_fingerprint(event_map.get(event_id)),
                 observed_at=(event_map.get(event_id) or {}).get("ts") or _utcnow(),
                 status=EvidenceStatus.RESOLVED if event_id in event_map else EvidenceStatus.UNVERIFIABLE,
@@ -327,13 +330,15 @@ class DistillationEngine:
                 extraction_source=cand.source,
             ),
         )
+        cand_events = list(dict.fromkeys(cand.event_ids))
         entity.evidence = [Evidence(
-            id=f"ev-{event_id}", type=EvidenceType.EVENT, location=event_id,
+            id=evidence_id(eid, EvidenceType.EVENT, event_id),
+            type=EvidenceType.EVENT, location=event_id,
             fingerprint=_event_fingerprint(event_map.get(event_id)),
             observed_at=(event_map.get(event_id) or {}).get("ts") or _utcnow(),
             status=EvidenceStatus.RESOLVED if event_id in event_map else EvidenceStatus.UNVERIFIABLE,
             verification_method="event_store",
-        ) for event_id in cand.event_ids]
+        ) for event_id in cand_events]
         self.store.upsert(entity)
         # graph edges
         if cand.session_id:

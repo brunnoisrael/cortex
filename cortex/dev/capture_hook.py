@@ -18,13 +18,20 @@ DEFAULT_SESSIONS_DIR = Path(__file__).parent / "sessions"
 class SessionCapture:
     """Captura eventos de uma sessão de desenvolvimento em formato estruturado."""
     
-    def __init__(self, output_dir: Path | str | None = None):
+    def __init__(
+        self,
+        output_dir: Path | str | None = None,
+        session_id: str | None = None,
+        auto_save: bool = False,
+    ):
         self.output_dir = Path(output_dir) if output_dir is not None else DEFAULT_SESSIONS_DIR
         self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.session_id = session_id or datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.auto_save = auto_save
         self.current_session = {
-            "session_id": datetime.now().strftime("%Y%m%d_%H%M%S"),
+            "session_id": self.session_id,
             "start_time": datetime.now().isoformat(),
-            "events": []
+            "events": [],
         }
     
     def capture_event(self, role: str, content: str, files: list[str] | None = None) -> None:
@@ -35,6 +42,8 @@ class SessionCapture:
             "timestamp": datetime.now().isoformat(),
             "files": files or []
         })
+        if self.auto_save:
+            self.save_session()
     
     def capture_user_instruction(self, instruction: str, files: list[str] | None = None) -> None:
         """Captura uma instrução do usuário."""
@@ -70,9 +79,13 @@ class SessionCapture:
         }
 
 
-def create_capture(output_dir: Path | str | None = None) -> SessionCapture:
+def create_capture(
+    output_dir: Path | str | None = None,
+    session_id: str | None = None,
+    auto_save: bool = False,
+) -> SessionCapture:
     """Factory function para criar uma instância de SessionCapture."""
-    return SessionCapture(output_dir)
+    return SessionCapture(output_dir, session_id=session_id, auto_save=auto_save)
 
 
 if __name__ == "__main__":

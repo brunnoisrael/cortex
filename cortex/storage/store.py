@@ -545,15 +545,26 @@ class KnowledgeStore:
                 ),
             )
             self.conn.execute("DELETE FROM evidence WHERE entity_id = ?", (entity.id,))
+            seen_evidence_ids: set[str] = set()
+            unique_evidence = []
+            for ev in entity.evidence:
+                if ev.id not in seen_evidence_ids:
+                    seen_evidence_ids.add(ev.id)
+                    unique_evidence.append(ev)
             self.conn.executemany(
                 "INSERT INTO evidence (id, entity_id, type, location, fingerprint, observed_at,"
                 " status, verification_method, line_start, line_end, content_excerpt, \"commit\")"
-                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                " ON CONFLICT(id) DO UPDATE SET entity_id=excluded.entity_id, type=excluded.type,"
+                " location=excluded.location, fingerprint=excluded.fingerprint, observed_at=excluded.observed_at,"
+                " status=excluded.status, verification_method=excluded.verification_method,"
+                " line_start=excluded.line_start, line_end=excluded.line_end,"
+                " content_excerpt=excluded.content_excerpt, \"commit\"=excluded.\"commit\"",
                 [(
                     ev.id, entity.id, ev.type.value, ev.location, ev.fingerprint,
                     ev.observed_at, ev.status.value, ev.verification_method,
                     ev.line_start, ev.line_end, ev.content_excerpt, ev.commit,
-                ) for ev in entity.evidence],
+                ) for ev in unique_evidence],
             )
             text = self._fts_text(entity)
             self.conn.execute("DELETE FROM entities_fts WHERE id = ?", (entity.id,))

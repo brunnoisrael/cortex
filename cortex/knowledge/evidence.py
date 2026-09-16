@@ -47,9 +47,17 @@ def fingerprint_event(event: dict[str, Any] | None) -> str | None:
     return fingerprint_text(payload)
 
 
-def evidence_id(entity_id: str, kind: EvidenceType, location: str) -> str:
-    raw = f"{entity_id}|{kind.value}|{location}".encode()
-    return "ev-" + hashlib.sha256(raw).hexdigest()[:16]
+def evidence_id(
+    entity_id: str,
+    kind: EvidenceType,
+    location: str | None = None,
+    extra: str | None = None,
+) -> str:
+    loc = str(location).strip() if location else "none"
+    raw = f"{entity_id}|{kind.value}|{loc}"
+    if extra:
+        raw += f"|{str(extra).strip()}"
+    return "ev-" + hashlib.sha256(raw.encode()).hexdigest()[:16]
 
 
 def _safe_path(root: Path, location: str) -> Path | None:
@@ -71,9 +79,9 @@ def resolve_entity_evidence(store: KnowledgeStore, root: Path, entity: Entity) -
         if len(token) > 2 and token.replace("_", "").isalnum()
     ][:8]
     cited_files = list(dict.fromkeys(
-        entity.provenance.source_files
-        + [str(item) for item in entity.details.get("affected_files", []) if isinstance(item, str)]
-        + [str(item) for item in entity.scope]
+        [str(f).strip() for f in entity.provenance.source_files if f and str(f).strip()]
+        + [str(item).strip() for item in entity.details.get("affected_files", []) if isinstance(item, str) and item.strip()]
+        + [str(item).strip() for item in entity.scope if isinstance(item, str) and item.strip()]
     ))
     line_refs = entity.details.get("line_refs") or {}
     for location in cited_files:
@@ -132,7 +140,10 @@ def resolve_entity_evidence(store: KnowledgeStore, root: Path, entity: Entity) -
                 type=EvidenceType.FILE, location=location, observed_at=_utcnow(),
                 status=EvidenceStatus.UNVERIFIABLE, verification_method="filesystem",
             ))
-    for event_id in entity.provenance.source_events:
+    source_events = list(dict.fromkeys(
+        [str(e).strip() for e in entity.provenance.source_events if e and str(e).strip()]
+    ))
+    for event_id in source_events:
         event = next((item for item in store.all_events() if item["id"] == event_id), None)
         results.append(Evidence(
             id=evidence_id(entity.id, EvidenceType.EVENT, event_id),
@@ -142,7 +153,10 @@ def resolve_entity_evidence(store: KnowledgeStore, root: Path, entity: Entity) -
             status=EvidenceStatus.RESOLVED if event else EvidenceStatus.UNVERIFIABLE,
             verification_method="event_store",
         ))
-    for commit in entity.provenance.source_commits:
+    source_commits = list(dict.fromkeys(
+        [str(c).strip() for c in entity.provenance.source_commits if c and str(c).strip()]
+    ))
+    for commit in source_commits:
         resolved = False
         try:
             subprocess.run(
@@ -160,9 +174,11 @@ def resolve_entity_evidence(store: KnowledgeStore, root: Path, entity: Entity) -
             verification_method="git_cat_file",
             commit=commit,
         ))
-    for test_location in entity.details.get("tests", []) or entity.details.get("test_files", []) or []:
-        if not isinstance(test_location, str):
-            continue
+    test_locations = list(dict.fromkeys(
+        [str(item).strip() for item in (entity.details.get("tests", []) or entity.details.get("test_files", []) or [])
+         if isinstance(item, str) and item.strip()]
+    ))
+    for test_location in test_locations:
         path = _safe_path(root, test_location)
         exists = path is not None and path.is_file()
         fingerprint = fingerprint_bytes(path.read_bytes()) if exists and path is not None else None
@@ -175,7 +191,7 @@ def resolve_entity_evidence(store: KnowledgeStore, root: Path, entity: Entity) -
     review_ids = entity.details.get("review_ids", []) or []
     if entity.details.get("review_id"):
         review_ids = [*review_ids, entity.details["review_id"]]
-    for review_id in dict.fromkeys(str(item) for item in review_ids):
+    for review_id in dict.fromkeys(str(item).strip() for item in review_ids if item and str(item).strip()):
         review = store.get(review_id)
         resolved = review is not None and review.type.value == "review"
         fingerprint = fingerprint_text(review.statement) if resolved and review is not None else None
@@ -185,7 +201,14 @@ def resolve_entity_evidence(store: KnowledgeStore, root: Path, entity: Entity) -
             observed_at=_utcnow(), status=EvidenceStatus.RESOLVED if resolved else EvidenceStatus.UNVERIFIABLE,
             verification_method="cortex_review",
         ))
-    return results
+    # Guarantee no duplicate evidence IDs within the returned list
+    seen_ids: set[str] = set()
+    deduped: list[Evidence] = []
+    for item in results:
+        if item.id not in seen_ids:
+            seen_ids.add(item.id)
+            deduped.append(item)
+    return deduped
 
 
 def refresh_entity_evidence(store: KnowledgeStore, root: Path, entity: Entity) -> dict[str, Any]:
