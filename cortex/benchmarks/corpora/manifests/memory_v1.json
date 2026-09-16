@@ -1,9 +1,9 @@
 {
   "corpus": "../normalized/engineering_memory_v1.nofiller.jsonl",
-  "corpus_hash": "sha256:dba8b3025fd7ed03e861a3b98cc5c97beda63648c4ad8a6d2d523bf78835a689",
+  "corpus_hash": "sha256:2adb4efba087fe716d7f51db2622b5724a2d3d07d023d70258f5f6a02cbe58b9",
   "cortex_version": "0.1.0",
   "dataset_revisions": {
-    "internal": "engineering-memory-v1"
+    "internal": "engineering-memory-v2"
   },
   "embedding_cache_dir": "outside-repository",
   "embedding_model": "none",

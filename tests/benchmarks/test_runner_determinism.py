@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from cortex.benchmarks.corpora.build_internal import REVISION
 from cortex.benchmarks.runner import run_benchmark
 
 ARTIFACTS = {"run_manifest.json", "metrics.jsonl", "summary.json", "errors.jsonl",
@@ -42,7 +43,7 @@ def test_run_manifest_records_the_freeze(tmp_path):
     run_benchmark(manifest, ["bm25"], out)
     document = json.loads((out / "run_manifest.json").read_text(encoding="utf-8"))
     frozen = document["frozen"]
-    assert frozen["splits"]["dev"] and frozen["revisions"] == {"internal": "engineering-memory-v1"}
+    assert frozen["splits"]["dev"] and frozen["revisions"] == {"internal": REVISION}
     assert document["network_enabled"] is False
 
 

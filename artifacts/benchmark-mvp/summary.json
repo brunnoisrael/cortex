@@ -4,1751 +4,1241 @@
       "bm25": {
         "abstention_recall": {
           "confirmatory": false,
+          "family": "abstention",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "answer_support_recall": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "contradiction_exposure_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "current_state_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "deletion_compliance": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "evidence_resolution_rate": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "evidence",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "false_certainty_rate": {
           "confirmatory": false,
+          "family": "abstention",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "lineage_completeness": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "mrr": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "ndcg_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "precision_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "provenance_coverage": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "evidence",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "recall_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "scope_accuracy": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "set_f1": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "stale_leak_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "supersession_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "unsupported_claim_rate": {
           "confirmatory": false,
+          "family": "evidence",
           "mean": 0.0,
-          "n": 2
-        }
-      },
-      "bm25_temporal": {
-        "abstention_recall": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "answer_support_recall": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "contradiction_exposure_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "current_state_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "deletion_compliance": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "evidence_resolution_rate": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "false_certainty_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "lineage_completeness": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "mrr": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "ndcg_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "precision_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "provenance_coverage": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "recall_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "scope_accuracy": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "set_f1": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "stale_leak_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "supersession_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "unsupported_claim_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         }
       },
       "cortex": {
         "abstention_recall": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "abstention",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "answer_support_recall": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "contradiction_exposure_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "current_state_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "deletion_compliance": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "evidence_resolution_rate": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "evidence",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "extraction_recall": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "extraction_spurious_rate": {
           "confirmatory": false,
+          "family": "evidence",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "false_certainty_rate": {
           "confirmatory": false,
+          "family": "abstention",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "lineage_completeness": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "mrr": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "ndcg_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "precision_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "provenance_coverage": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "evidence",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "recall_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "scope_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "set_f1": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "stale_leak_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "supersession_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "unsupported_claim_rate": {
           "confirmatory": false,
+          "family": "evidence",
           "mean": 0.0,
-          "n": 2
-        }
-      },
-      "no_memory": {
-        "abstention_recall": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "answer_support_recall": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "contradiction_exposure_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "current_state_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "deletion_compliance": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "evidence_resolution_rate": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "false_certainty_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "lineage_completeness": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "mrr": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "ndcg_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "precision_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "provenance_coverage": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "recall_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "scope_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "set_f1": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "stale_leak_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "supersession_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "unsupported_claim_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         }
       },
       "oracle": {
         "abstention_recall": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "abstention",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "answer_support_recall": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "contradiction_exposure_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "current_state_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "deletion_compliance": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "evidence_resolution_rate": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "evidence",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "false_certainty_rate": {
           "confirmatory": false,
+          "family": "abstention",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "lineage_completeness": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "mrr": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "ndcg_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "precision_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "provenance_coverage": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "evidence",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "recall_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "scope_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "set_f1": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "stale_leak_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "supersession_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "unsupported_claim_rate": {
           "confirmatory": false,
+          "family": "evidence",
           "mean": 0.0,
-          "n": 2
-        }
-      },
-      "raw_context": {
-        "abstention_recall": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "answer_support_recall": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "contradiction_exposure_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "current_state_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "deletion_compliance": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "evidence_resolution_rate": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "false_certainty_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "lineage_completeness": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "mrr": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "ndcg_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "precision_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "provenance_coverage": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "recall_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "scope_accuracy": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "set_f1": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "stale_leak_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "supersession_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "unsupported_claim_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         }
       }
     },
     "aggregation": {
       "bm25": {
         "abstention_recall": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "abstention",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "answer_support_recall": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "contradiction_exposure_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "current_state_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "deletion_compliance": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "evidence_resolution_rate": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "evidence",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "false_certainty_rate": {
           "confirmatory": false,
+          "family": "abstention",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "lineage_completeness": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "mrr": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "ndcg_at_k": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "precision_at_k": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "provenance_coverage": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "evidence",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "recall_at_k": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "scope_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "set_f1": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "stale_leak_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "supersession_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "unsupported_claim_rate": {
           "confirmatory": false,
+          "family": "evidence",
           "mean": 0.0,
-          "n": 1
-        }
-      },
-      "bm25_temporal": {
-        "abstention_recall": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "answer_support_recall": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "contradiction_exposure_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "current_state_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "deletion_compliance": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "evidence_resolution_rate": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "false_certainty_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "lineage_completeness": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "mrr": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "ndcg_at_k": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "precision_at_k": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "provenance_coverage": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "recall_at_k": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "scope_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "set_f1": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "stale_leak_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "supersession_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "unsupported_claim_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         }
       },
       "cortex": {
         "abstention_recall": {
           "confirmatory": false,
+          "family": "abstention",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "answer_support_recall": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "contradiction_exposure_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "current_state_accuracy": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "deletion_compliance": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "evidence_resolution_rate": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "evidence",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "extraction_recall": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "extraction_spurious_rate": {
           "confirmatory": false,
+          "family": "evidence",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "false_certainty_rate": {
           "confirmatory": false,
+          "family": "abstention",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "lineage_completeness": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "mrr": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "ndcg_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "precision_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "provenance_coverage": {
           "confirmatory": false,
+          "family": "evidence",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "recall_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "scope_accuracy": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "set_f1": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "stale_leak_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "supersession_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "unsupported_claim_rate": {
           "confirmatory": false,
+          "family": "evidence",
           "mean": 0.0,
-          "n": 1
-        }
-      },
-      "no_memory": {
-        "abstention_recall": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "answer_support_recall": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "contradiction_exposure_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "current_state_accuracy": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "deletion_compliance": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "evidence_resolution_rate": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "false_certainty_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "lineage_completeness": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "mrr": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "ndcg_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "precision_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "provenance_coverage": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "recall_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "scope_accuracy": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "set_f1": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "stale_leak_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "supersession_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "unsupported_claim_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         }
       },
       "oracle": {
         "abstention_recall": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "abstention",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "answer_support_recall": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "contradiction_exposure_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "current_state_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "deletion_compliance": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "evidence_resolution_rate": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "evidence",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "false_certainty_rate": {
           "confirmatory": false,
+          "family": "abstention",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "lineage_completeness": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "mrr": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "ndcg_at_k": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "precision_at_k": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "provenance_coverage": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "evidence",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "recall_at_k": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "scope_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "set_f1": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "stale_leak_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "supersession_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "unsupported_claim_rate": {
           "confirmatory": false,
+          "family": "evidence",
           "mean": 0.0,
-          "n": 1
-        }
-      },
-      "raw_context": {
-        "abstention_recall": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "answer_support_recall": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "contradiction_exposure_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "current_state_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "deletion_compliance": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "evidence_resolution_rate": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "false_certainty_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "lineage_completeness": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "mrr": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "ndcg_at_k": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "precision_at_k": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "provenance_coverage": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "recall_at_k": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "scope_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "set_f1": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "stale_leak_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "supersession_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "unsupported_claim_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         }
       }
     },
     "cascade": {
       "bm25": {
         "abstention_recall": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "abstention",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "answer_support_recall": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "cascade_correctness_hop1": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "cascade_correctness_hop2": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "contradiction_exposure_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "current_state_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "deletion_compliance": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "evidence_resolution_rate": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "evidence",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "false_certainty_rate": {
           "confirmatory": false,
+          "family": "abstention",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "lineage_completeness": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "mrr": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "ndcg_at_k": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "precision_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.5,
-          "n": 1
+          "n": 1,
+          "required_n": 170
         },
         "provenance_coverage": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "evidence",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "recall_at_k": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "scope_accuracy": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "set_f1": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.66666667,
-          "n": 1
+          "n": 1,
+          "required_n": 133
         },
         "stale_leak_rate": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "supersession_accuracy": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "unsupported_claim_rate": {
           "confirmatory": false,
+          "family": "evidence",
           "mean": 0.0,
-          "n": 1
-        }
-      },
-      "bm25_temporal": {
-        "abstention_recall": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "answer_support_recall": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "cascade_correctness_hop1": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "cascade_correctness_hop2": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "contradiction_exposure_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "current_state_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "deletion_compliance": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "evidence_resolution_rate": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "false_certainty_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "lineage_completeness": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "mrr": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "ndcg_at_k": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "precision_at_k": {
-          "confirmatory": false,
-          "mean": 0.5,
-          "n": 1
-        },
-        "provenance_coverage": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "recall_at_k": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "scope_accuracy": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "set_f1": {
-          "confirmatory": false,
-          "mean": 0.66666667,
-          "n": 1
-        },
-        "stale_leak_rate": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "supersession_accuracy": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "unsupported_claim_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         }
       },
       "cortex": {
         "abstention_recall": {
           "confirmatory": false,
+          "family": "abstention",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "answer_support_recall": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "cascade_correctness_hop1": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "cascade_correctness_hop2": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "contradiction_exposure_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "current_state_accuracy": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "deletion_compliance": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "evidence_resolution_rate": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "evidence",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "extraction_recall": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "extraction_spurious_rate": {
           "confirmatory": false,
+          "family": "evidence",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "false_certainty_rate": {
           "confirmatory": false,
+          "family": "abstention",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "lineage_completeness": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "mrr": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "ndcg_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "precision_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "provenance_coverage": {
           "confirmatory": false,
+          "family": "evidence",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "recall_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "scope_accuracy": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "set_f1": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "stale_leak_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "supersession_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "unsupported_claim_rate": {
           "confirmatory": false,
+          "family": "evidence",
           "mean": 0.0,
-          "n": 1
-        }
-      },
-      "no_memory": {
-        "abstention_recall": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "answer_support_recall": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "cascade_correctness_hop1": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "cascade_correctness_hop2": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "contradiction_exposure_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "current_state_accuracy": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "deletion_compliance": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "evidence_resolution_rate": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "false_certainty_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "lineage_completeness": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "mrr": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "ndcg_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "precision_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "provenance_coverage": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "recall_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "scope_accuracy": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "set_f1": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "stale_leak_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "supersession_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "unsupported_claim_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         }
       },
       "oracle": {
         "abstention_recall": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "abstention",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "answer_support_recall": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "cascade_correctness_hop1": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "cascade_correctness_hop2": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "contradiction_exposure_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "current_state_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "deletion_compliance": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "evidence_resolution_rate": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "evidence",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "false_certainty_rate": {
           "confirmatory": false,
+          "family": "abstention",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "lineage_completeness": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.5,
-          "n": 1
+          "n": 1,
+          "required_n": 170
         },
         "mrr": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "ndcg_at_k": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "precision_at_k": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "provenance_coverage": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "evidence",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "recall_at_k": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "scope_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "set_f1": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "stale_leak_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "supersession_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "unsupported_claim_rate": {
           "confirmatory": false,
+          "family": "evidence",
           "mean": 0.0,
-          "n": 1
-        }
-      },
-      "raw_context": {
-        "abstention_recall": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "answer_support_recall": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "cascade_correctness_hop1": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "cascade_correctness_hop2": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "contradiction_exposure_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "current_state_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "deletion_compliance": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "evidence_resolution_rate": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "false_certainty_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "lineage_completeness": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "mrr": {
-          "confirmatory": false,
-          "mean": 0.5,
-          "n": 1
-        },
-        "ndcg_at_k": {
-          "confirmatory": false,
-          "mean": 0.63092975,
-          "n": 1
-        },
-        "precision_at_k": {
-          "confirmatory": false,
-          "mean": 0.5,
-          "n": 1
-        },
-        "provenance_coverage": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "recall_at_k": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "scope_accuracy": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "set_f1": {
-          "confirmatory": false,
-          "mean": 0.66666667,
-          "n": 1
-        },
-        "stale_leak_rate": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "supersession_accuracy": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "unsupported_claim_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         }
       }
     },
@@ -1756,1691 +1246,1199 @@
       "bm25": {
         "abstention_recall": {
           "confirmatory": false,
+          "family": "abstention",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "answer_support_recall": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "contradiction_exposure_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "current_state_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "deletion_compliance": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "evidence_resolution_rate": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "evidence",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "false_certainty_rate": {
           "confirmatory": false,
+          "family": "abstention",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "lineage_completeness": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "mrr": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "ndcg_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "precision_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "provenance_coverage": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "evidence",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "recall_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "scope_accuracy": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "set_f1": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "stale_leak_rate": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "supersession_accuracy": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "unsupported_claim_rate": {
           "confirmatory": false,
+          "family": "evidence",
           "mean": 0.0,
-          "n": 1
-        }
-      },
-      "bm25_temporal": {
-        "abstention_recall": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "answer_support_recall": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "contradiction_exposure_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "current_state_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "deletion_compliance": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "evidence_resolution_rate": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "false_certainty_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "lineage_completeness": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "mrr": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "ndcg_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "precision_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "provenance_coverage": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "recall_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "scope_accuracy": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "set_f1": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "stale_leak_rate": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "supersession_accuracy": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "unsupported_claim_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         }
       },
       "cortex": {
         "abstention_recall": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "abstention",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "answer_support_recall": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "contradiction_exposure_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "current_state_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "deletion_compliance": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "evidence_resolution_rate": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "evidence",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "extraction_recall": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "extraction_spurious_rate": {
           "confirmatory": false,
+          "family": "evidence",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "false_certainty_rate": {
           "confirmatory": false,
+          "family": "abstention",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "lineage_completeness": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "mrr": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "ndcg_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "precision_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "provenance_coverage": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "evidence",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "recall_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "scope_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "set_f1": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "stale_leak_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "supersession_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "unsupported_claim_rate": {
           "confirmatory": false,
+          "family": "evidence",
           "mean": 0.0,
-          "n": 1
-        }
-      },
-      "no_memory": {
-        "abstention_recall": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "answer_support_recall": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "contradiction_exposure_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "current_state_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "deletion_compliance": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "evidence_resolution_rate": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "false_certainty_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "lineage_completeness": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "mrr": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "ndcg_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "precision_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "provenance_coverage": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "recall_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "scope_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "set_f1": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "stale_leak_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "supersession_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "unsupported_claim_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         }
       },
       "oracle": {
         "abstention_recall": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "abstention",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "answer_support_recall": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "contradiction_exposure_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "current_state_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "deletion_compliance": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "evidence_resolution_rate": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "evidence",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "false_certainty_rate": {
           "confirmatory": false,
+          "family": "abstention",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "lineage_completeness": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "mrr": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "ndcg_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "precision_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "provenance_coverage": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "evidence",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "recall_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "scope_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "set_f1": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "stale_leak_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         },
         "supersession_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 1
+          "n": 1,
+          "required_n": 1
         },
         "unsupported_claim_rate": {
           "confirmatory": false,
+          "family": "evidence",
           "mean": 0.0,
-          "n": 1
-        }
-      },
-      "raw_context": {
-        "abstention_recall": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "answer_support_recall": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "contradiction_exposure_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "current_state_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "deletion_compliance": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "evidence_resolution_rate": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "false_certainty_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "lineage_completeness": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "mrr": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "ndcg_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "precision_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "provenance_coverage": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "recall_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "scope_accuracy": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "set_f1": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "stale_leak_rate": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 1
-        },
-        "supersession_accuracy": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
-        },
-        "unsupported_claim_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 1
+          "n": 1,
+          "required_n": 48
         }
       }
     },
     "exact_recall": {
       "bm25": {
         "abstention_recall": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "abstention",
           "mean": 1.0,
-          "n": 3
+          "n": 3,
+          "required_n": 1
         },
         "answer_support_recall": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 3
+          "n": 3,
+          "required_n": 1
         },
         "contradiction_exposure_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 3
+          "n": 3,
+          "required_n": 48
         },
         "current_state_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 3
+          "n": 3,
+          "required_n": 1
         },
         "deletion_compliance": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 3
+          "n": 3,
+          "required_n": 1
         },
         "evidence_resolution_rate": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "evidence",
           "mean": 1.0,
-          "n": 3
+          "n": 3,
+          "required_n": 1
         },
         "false_certainty_rate": {
           "confirmatory": false,
+          "family": "abstention",
           "mean": 0.0,
-          "n": 3
+          "n": 3,
+          "required_n": 48
         },
         "lineage_completeness": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 3
+          "n": 3,
+          "required_n": 1
         },
         "mrr": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 3
+          "n": 3,
+          "required_n": 1
         },
         "ndcg_at_k": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 3
+          "n": 3,
+          "required_n": 1
         },
         "precision_at_k": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 3
+          "n": 3,
+          "required_n": 1
         },
         "provenance_coverage": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "evidence",
           "mean": 1.0,
-          "n": 3
+          "n": 3,
+          "required_n": 1
         },
         "recall_at_k": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 3
+          "n": 3,
+          "required_n": 1
         },
         "scope_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 3
+          "n": 3,
+          "required_n": 1
         },
         "set_f1": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 3
+          "n": 3,
+          "required_n": 1
         },
         "stale_leak_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 3
+          "n": 3,
+          "required_n": 48
         },
         "supersession_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 3
+          "n": 3,
+          "required_n": 1
         },
         "unsupported_claim_rate": {
           "confirmatory": false,
+          "family": "evidence",
           "mean": 0.0,
-          "n": 3
-        }
-      },
-      "bm25_temporal": {
-        "abstention_recall": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 3
-        },
-        "answer_support_recall": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 3
-        },
-        "contradiction_exposure_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 3
-        },
-        "current_state_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 3
-        },
-        "deletion_compliance": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 3
-        },
-        "evidence_resolution_rate": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 3
-        },
-        "false_certainty_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 3
-        },
-        "lineage_completeness": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 3
-        },
-        "mrr": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 3
-        },
-        "ndcg_at_k": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 3
-        },
-        "precision_at_k": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 3
-        },
-        "provenance_coverage": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 3
-        },
-        "recall_at_k": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 3
-        },
-        "scope_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 3
-        },
-        "set_f1": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 3
-        },
-        "stale_leak_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 3
-        },
-        "supersession_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 3
-        },
-        "unsupported_claim_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 3
+          "n": 3,
+          "required_n": 48
         }
       },
       "cortex": {
         "abstention_recall": {
           "confirmatory": false,
+          "family": "abstention",
           "mean": 0.0,
-          "n": 3
+          "n": 3,
+          "required_n": 48
         },
         "answer_support_recall": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 3
+          "n": 3,
+          "required_n": 48
         },
         "contradiction_exposure_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 3
+          "n": 3,
+          "required_n": 48
         },
         "current_state_accuracy": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 3
+          "n": 3,
+          "required_n": 48
         },
         "deletion_compliance": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 3
+          "n": 3,
+          "required_n": 1
         },
         "evidence_resolution_rate": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "evidence",
           "mean": 1.0,
-          "n": 3
+          "n": 3,
+          "required_n": 1
         },
         "extraction_recall": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 3
+          "n": 3,
+          "required_n": 48
         },
         "extraction_spurious_rate": {
           "confirmatory": false,
+          "family": "evidence",
           "mean": 0.0,
-          "n": 3
+          "n": 3,
+          "required_n": 48
         },
         "false_certainty_rate": {
           "confirmatory": false,
+          "family": "abstention",
           "mean": 0.0,
-          "n": 3
+          "n": 3,
+          "required_n": 48
         },
         "lineage_completeness": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 3
+          "n": 3,
+          "required_n": 1
         },
         "mrr": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 3
+          "n": 3,
+          "required_n": 48
         },
         "ndcg_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 3
+          "n": 3,
+          "required_n": 48
         },
         "precision_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 3
+          "n": 3,
+          "required_n": 48
         },
         "provenance_coverage": {
           "confirmatory": false,
+          "family": "evidence",
           "mean": 0.0,
-          "n": 3
+          "n": 3,
+          "required_n": 48
         },
         "recall_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 3
+          "n": 3,
+          "required_n": 48
         },
         "scope_accuracy": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 3
+          "n": 3,
+          "required_n": 48
         },
         "set_f1": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 3
+          "n": 3,
+          "required_n": 48
         },
         "stale_leak_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 3
+          "n": 3,
+          "required_n": 48
         },
         "supersession_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 3
+          "n": 3,
+          "required_n": 1
         },
         "unsupported_claim_rate": {
           "confirmatory": false,
+          "family": "evidence",
           "mean": 0.0,
-          "n": 3
-        }
-      },
-      "no_memory": {
-        "abstention_recall": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 3
-        },
-        "answer_support_recall": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 3
-        },
-        "contradiction_exposure_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 3
-        },
-        "current_state_accuracy": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 3
-        },
-        "deletion_compliance": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 3
-        },
-        "evidence_resolution_rate": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 3
-        },
-        "false_certainty_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 3
-        },
-        "lineage_completeness": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 3
-        },
-        "mrr": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 3
-        },
-        "ndcg_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 3
-        },
-        "precision_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 3
-        },
-        "provenance_coverage": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 3
-        },
-        "recall_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 3
-        },
-        "scope_accuracy": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 3
-        },
-        "set_f1": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 3
-        },
-        "stale_leak_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 3
-        },
-        "supersession_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 3
-        },
-        "unsupported_claim_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 3
+          "n": 3,
+          "required_n": 48
         }
       },
       "oracle": {
         "abstention_recall": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "abstention",
           "mean": 1.0,
-          "n": 3
+          "n": 3,
+          "required_n": 1
         },
         "answer_support_recall": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 3
+          "n": 3,
+          "required_n": 1
         },
         "contradiction_exposure_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 3
+          "n": 3,
+          "required_n": 48
         },
         "current_state_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 3
+          "n": 3,
+          "required_n": 1
         },
         "deletion_compliance": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 3
+          "n": 3,
+          "required_n": 1
         },
         "evidence_resolution_rate": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "evidence",
           "mean": 1.0,
-          "n": 3
+          "n": 3,
+          "required_n": 1
         },
         "false_certainty_rate": {
           "confirmatory": false,
+          "family": "abstention",
           "mean": 0.0,
-          "n": 3
+          "n": 3,
+          "required_n": 48
         },
         "lineage_completeness": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 3
+          "n": 3,
+          "required_n": 1
         },
         "mrr": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 3
+          "n": 3,
+          "required_n": 1
         },
         "ndcg_at_k": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 3
+          "n": 3,
+          "required_n": 1
         },
         "precision_at_k": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 3
+          "n": 3,
+          "required_n": 1
         },
         "provenance_coverage": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "evidence",
           "mean": 1.0,
-          "n": 3
+          "n": 3,
+          "required_n": 1
         },
         "recall_at_k": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 3
+          "n": 3,
+          "required_n": 1
         },
         "scope_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 3
+          "n": 3,
+          "required_n": 1
         },
         "set_f1": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 3
+          "n": 3,
+          "required_n": 1
         },
         "stale_leak_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 3
+          "n": 3,
+          "required_n": 48
         },
         "supersession_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 3
+          "n": 3,
+          "required_n": 1
         },
         "unsupported_claim_rate": {
           "confirmatory": false,
+          "family": "evidence",
           "mean": 0.0,
-          "n": 3
-        }
-      },
-      "raw_context": {
-        "abstention_recall": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 3
-        },
-        "answer_support_recall": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 3
-        },
-        "contradiction_exposure_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 3
-        },
-        "current_state_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 3
-        },
-        "deletion_compliance": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 3
-        },
-        "evidence_resolution_rate": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 3
-        },
-        "false_certainty_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 3
-        },
-        "lineage_completeness": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 3
-        },
-        "mrr": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 3
-        },
-        "ndcg_at_k": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 3
-        },
-        "precision_at_k": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 3
-        },
-        "provenance_coverage": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 3
-        },
-        "recall_at_k": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 3
-        },
-        "scope_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 3
-        },
-        "set_f1": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 3
-        },
-        "stale_leak_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 3
-        },
-        "supersession_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 3
-        },
-        "unsupported_claim_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 3
+          "n": 3,
+          "required_n": 48
         }
       }
     },
     "tracking": {
       "bm25": {
         "abstention_recall": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "abstention",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "answer_support_recall": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "contradiction_exposure_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "current_state_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "deletion_compliance": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "evidence_resolution_rate": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "evidence",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "false_certainty_rate": {
           "confirmatory": false,
+          "family": "abstention",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "lineage_completeness": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "mrr": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.5,
-          "n": 2
+          "n": 2,
+          "required_n": 170
         },
         "ndcg_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.63092975,
-          "n": 2
+          "n": 2,
+          "required_n": 144
         },
         "precision_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.5,
-          "n": 2
+          "n": 2,
+          "required_n": 170
         },
         "provenance_coverage": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "evidence",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "recall_at_k": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "scope_accuracy": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "set_f1": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.66666667,
-          "n": 2
+          "n": 2,
+          "required_n": 133
         },
         "stale_leak_rate": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "supersession_accuracy": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "unsupported_claim_rate": {
           "confirmatory": false,
+          "family": "evidence",
           "mean": 0.0,
-          "n": 2
-        }
-      },
-      "bm25_temporal": {
-        "abstention_recall": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "answer_support_recall": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "contradiction_exposure_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "current_state_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "deletion_compliance": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "evidence_resolution_rate": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "false_certainty_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "lineage_completeness": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "mrr": {
-          "confirmatory": false,
-          "mean": 0.5,
-          "n": 2
-        },
-        "ndcg_at_k": {
-          "confirmatory": false,
-          "mean": 0.63092975,
-          "n": 2
-        },
-        "precision_at_k": {
-          "confirmatory": false,
-          "mean": 0.5,
-          "n": 2
-        },
-        "provenance_coverage": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "recall_at_k": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "scope_accuracy": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "set_f1": {
-          "confirmatory": false,
-          "mean": 0.66666667,
-          "n": 2
-        },
-        "stale_leak_rate": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "supersession_accuracy": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "unsupported_claim_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         }
       },
       "cortex": {
         "abstention_recall": {
           "confirmatory": false,
+          "family": "abstention",
           "mean": 0.5,
-          "n": 2
+          "n": 2,
+          "required_n": 170
         },
         "answer_support_recall": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.5,
-          "n": 2
+          "n": 2,
+          "required_n": 170
         },
         "contradiction_exposure_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "current_state_accuracy": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.5,
-          "n": 2
+          "n": 2,
+          "required_n": 170
         },
         "deletion_compliance": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "evidence_resolution_rate": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "evidence",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "extraction_recall": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.5,
-          "n": 2
+          "n": 2,
+          "required_n": 170
         },
         "extraction_spurious_rate": {
           "confirmatory": false,
+          "family": "evidence",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "false_certainty_rate": {
           "confirmatory": false,
+          "family": "abstention",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "lineage_completeness": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "mrr": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.5,
-          "n": 2
+          "n": 2,
+          "required_n": 170
         },
         "ndcg_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.5,
-          "n": 2
+          "n": 2,
+          "required_n": 170
         },
         "precision_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.5,
-          "n": 2
+          "n": 2,
+          "required_n": 170
         },
         "provenance_coverage": {
           "confirmatory": false,
+          "family": "evidence",
           "mean": 0.5,
-          "n": 2
+          "n": 2,
+          "required_n": 170
         },
         "recall_at_k": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.5,
-          "n": 2
+          "n": 2,
+          "required_n": 170
         },
         "scope_accuracy": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.5,
-          "n": 2
+          "n": 2,
+          "required_n": 170
         },
         "set_f1": {
           "confirmatory": false,
+          "family": "retrieval",
           "mean": 0.5,
-          "n": 2
+          "n": 2,
+          "required_n": 170
         },
         "stale_leak_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "supersession_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "unsupported_claim_rate": {
           "confirmatory": false,
+          "family": "evidence",
           "mean": 0.0,
-          "n": 2
-        }
-      },
-      "no_memory": {
-        "abstention_recall": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "answer_support_recall": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "contradiction_exposure_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "current_state_accuracy": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "deletion_compliance": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "evidence_resolution_rate": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "false_certainty_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "lineage_completeness": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "mrr": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "ndcg_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "precision_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "provenance_coverage": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "recall_at_k": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "scope_accuracy": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "set_f1": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "stale_leak_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "supersession_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "unsupported_claim_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         }
       },
       "oracle": {
         "abstention_recall": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "abstention",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "answer_support_recall": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "contradiction_exposure_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "current_state_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "deletion_compliance": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "evidence_resolution_rate": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "evidence",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "false_certainty_rate": {
           "confirmatory": false,
+          "family": "abstention",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "lineage_completeness": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.5,
-          "n": 2
+          "n": 2,
+          "required_n": 170
         },
         "mrr": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "ndcg_at_k": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "precision_at_k": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "provenance_coverage": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "evidence",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "recall_at_k": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "scope_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "set_f1": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "retrieval",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "stale_leak_rate": {
           "confirmatory": false,
+          "family": "temporality",
           "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         },
         "supersession_accuracy": {
-          "confirmatory": false,
+          "confirmatory": true,
+          "family": "temporality",
           "mean": 1.0,
-          "n": 2
+          "n": 2,
+          "required_n": 1
         },
         "unsupported_claim_rate": {
           "confirmatory": false,
+          "family": "evidence",
           "mean": 0.0,
-          "n": 2
-        }
-      },
-      "raw_context": {
-        "abstention_recall": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "answer_support_recall": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "contradiction_exposure_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "current_state_accuracy": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "deletion_compliance": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "evidence_resolution_rate": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "false_certainty_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "lineage_completeness": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "mrr": {
-          "confirmatory": false,
-          "mean": 0.5,
-          "n": 2
-        },
-        "ndcg_at_k": {
-          "confirmatory": false,
-          "mean": 0.63092975,
-          "n": 2
-        },
-        "precision_at_k": {
-          "confirmatory": false,
-          "mean": 0.5,
-          "n": 2
-        },
-        "provenance_coverage": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "recall_at_k": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "scope_accuracy": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "set_f1": {
-          "confirmatory": false,
-          "mean": 0.66666667,
-          "n": 2
-        },
-        "stale_leak_rate": {
-          "confirmatory": false,
-          "mean": 1.0,
-          "n": 2
-        },
-        "supersession_accuracy": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
-        },
-        "unsupported_claim_rate": {
-          "confirmatory": false,
-          "mean": 0.0,
-          "n": 2
+          "n": 2,
+          "required_n": 48
         }
       }
     }
@@ -3450,628 +2448,570 @@
   "dataset_revisions": {
     "meme": "mvp"
   },
-  "decision": "promover_com_reservas",
+  "decision": "reduzir_claim",
   "endpoints": {
     "bm25": {
       "abstention_recall": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "abstention",
         "mean": 0.7,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 121
       },
       "answer_support_recall": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "retrieval",
         "mean": 0.7,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 121
       },
       "cascade_correctness_hop1": {
         "confirmatory": false,
+        "family": "temporality",
         "mean": 0.0,
-        "n": 1
+        "minimum_detectable_effect": 0.15,
+        "n": 1,
+        "power_basis": "observed_rate",
+        "required_n": 48
       },
       "cascade_correctness_hop2": {
         "confirmatory": false,
+        "family": "temporality",
         "mean": 0.0,
-        "n": 1
+        "minimum_detectable_effect": 0.15,
+        "n": 1,
+        "power_basis": "observed_rate",
+        "required_n": 48
       },
       "contradiction_exposure_rate": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "temporality",
         "mean": 0.0,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 48
       },
       "current_state_accuracy": {
         "confirmatory": true,
+        "family": "temporality",
         "mean": 1.0,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 1
       },
       "deletion_compliance": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "temporality",
         "mean": 0.6,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 152
       },
       "evidence_resolution_rate": {
         "confirmatory": true,
+        "family": "evidence",
         "mean": 1.0,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 1
       },
       "false_certainty_rate": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "abstention",
         "mean": 0.0,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 48
       },
       "lineage_completeness": {
         "confirmatory": true,
+        "family": "temporality",
         "mean": 1.0,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 1
       },
       "mrr": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "retrieval",
         "mean": 0.6,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 152
       },
       "ndcg_at_k": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "retrieval",
         "mean": 0.62618595,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 145
       },
       "precision_at_k": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "retrieval",
         "mean": 0.55,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 163
       },
       "provenance_coverage": {
         "confirmatory": true,
+        "family": "evidence",
         "mean": 1.0,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 1
       },
       "recall_at_k": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "retrieval",
         "mean": 0.7,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 121
       },
       "scope_accuracy": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "retrieval",
         "mean": 0.4,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 173
       },
       "set_f1": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "retrieval",
         "mean": 0.600000001,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 152
       },
       "stale_leak_rate": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "temporality",
         "mean": 0.4,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 173
       },
       "supersession_accuracy": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "temporality",
         "mean": 0.6,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 152
       },
       "unsupported_claim_rate": {
-        "confirmatory": true,
-        "mean": 0.0,
-        "n": 10
-      }
-    },
-    "bm25_temporal": {
-      "abstention_recall": {
-        "confirmatory": true,
-        "mean": 0.7,
-        "n": 10
-      },
-      "answer_support_recall": {
-        "confirmatory": true,
-        "mean": 0.7,
-        "n": 10
-      },
-      "cascade_correctness_hop1": {
         "confirmatory": false,
+        "family": "evidence",
         "mean": 0.0,
-        "n": 1
-      },
-      "cascade_correctness_hop2": {
-        "confirmatory": false,
-        "mean": 0.0,
-        "n": 1
-      },
-      "contradiction_exposure_rate": {
-        "confirmatory": true,
-        "mean": 0.0,
-        "n": 10
-      },
-      "current_state_accuracy": {
-        "confirmatory": true,
-        "mean": 1.0,
-        "n": 10
-      },
-      "deletion_compliance": {
-        "confirmatory": true,
-        "mean": 0.6,
-        "n": 10
-      },
-      "evidence_resolution_rate": {
-        "confirmatory": true,
-        "mean": 1.0,
-        "n": 10
-      },
-      "false_certainty_rate": {
-        "confirmatory": true,
-        "mean": 0.0,
-        "n": 10
-      },
-      "lineage_completeness": {
-        "confirmatory": true,
-        "mean": 1.0,
-        "n": 10
-      },
-      "mrr": {
-        "confirmatory": true,
-        "mean": 0.6,
-        "n": 10
-      },
-      "ndcg_at_k": {
-        "confirmatory": true,
-        "mean": 0.62618595,
-        "n": 10
-      },
-      "precision_at_k": {
-        "confirmatory": true,
-        "mean": 0.55,
-        "n": 10
-      },
-      "provenance_coverage": {
-        "confirmatory": true,
-        "mean": 1.0,
-        "n": 10
-      },
-      "recall_at_k": {
-        "confirmatory": true,
-        "mean": 0.7,
-        "n": 10
-      },
-      "scope_accuracy": {
-        "confirmatory": true,
-        "mean": 0.4,
-        "n": 10
-      },
-      "set_f1": {
-        "confirmatory": true,
-        "mean": 0.600000001,
-        "n": 10
-      },
-      "stale_leak_rate": {
-        "confirmatory": true,
-        "mean": 0.4,
-        "n": 10
-      },
-      "supersession_accuracy": {
-        "confirmatory": true,
-        "mean": 0.6,
-        "n": 10
-      },
-      "unsupported_claim_rate": {
-        "confirmatory": true,
-        "mean": 0.0,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 48
       }
     },
     "cortex": {
       "abstention_recall": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "abstention",
         "mean": 0.4,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 173
       },
       "answer_support_recall": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "retrieval",
         "mean": 0.1,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 100
       },
       "cascade_correctness_hop1": {
         "confirmatory": false,
+        "family": "temporality",
         "mean": 0.0,
-        "n": 1
+        "minimum_detectable_effect": 0.15,
+        "n": 1,
+        "power_basis": "observed_rate",
+        "required_n": 48
       },
       "cascade_correctness_hop2": {
         "confirmatory": false,
+        "family": "temporality",
         "mean": 0.0,
-        "n": 1
+        "minimum_detectable_effect": 0.15,
+        "n": 1,
+        "power_basis": "observed_rate",
+        "required_n": 48
       },
       "contradiction_exposure_rate": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "temporality",
         "mean": 0.0,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 48
       },
       "current_state_accuracy": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "temporality",
         "mean": 0.4,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 173
       },
       "deletion_compliance": {
         "confirmatory": true,
+        "family": "temporality",
         "mean": 1.0,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 1
       },
       "evidence_resolution_rate": {
         "confirmatory": true,
+        "family": "evidence",
         "mean": 1.0,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 1
       },
       "extraction_recall": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "retrieval",
         "mean": 0.4,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 173
       },
       "extraction_spurious_rate": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "evidence",
         "mean": 0.0,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 48
       },
       "false_certainty_rate": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "abstention",
         "mean": 0.0,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 48
       },
       "lineage_completeness": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "temporality",
         "mean": 0.7,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 121
       },
       "mrr": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "retrieval",
         "mean": 0.1,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 100
       },
       "ndcg_at_k": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "retrieval",
         "mean": 0.1,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 100
       },
       "precision_at_k": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "retrieval",
         "mean": 0.1,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 100
       },
       "provenance_coverage": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "evidence",
         "mean": 0.4,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 173
       },
       "recall_at_k": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "retrieval",
         "mean": 0.1,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 100
       },
       "scope_accuracy": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "retrieval",
         "mean": 0.4,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 173
       },
       "set_f1": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "retrieval",
         "mean": 0.4,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 173
       },
       "stale_leak_rate": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "temporality",
         "mean": 0.0,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 48
       },
       "supersession_accuracy": {
         "confirmatory": true,
+        "family": "temporality",
         "mean": 1.0,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 1
       },
       "unsupported_claim_rate": {
-        "confirmatory": true,
-        "mean": 0.0,
-        "n": 10
-      }
-    },
-    "no_memory": {
-      "abstention_recall": {
-        "confirmatory": true,
-        "mean": 0.3,
-        "n": 10
-      },
-      "answer_support_recall": {
-        "confirmatory": true,
-        "mean": 0.0,
-        "n": 10
-      },
-      "cascade_correctness_hop1": {
         "confirmatory": false,
+        "family": "evidence",
         "mean": 0.0,
-        "n": 1
-      },
-      "cascade_correctness_hop2": {
-        "confirmatory": false,
-        "mean": 0.0,
-        "n": 1
-      },
-      "contradiction_exposure_rate": {
-        "confirmatory": true,
-        "mean": 0.0,
-        "n": 10
-      },
-      "current_state_accuracy": {
-        "confirmatory": true,
-        "mean": 0.3,
-        "n": 10
-      },
-      "deletion_compliance": {
-        "confirmatory": true,
-        "mean": 1.0,
-        "n": 10
-      },
-      "evidence_resolution_rate": {
-        "confirmatory": true,
-        "mean": 1.0,
-        "n": 10
-      },
-      "false_certainty_rate": {
-        "confirmatory": true,
-        "mean": 0.0,
-        "n": 10
-      },
-      "lineage_completeness": {
-        "confirmatory": true,
-        "mean": 0.7,
-        "n": 10
-      },
-      "mrr": {
-        "confirmatory": true,
-        "mean": 0.0,
-        "n": 10
-      },
-      "ndcg_at_k": {
-        "confirmatory": true,
-        "mean": 0.0,
-        "n": 10
-      },
-      "precision_at_k": {
-        "confirmatory": true,
-        "mean": 0.0,
-        "n": 10
-      },
-      "provenance_coverage": {
-        "confirmatory": true,
-        "mean": 0.3,
-        "n": 10
-      },
-      "recall_at_k": {
-        "confirmatory": true,
-        "mean": 0.0,
-        "n": 10
-      },
-      "scope_accuracy": {
-        "confirmatory": true,
-        "mean": 0.3,
-        "n": 10
-      },
-      "set_f1": {
-        "confirmatory": true,
-        "mean": 0.3,
-        "n": 10
-      },
-      "stale_leak_rate": {
-        "confirmatory": true,
-        "mean": 0.0,
-        "n": 10
-      },
-      "supersession_accuracy": {
-        "confirmatory": true,
-        "mean": 1.0,
-        "n": 10
-      },
-      "unsupported_claim_rate": {
-        "confirmatory": true,
-        "mean": 0.0,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 48
       }
     },
     "oracle": {
       "abstention_recall": {
         "confirmatory": true,
+        "family": "abstention",
         "mean": 1.0,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 1
       },
       "answer_support_recall": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "retrieval",
         "mean": 0.7,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 121
       },
       "cascade_correctness_hop1": {
         "confirmatory": false,
+        "family": "temporality",
         "mean": 0.0,
-        "n": 1
+        "minimum_detectable_effect": 0.15,
+        "n": 1,
+        "power_basis": "observed_rate",
+        "required_n": 48
       },
       "cascade_correctness_hop2": {
         "confirmatory": false,
+        "family": "temporality",
         "mean": 0.0,
-        "n": 1
+        "minimum_detectable_effect": 0.15,
+        "n": 1,
+        "power_basis": "observed_rate",
+        "required_n": 48
       },
       "contradiction_exposure_rate": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "temporality",
         "mean": 0.0,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 48
       },
       "current_state_accuracy": {
         "confirmatory": true,
+        "family": "temporality",
         "mean": 1.0,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 1
       },
       "deletion_compliance": {
         "confirmatory": true,
+        "family": "temporality",
         "mean": 1.0,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 1
       },
       "evidence_resolution_rate": {
         "confirmatory": true,
+        "family": "evidence",
         "mean": 1.0,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 1
       },
       "false_certainty_rate": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "abstention",
         "mean": 0.0,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 48
       },
       "lineage_completeness": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "temporality",
         "mean": 0.85,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 48
       },
       "mrr": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "retrieval",
         "mean": 0.7,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 121
       },
       "ndcg_at_k": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "retrieval",
         "mean": 0.7,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 121
       },
       "precision_at_k": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "retrieval",
         "mean": 0.7,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 121
       },
       "provenance_coverage": {
         "confirmatory": true,
+        "family": "evidence",
         "mean": 1.0,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 1
       },
       "recall_at_k": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "retrieval",
         "mean": 0.7,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 121
       },
       "scope_accuracy": {
         "confirmatory": true,
+        "family": "retrieval",
         "mean": 1.0,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 1
       },
       "set_f1": {
         "confirmatory": true,
+        "family": "retrieval",
         "mean": 1.0,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 1
       },
       "stale_leak_rate": {
-        "confirmatory": true,
+        "confirmatory": false,
+        "family": "temporality",
         "mean": 0.0,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 48
       },
       "supersession_accuracy": {
         "confirmatory": true,
+        "family": "temporality",
         "mean": 1.0,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 1
       },
       "unsupported_claim_rate": {
-        "confirmatory": true,
-        "mean": 0.0,
-        "n": 10
-      }
-    },
-    "raw_context": {
-      "abstention_recall": {
-        "confirmatory": true,
-        "mean": 0.7,
-        "n": 10
-      },
-      "answer_support_recall": {
-        "confirmatory": true,
-        "mean": 0.7,
-        "n": 10
-      },
-      "cascade_correctness_hop1": {
         "confirmatory": false,
+        "family": "evidence",
         "mean": 0.0,
-        "n": 1
-      },
-      "cascade_correctness_hop2": {
-        "confirmatory": false,
-        "mean": 0.0,
-        "n": 1
-      },
-      "contradiction_exposure_rate": {
-        "confirmatory": true,
-        "mean": 0.0,
-        "n": 10
-      },
-      "current_state_accuracy": {
-        "confirmatory": true,
-        "mean": 1.0,
-        "n": 10
-      },
-      "deletion_compliance": {
-        "confirmatory": true,
-        "mean": 0.6,
-        "n": 10
-      },
-      "evidence_resolution_rate": {
-        "confirmatory": true,
-        "mean": 1.0,
-        "n": 10
-      },
-      "false_certainty_rate": {
-        "confirmatory": true,
-        "mean": 0.0,
-        "n": 10
-      },
-      "lineage_completeness": {
-        "confirmatory": true,
-        "mean": 1.0,
-        "n": 10
-      },
-      "mrr": {
-        "confirmatory": true,
-        "mean": 0.55,
-        "n": 10
-      },
-      "ndcg_at_k": {
-        "confirmatory": true,
-        "mean": 0.589278925,
-        "n": 10
-      },
-      "precision_at_k": {
-        "confirmatory": true,
-        "mean": 0.55,
-        "n": 10
-      },
-      "provenance_coverage": {
-        "confirmatory": true,
-        "mean": 1.0,
-        "n": 10
-      },
-      "recall_at_k": {
-        "confirmatory": true,
-        "mean": 0.7,
-        "n": 10
-      },
-      "scope_accuracy": {
-        "confirmatory": true,
-        "mean": 0.4,
-        "n": 10
-      },
-      "set_f1": {
-        "confirmatory": true,
-        "mean": 0.600000001,
-        "n": 10
-      },
-      "stale_leak_rate": {
-        "confirmatory": true,
-        "mean": 0.4,
-        "n": 10
-      },
-      "supersession_accuracy": {
-        "confirmatory": true,
-        "mean": 0.6,
-        "n": 10
-      },
-      "unsupported_claim_rate": {
-        "confirmatory": true,
-        "mean": 0.0,
-        "n": 10
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "power_basis": "observed_rate",
+        "required_n": 48
       }
     }
   },
@@ -4085,10 +3025,10 @@
       "exceptions_converted_to_zero": 0,
       "paired_interval_available": true,
       "stale_leak_not_worse_than_bm25": true,
-      "stale_leak_not_worse_than_raw_context": true,
+      "stale_leak_not_worse_than_raw_context": null,
       "stale_leak_rate_bm25": 0.4,
       "stale_leak_rate_cortex": 0.0,
-      "stale_leak_rate_raw_context": 0.4
+      "stale_leak_rate_raw_context": null
     },
     "G2_relative_value": {
       "abstention_recall": {
@@ -4096,9 +3036,15 @@
         "ci_includes_zero": true,
         "ci_low": -0.8,
         "comparison": "cortex_vs_bm25",
-        "confirmatory": true,
+        "confirmatory": false,
         "diff": -0.3,
-        "n": 10
+        "family": "abstention",
+        "holm_significant": false,
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "p_value": 0.2935,
+        "power_basis": "baseline_arm",
+        "required_n": 121
       },
       "current_state_accuracy": {
         "ci_high": -0.3,
@@ -4107,34 +3053,48 @@
         "comparison": "cortex_vs_bm25",
         "confirmatory": true,
         "diff": -0.6,
-        "n": 10
+        "family": "temporality",
+        "holm_significant": true,
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "p_value": 0.0005,
+        "power_basis": "baseline_arm",
+        "required_n": 1
       },
       "deletion_compliance": {
         "ci_high": 0.7,
         "ci_includes_zero": false,
         "ci_low": 0.1,
         "comparison": "cortex_vs_bm25",
-        "confirmatory": true,
+        "confirmatory": false,
         "diff": 0.4,
-        "n": 10
+        "family": "temporality",
+        "holm_significant": false,
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "p_value": 0.0205,
+        "power_basis": "baseline_arm",
+        "required_n": 152
       },
       "recall_at_k": {
         "ci_high": -0.3,
         "ci_includes_zero": false,
         "ci_low": -0.9,
         "comparison": "cortex_vs_bm25",
-        "confirmatory": true,
+        "confirmatory": false,
         "diff": -0.6,
-        "n": 10
+        "family": "retrieval",
+        "holm_significant": true,
+        "minimum_detectable_effect": 0.15,
+        "n": 10,
+        "p_value": 0.0005,
+        "power_basis": "baseline_arm",
+        "required_n": 121
       },
       "set_f1": {
-        "ci_high": 0.366666666,
-        "ci_includes_zero": true,
-        "ci_low": -0.733333334,
         "comparison": "cortex_vs_raw_context",
-        "confirmatory": true,
-        "diff": -0.20000000099999998,
-        "n": 10
+        "holm_significant": null,
+        "n": 0
       }
     },
     "G3_assertion_safety": {
@@ -4144,29 +3104,73 @@
     }
   },
   "paired_comparisons": {
+    "__holm_bonferroni__": {
+      "abstention": {
+        "comparisons": 2,
+        "largest_p_value": 1.0,
+        "rejected": 0,
+        "smallest_p_value": 0.2935
+      },
+      "evidence": {
+        "comparisons": 3,
+        "largest_p_value": 1.0,
+        "rejected": 1,
+        "smallest_p_value": 0.0005
+      },
+      "retrieval": {
+        "comparisons": 7,
+        "largest_p_value": 1.0,
+        "rejected": 5,
+        "smallest_p_value": 0.0005
+      },
+      "temporality": {
+        "comparisons": 6,
+        "largest_p_value": 1.0,
+        "rejected": 1,
+        "smallest_p_value": 0.0005
+      }
+    },
     "cortex_vs_bm25:abstention_recall": {
       "ci_high": 0.3,
       "ci_includes_zero": true,
       "ci_low": -0.8,
-      "confirmatory": true,
+      "confirmatory": false,
       "diff": -0.3,
-      "n": 10
+      "family": "abstention",
+      "holm_significant": false,
+      "minimum_detectable_effect": 0.15,
+      "n": 10,
+      "p_value": 0.2935,
+      "power_basis": "baseline_arm",
+      "required_n": 121
     },
     "cortex_vs_bm25:answer_support_recall": {
       "ci_high": -0.3,
       "ci_includes_zero": false,
       "ci_low": -0.9,
-      "confirmatory": true,
+      "confirmatory": false,
       "diff": -0.6,
-      "n": 10
+      "family": "retrieval",
+      "holm_significant": true,
+      "minimum_detectable_effect": 0.15,
+      "n": 10,
+      "p_value": 0.0005,
+      "power_basis": "baseline_arm",
+      "required_n": 121
     },
     "cortex_vs_bm25:contradiction_exposure_rate": {
       "ci_high": 0.0,
       "ci_includes_zero": true,
       "ci_low": 0.0,
-      "confirmatory": true,
+      "confirmatory": false,
       "diff": 0.0,
-      "n": 10
+      "family": "temporality",
+      "holm_significant": false,
+      "minimum_detectable_effect": 0.15,
+      "n": 10,
+      "p_value": 1.0,
+      "power_basis": "baseline_arm",
+      "required_n": 48
     },
     "cortex_vs_bm25:current_state_accuracy": {
       "ci_high": -0.3,
@@ -4174,15 +3178,27 @@
       "ci_low": -0.9,
       "confirmatory": true,
       "diff": -0.6,
-      "n": 10
+      "family": "temporality",
+      "holm_significant": true,
+      "minimum_detectable_effect": 0.15,
+      "n": 10,
+      "p_value": 0.0005,
+      "power_basis": "baseline_arm",
+      "required_n": 1
     },
     "cortex_vs_bm25:deletion_compliance": {
       "ci_high": 0.7,
       "ci_includes_zero": false,
       "ci_low": 0.1,
-      "confirmatory": true,
+      "confirmatory": false,
       "diff": 0.4,
-      "n": 10
+      "family": "temporality",
+      "holm_significant": false,
+      "minimum_detectable_effect": 0.15,
+      "n": 10,
+      "p_value": 0.0205,
+      "power_basis": "baseline_arm",
+      "required_n": 152
     },
     "cortex_vs_bm25:evidence_resolution_rate": {
       "ci_high": 0.0,
@@ -4190,15 +3206,27 @@
       "ci_low": 0.0,
       "confirmatory": true,
       "diff": 0.0,
-      "n": 10
+      "family": "evidence",
+      "holm_significant": false,
+      "minimum_detectable_effect": 0.15,
+      "n": 10,
+      "p_value": 1.0,
+      "power_basis": "baseline_arm",
+      "required_n": 1
     },
     "cortex_vs_bm25:false_certainty_rate": {
       "ci_high": 0.0,
       "ci_includes_zero": true,
       "ci_low": 0.0,
-      "confirmatory": true,
+      "confirmatory": false,
       "diff": 0.0,
-      "n": 10
+      "family": "abstention",
+      "holm_significant": false,
+      "minimum_detectable_effect": 0.15,
+      "n": 10,
+      "p_value": 1.0,
+      "power_basis": "baseline_arm",
+      "required_n": 48
     },
     "cortex_vs_bm25:lineage_completeness": {
       "ci_high": 0.0,
@@ -4206,31 +3234,55 @@
       "ci_low": -0.6,
       "confirmatory": true,
       "diff": -0.3,
-      "n": 10
+      "family": "temporality",
+      "holm_significant": false,
+      "minimum_detectable_effect": 0.15,
+      "n": 10,
+      "p_value": 0.081,
+      "power_basis": "baseline_arm",
+      "required_n": 1
     },
     "cortex_vs_bm25:mrr": {
-      "ci_high": -0.2,
+      "ci_high": -0.15,
       "ci_includes_zero": false,
       "ci_low": -0.8,
-      "confirmatory": true,
+      "confirmatory": false,
       "diff": -0.5,
-      "n": 10
+      "family": "retrieval",
+      "holm_significant": true,
+      "minimum_detectable_effect": 0.15,
+      "n": 10,
+      "p_value": 0.0035,
+      "power_basis": "baseline_arm",
+      "required_n": 152
     },
     "cortex_vs_bm25:ndcg_at_k": {
-      "ci_high": -0.22618595,
+      "ci_high": -0.189278925,
       "ci_includes_zero": false,
       "ci_low": -0.82618595,
-      "confirmatory": true,
+      "confirmatory": false,
       "diff": -0.52618595,
-      "n": 10
+      "family": "retrieval",
+      "holm_significant": true,
+      "minimum_detectable_effect": 0.15,
+      "n": 10,
+      "p_value": 0.001,
+      "power_basis": "baseline_arm",
+      "required_n": 145
     },
     "cortex_vs_bm25:precision_at_k": {
       "ci_high": -0.15,
       "ci_includes_zero": false,
       "ci_low": -0.75,
-      "confirmatory": true,
+      "confirmatory": false,
       "diff": -0.45,
-      "n": 10
+      "family": "retrieval",
+      "holm_significant": true,
+      "minimum_detectable_effect": 0.15,
+      "n": 10,
+      "p_value": 0.007,
+      "power_basis": "baseline_arm",
+      "required_n": 163
     },
     "cortex_vs_bm25:provenance_coverage": {
       "ci_high": -0.3,
@@ -4238,488 +3290,118 @@
       "ci_low": -0.9,
       "confirmatory": true,
       "diff": -0.6,
-      "n": 10
+      "family": "evidence",
+      "holm_significant": true,
+      "minimum_detectable_effect": 0.15,
+      "n": 10,
+      "p_value": 0.0005,
+      "power_basis": "baseline_arm",
+      "required_n": 1
     },
     "cortex_vs_bm25:recall_at_k": {
       "ci_high": -0.3,
       "ci_includes_zero": false,
       "ci_low": -0.9,
-      "confirmatory": true,
+      "confirmatory": false,
       "diff": -0.6,
-      "n": 10
+      "family": "retrieval",
+      "holm_significant": true,
+      "minimum_detectable_effect": 0.15,
+      "n": 10,
+      "p_value": 0.0005,
+      "power_basis": "baseline_arm",
+      "required_n": 121
     },
     "cortex_vs_bm25:scope_accuracy": {
-      "ci_high": 0.5,
+      "ci_high": 0.6,
       "ci_includes_zero": true,
-      "ci_low": -0.6,
-      "confirmatory": true,
+      "ci_low": -0.5,
+      "confirmatory": false,
       "diff": 0.0,
-      "n": 10
+      "family": "retrieval",
+      "holm_significant": false,
+      "minimum_detectable_effect": 0.15,
+      "n": 10,
+      "p_value": 1.0,
+      "power_basis": "baseline_arm",
+      "required_n": 173
     },
     "cortex_vs_bm25:set_f1": {
-      "ci_high": 0.366666666,
+      "ci_high": 0.366666665,
       "ci_includes_zero": true,
-      "ci_low": -0.733333334,
-      "confirmatory": true,
+      "ci_low": -0.700000001,
+      "confirmatory": false,
       "diff": -0.20000000099999998,
-      "n": 10
+      "family": "retrieval",
+      "holm_significant": false,
+      "minimum_detectable_effect": 0.15,
+      "n": 10,
+      "p_value": 0.4535,
+      "power_basis": "baseline_arm",
+      "required_n": 152
     },
     "cortex_vs_bm25:stale_leak_rate": {
       "ci_high": -0.1,
       "ci_includes_zero": false,
       "ci_low": -0.7,
-      "confirmatory": true,
+      "confirmatory": false,
       "diff": -0.4,
-      "n": 10
+      "family": "temporality",
+      "holm_significant": false,
+      "minimum_detectable_effect": 0.15,
+      "n": 10,
+      "p_value": 0.0205,
+      "power_basis": "baseline_arm",
+      "required_n": 173
     },
     "cortex_vs_bm25:supersession_accuracy": {
       "ci_high": 0.7,
       "ci_includes_zero": false,
       "ci_low": 0.1,
-      "confirmatory": true,
+      "confirmatory": false,
       "diff": 0.4,
-      "n": 10
+      "family": "temporality",
+      "holm_significant": false,
+      "minimum_detectable_effect": 0.15,
+      "n": 10,
+      "p_value": 0.0205,
+      "power_basis": "baseline_arm",
+      "required_n": 152
     },
     "cortex_vs_bm25:unsupported_claim_rate": {
       "ci_high": 0.0,
       "ci_includes_zero": true,
       "ci_low": 0.0,
-      "confirmatory": true,
+      "confirmatory": false,
       "diff": 0.0,
-      "n": 10
-    },
-    "cortex_vs_bm25_temporal:abstention_recall": {
-      "ci_high": 0.3,
-      "ci_includes_zero": true,
-      "ci_low": -0.8,
-      "confirmatory": true,
-      "diff": -0.3,
-      "n": 10
-    },
-    "cortex_vs_bm25_temporal:answer_support_recall": {
-      "ci_high": -0.3,
-      "ci_includes_zero": false,
-      "ci_low": -0.9,
-      "confirmatory": true,
-      "diff": -0.6,
-      "n": 10
-    },
-    "cortex_vs_bm25_temporal:contradiction_exposure_rate": {
-      "ci_high": 0.0,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
-      "confirmatory": true,
-      "diff": 0.0,
-      "n": 10
-    },
-    "cortex_vs_bm25_temporal:current_state_accuracy": {
-      "ci_high": -0.3,
-      "ci_includes_zero": false,
-      "ci_low": -0.9,
-      "confirmatory": true,
-      "diff": -0.6,
-      "n": 10
-    },
-    "cortex_vs_bm25_temporal:deletion_compliance": {
-      "ci_high": 0.7,
-      "ci_includes_zero": false,
-      "ci_low": 0.1,
-      "confirmatory": true,
-      "diff": 0.4,
-      "n": 10
-    },
-    "cortex_vs_bm25_temporal:evidence_resolution_rate": {
-      "ci_high": 0.0,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
-      "confirmatory": true,
-      "diff": 0.0,
-      "n": 10
-    },
-    "cortex_vs_bm25_temporal:false_certainty_rate": {
-      "ci_high": 0.0,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
-      "confirmatory": true,
-      "diff": 0.0,
-      "n": 10
-    },
-    "cortex_vs_bm25_temporal:lineage_completeness": {
-      "ci_high": 0.0,
-      "ci_includes_zero": true,
-      "ci_low": -0.6,
-      "confirmatory": true,
-      "diff": -0.3,
-      "n": 10
-    },
-    "cortex_vs_bm25_temporal:mrr": {
-      "ci_high": -0.2,
-      "ci_includes_zero": false,
-      "ci_low": -0.8,
-      "confirmatory": true,
-      "diff": -0.5,
-      "n": 10
-    },
-    "cortex_vs_bm25_temporal:ndcg_at_k": {
-      "ci_high": -0.22618595,
-      "ci_includes_zero": false,
-      "ci_low": -0.82618595,
-      "confirmatory": true,
-      "diff": -0.52618595,
-      "n": 10
-    },
-    "cortex_vs_bm25_temporal:precision_at_k": {
-      "ci_high": -0.15,
-      "ci_includes_zero": false,
-      "ci_low": -0.75,
-      "confirmatory": true,
-      "diff": -0.45,
-      "n": 10
-    },
-    "cortex_vs_bm25_temporal:provenance_coverage": {
-      "ci_high": -0.3,
-      "ci_includes_zero": false,
-      "ci_low": -0.9,
-      "confirmatory": true,
-      "diff": -0.6,
-      "n": 10
-    },
-    "cortex_vs_bm25_temporal:recall_at_k": {
-      "ci_high": -0.3,
-      "ci_includes_zero": false,
-      "ci_low": -0.9,
-      "confirmatory": true,
-      "diff": -0.6,
-      "n": 10
-    },
-    "cortex_vs_bm25_temporal:scope_accuracy": {
-      "ci_high": 0.5,
-      "ci_includes_zero": true,
-      "ci_low": -0.6,
-      "confirmatory": true,
-      "diff": 0.0,
-      "n": 10
-    },
-    "cortex_vs_bm25_temporal:set_f1": {
-      "ci_high": 0.366666666,
-      "ci_includes_zero": true,
-      "ci_low": -0.733333334,
-      "confirmatory": true,
-      "diff": -0.20000000099999998,
-      "n": 10
-    },
-    "cortex_vs_bm25_temporal:stale_leak_rate": {
-      "ci_high": -0.1,
-      "ci_includes_zero": false,
-      "ci_low": -0.7,
-      "confirmatory": true,
-      "diff": -0.4,
-      "n": 10
-    },
-    "cortex_vs_bm25_temporal:supersession_accuracy": {
-      "ci_high": 0.7,
-      "ci_includes_zero": false,
-      "ci_low": 0.1,
-      "confirmatory": true,
-      "diff": 0.4,
-      "n": 10
-    },
-    "cortex_vs_bm25_temporal:unsupported_claim_rate": {
-      "ci_high": 0.0,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
-      "confirmatory": true,
-      "diff": 0.0,
-      "n": 10
-    },
-    "cortex_vs_no_memory:abstention_recall": {
-      "ci_high": 0.3,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
-      "confirmatory": true,
-      "diff": 0.1,
-      "n": 10
-    },
-    "cortex_vs_no_memory:answer_support_recall": {
-      "ci_high": 0.3,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
-      "confirmatory": true,
-      "diff": 0.1,
-      "n": 10
-    },
-    "cortex_vs_no_memory:contradiction_exposure_rate": {
-      "ci_high": 0.0,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
-      "confirmatory": true,
-      "diff": 0.0,
-      "n": 10
-    },
-    "cortex_vs_no_memory:current_state_accuracy": {
-      "ci_high": 0.3,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
-      "confirmatory": true,
-      "diff": 0.1,
-      "n": 10
-    },
-    "cortex_vs_no_memory:deletion_compliance": {
-      "ci_high": 0.0,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
-      "confirmatory": true,
-      "diff": 0.0,
-      "n": 10
-    },
-    "cortex_vs_no_memory:evidence_resolution_rate": {
-      "ci_high": 0.0,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
-      "confirmatory": true,
-      "diff": 0.0,
-      "n": 10
-    },
-    "cortex_vs_no_memory:false_certainty_rate": {
-      "ci_high": 0.0,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
-      "confirmatory": true,
-      "diff": 0.0,
-      "n": 10
-    },
-    "cortex_vs_no_memory:lineage_completeness": {
-      "ci_high": 0.0,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
-      "confirmatory": true,
-      "diff": 0.0,
-      "n": 10
-    },
-    "cortex_vs_no_memory:mrr": {
-      "ci_high": 0.3,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
-      "confirmatory": true,
-      "diff": 0.1,
-      "n": 10
-    },
-    "cortex_vs_no_memory:ndcg_at_k": {
-      "ci_high": 0.3,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
-      "confirmatory": true,
-      "diff": 0.1,
-      "n": 10
-    },
-    "cortex_vs_no_memory:precision_at_k": {
-      "ci_high": 0.3,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
-      "confirmatory": true,
-      "diff": 0.1,
-      "n": 10
-    },
-    "cortex_vs_no_memory:provenance_coverage": {
-      "ci_high": 0.3,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
-      "confirmatory": true,
-      "diff": 0.1,
-      "n": 10
-    },
-    "cortex_vs_no_memory:recall_at_k": {
-      "ci_high": 0.3,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
-      "confirmatory": true,
-      "diff": 0.1,
-      "n": 10
-    },
-    "cortex_vs_no_memory:scope_accuracy": {
-      "ci_high": 0.3,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
-      "confirmatory": true,
-      "diff": 0.1,
-      "n": 10
-    },
-    "cortex_vs_no_memory:set_f1": {
-      "ci_high": 0.3,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
-      "confirmatory": true,
-      "diff": 0.1,
-      "n": 10
-    },
-    "cortex_vs_no_memory:stale_leak_rate": {
-      "ci_high": 0.0,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
-      "confirmatory": true,
-      "diff": 0.0,
-      "n": 10
-    },
-    "cortex_vs_no_memory:supersession_accuracy": {
-      "ci_high": 0.0,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
-      "confirmatory": true,
-      "diff": 0.0,
-      "n": 10
-    },
-    "cortex_vs_no_memory:unsupported_claim_rate": {
-      "ci_high": 0.0,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
-      "confirmatory": true,
-      "diff": 0.0,
-      "n": 10
-    },
-    "cortex_vs_raw_context:abstention_recall": {
-      "ci_high": 0.3,
-      "ci_includes_zero": true,
-      "ci_low": -0.8,
-      "confirmatory": true,
-      "diff": -0.3,
-      "n": 10
-    },
-    "cortex_vs_raw_context:answer_support_recall": {
-      "ci_high": -0.3,
-      "ci_includes_zero": false,
-      "ci_low": -0.9,
-      "confirmatory": true,
-      "diff": -0.6,
-      "n": 10
-    },
-    "cortex_vs_raw_context:contradiction_exposure_rate": {
-      "ci_high": 0.0,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
-      "confirmatory": true,
-      "diff": 0.0,
-      "n": 10
-    },
-    "cortex_vs_raw_context:current_state_accuracy": {
-      "ci_high": -0.3,
-      "ci_includes_zero": false,
-      "ci_low": -0.9,
-      "confirmatory": true,
-      "diff": -0.6,
-      "n": 10
-    },
-    "cortex_vs_raw_context:deletion_compliance": {
-      "ci_high": 0.7,
-      "ci_includes_zero": false,
-      "ci_low": 0.1,
-      "confirmatory": true,
-      "diff": 0.4,
-      "n": 10
-    },
-    "cortex_vs_raw_context:evidence_resolution_rate": {
-      "ci_high": 0.0,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
-      "confirmatory": true,
-      "diff": 0.0,
-      "n": 10
-    },
-    "cortex_vs_raw_context:false_certainty_rate": {
-      "ci_high": 0.0,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
-      "confirmatory": true,
-      "diff": 0.0,
-      "n": 10
-    },
-    "cortex_vs_raw_context:lineage_completeness": {
-      "ci_high": 0.0,
-      "ci_includes_zero": true,
-      "ci_low": -0.6,
-      "confirmatory": true,
-      "diff": -0.3,
-      "n": 10
-    },
-    "cortex_vs_raw_context:mrr": {
-      "ci_high": -0.15,
-      "ci_includes_zero": false,
-      "ci_low": -0.75,
-      "confirmatory": true,
-      "diff": -0.45,
-      "n": 10
-    },
-    "cortex_vs_raw_context:ndcg_at_k": {
-      "ci_high": -0.189278925,
-      "ci_includes_zero": false,
-      "ci_low": -0.789278925,
-      "confirmatory": true,
-      "diff": -0.489278925,
-      "n": 10
-    },
-    "cortex_vs_raw_context:precision_at_k": {
-      "ci_high": -0.15,
-      "ci_includes_zero": false,
-      "ci_low": -0.75,
-      "confirmatory": true,
-      "diff": -0.45,
-      "n": 10
-    },
-    "cortex_vs_raw_context:provenance_coverage": {
-      "ci_high": -0.3,
-      "ci_includes_zero": false,
-      "ci_low": -0.9,
-      "confirmatory": true,
-      "diff": -0.6,
-      "n": 10
-    },
-    "cortex_vs_raw_context:recall_at_k": {
-      "ci_high": -0.3,
-      "ci_includes_zero": false,
-      "ci_low": -0.9,
-      "confirmatory": true,
-      "diff": -0.6,
-      "n": 10
-    },
-    "cortex_vs_raw_context:scope_accuracy": {
-      "ci_high": 0.5,
-      "ci_includes_zero": true,
-      "ci_low": -0.6,
-      "confirmatory": true,
-      "diff": 0.0,
-      "n": 10
-    },
-    "cortex_vs_raw_context:set_f1": {
-      "ci_high": 0.366666666,
-      "ci_includes_zero": true,
-      "ci_low": -0.733333334,
-      "confirmatory": true,
-      "diff": -0.20000000099999998,
-      "n": 10
-    },
-    "cortex_vs_raw_context:stale_leak_rate": {
-      "ci_high": -0.1,
-      "ci_includes_zero": false,
-      "ci_low": -0.7,
-      "confirmatory": true,
-      "diff": -0.4,
-      "n": 10
-    },
-    "cortex_vs_raw_context:supersession_accuracy": {
-      "ci_high": 0.7,
-      "ci_includes_zero": false,
-      "ci_low": 0.1,
-      "confirmatory": true,
-      "diff": 0.4,
-      "n": 10
-    },
-    "cortex_vs_raw_context:unsupported_claim_rate": {
-      "ci_high": 0.0,
-      "ci_includes_zero": true,
-      "ci_low": 0.0,
-      "confirmatory": true,
-      "diff": 0.0,
-      "n": 10
+      "family": "evidence",
+      "holm_significant": false,
+      "minimum_detectable_effect": 0.15,
+      "n": 10,
+      "p_value": 1.0,
+      "power_basis": "baseline_arm",
+      "required_n": 48
     }
   },
-  "schema": "cortex_benchmark_summary/v1"
+  "schema": "cortex_benchmark_summary/v1",
+  "stratification": {
+    "filler": {
+      "nofiller": 10
+    },
+    "history_size": {
+      "s": 3,
+      "xs": 7
+    },
+    "hop": {
+      "0": 10
+    },
+    "task_type": {
+      "absence": 2,
+      "aggregation": 1,
+      "cascade": 1,
+      "deletion": 1,
+      "exact_recall": 3,
+      "tracking": 2
+    }
+  }
 }

@@ -7,18 +7,43 @@ import random
 from statistics import NormalDist
 
 
+def _bootstrap_means(differences: list[float], n_resamples: int) -> list[float]:
+    """Mean of each resample, drawn with a fixed seed so runs are reproducible."""
+    rng = random.Random(0)
+    size = len(differences)
+    return [sum(rng.choices(differences, k=size)) / size for _ in range(n_resamples)]
+
+
 def paired_bootstrap_ci(a: list[float], b: list[float], n_resamples: int = 10_000,
                         alpha: float = 0.05) -> tuple[float, float, float]:
     if len(a) != len(b) or not a:
         raise ValueError("paired bootstrap requires equally sized non-empty samples")
     differences = [x - y for x, y in zip(a, b)]
     diff = sum(differences) / len(differences)
-    rng = random.Random(0)
-    samples = [sum(rng.choice(differences) for _ in differences) / len(differences) for _ in range(n_resamples)]
-    samples.sort()
+    samples = sorted(_bootstrap_means(differences, n_resamples))
     low = samples[max(0, math.floor((alpha / 2) * n_resamples))]
     high = samples[min(n_resamples - 1, math.ceil((1 - alpha / 2) * n_resamples) - 1)]
     return diff, low, high
+
+
+def paired_bootstrap_p_value(a: list[float], b: list[float], n_resamples: int = 2_000) -> float:
+    """Two-sided p-value of the paired mean difference under H0: diff = 0.
+
+    Proportion of resampled means under H0 (centered differences) at least as
+    extreme as the observed mean difference. Deterministic (fixed seed) and
+    bounded below by ``1 / n_resamples`` so a difference observed in every
+    resample still reports a finite p-value instead of a misleading exact zero.
+    """
+    if len(a) != len(b) or not a:
+        raise ValueError("paired bootstrap requires equally sized non-empty samples")
+    differences = [x - y for x, y in zip(a, b)]
+    mean_diff = sum(differences) / len(differences)
+    observed = abs(mean_diff)
+    if observed == 0.0:
+        return 1.0
+    centered = [d - mean_diff for d in differences]
+    extremes = sum(1 for mean in _bootstrap_means(centered, n_resamples) if abs(mean) >= observed)
+    return max(1.0 / n_resamples, extremes / n_resamples)
 
 
 def holm_bonferroni(p_values: list[float], alpha: float = 0.05) -> list[bool]:

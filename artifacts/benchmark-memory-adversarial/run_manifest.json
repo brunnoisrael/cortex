@@ -1,10 +1,10 @@
 {
   "cases": null,
   "corpus": "C:\\Users\\Sergio\\Documents\\GitHub\\cortex\\cortex\\benchmarks\\corpora\\adversarial\\superseded_abstention.jsonl",
-  "corpus_hash": "sha256:b30c04e44a7f1aa9dad812b698a6f0df15bb6bab7ff7a956b845d68df77523d1",
+  "corpus_hash": "sha256:53b4b35d5eedd299274149269199fa04bf87725e122ca1a689536d3e2a40002f",
   "cortex_version": "0.1.0",
   "dataset_revisions": {
-    "internal": "engineering-memory-v1"
+    "internal": "engineering-memory-v2"
   },
   "embedding_cache_dir": "outside-repository",
   "embedding_model": "none",
@@ -17,14 +17,14 @@
   },
   "frozen": {
     "case_hashes": {
-      "adv-contradiction-open": "sha256:effb32e3791d952648050b3d15875d73be6350d1117a5da537aaf638f721092d",
-      "adv-dedup-absorbs-update": "sha256:0fdb550f972d3b16f33b1c781a43cf852a55158b660456a1da2c312062f53830",
-      "adv-filler-drowning": "sha256:915824a375247161f4c225f922e443bf82489a34f6c28e40e180c1e2118d49cd",
-      "adv-superseded-reassert": "sha256:de03e83b219016b6b60b04e41ebba5a2af9ad1ca86a187d4a4bcd58c1eab0dd9"
+      "adv-contradiction-open": "sha256:a5fb99f4db80af5a9186b158c53ec2a3b141c1dedcdc89795ac6afffeba3748a",
+      "adv-dedup-absorbs-update": "sha256:91c0508cea8c97297f042412f8d5386e93ee53f07f3220ab9aa2f2121a9aec9d",
+      "adv-filler-drowning": "sha256:b019c00c236964f45ec862b04de5804f803d354831e9202e686b40394944d09d",
+      "adv-superseded-reassert": "sha256:2e94ae0709c8c3738497a3b6c5464241d5ab58ef43f57023c53a3e4a3251401a"
     },
-    "corpus_hash": "sha256:1090eb5f126858511c1fd94b4824edf0565b7015937ded5ea6d51215e7465021",
+    "corpus_hash": "sha256:d90e14d9a4f137a11de95c99bd3ee80be630213f8d5d4afb203018a6b690608a",
     "revisions": {
-      "internal": "engineering-memory-v1"
+      "internal": "engineering-memory-v2"
     },
     "schema": "cortex_memory_benchmark_freeze/v1",
     "splits": {

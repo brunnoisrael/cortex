@@ -2,9 +2,9 @@
   "adapters": {
     "bm25": {
       "cost_per_case": {
-        "ms_compile": 0.1095,
-        "ms_ingest": 0.0115,
-        "ms_query": 0.1095,
+        "ms_compile": 0.1085,
+        "ms_ingest": 0.0103,
+        "ms_query": 0.1085,
         "tokens_compiled": 0.0,
         "tokens_input": 7.75,
         "tokens_retrieved": 20.5
@@ -33,42 +33,42 @@
     },
     "cortex": {
       "cost_per_case": {
-        "ms_compile": 45.3782,
-        "ms_ingest": 17.8875,
-        "ms_query": 130.8547,
-        "tokens_compiled": 84.25,
+        "ms_compile": 61.2888,
+        "ms_ingest": 4.592,
+        "ms_query": 119.2272,
+        "tokens_compiled": 84.75,
         "tokens_input": 11.0,
-        "tokens_retrieved": 18.75
+        "tokens_retrieved": 19.25
       },
       "quality": {
         "abstention_recall": 1.0,
         "answer_support_recall": 1.0,
         "contradiction_exposure_rate": 0.0,
         "current_state_accuracy": 1.0,
-        "deletion_compliance": 0.5,
+        "deletion_compliance": 0.75,
         "evidence_resolution_rate": 1.0,
         "extraction_recall": 1.0,
         "extraction_spurious_rate": 0.375,
         "false_certainty_rate": 0.0,
-        "lineage_completeness": 0.5,
-        "mrr": 0.75,
-        "ndcg_at_k": 0.815464875,
-        "precision_at_k": 0.75,
+        "lineage_completeness": 0.75,
+        "mrr": 0.875,
+        "ndcg_at_k": 0.9077324375,
+        "precision_at_k": 0.875,
         "provenance_coverage": 1.0,
         "recall_at_k": 1.0,
-        "scope_accuracy": 0.5,
-        "set_f1": 0.8333333350000001,
-        "stale_leak_rate": 0.5,
-        "supersession_accuracy": 0.5,
+        "scope_accuracy": 0.75,
+        "set_f1": 0.9166666675,
+        "stale_leak_rate": 0.25,
+        "supersession_accuracy": 0.75,
         "unsupported_claim_rate": 0.0
       },
-      "quality_per_compiled_token": 0.011869
+      "quality_per_compiled_token": 0.011799
     },
     "no_memory": {
       "cost_per_case": {
-        "ms_compile": 0.0203,
+        "ms_compile": 0.0355,
         "ms_ingest": 0.001,
-        "ms_query": 0.0203,
+        "ms_query": 0.0355,
         "tokens_compiled": 0.0,
         "tokens_input": 7.75,
         "tokens_retrieved": 0.0
@@ -97,9 +97,9 @@
     },
     "oracle": {
       "cost_per_case": {
-        "ms_compile": 0.0212,
-        "ms_ingest": 0.001,
-        "ms_query": 0.0212,
+        "ms_compile": 0.0272,
+        "ms_ingest": 0.0008,
+        "ms_query": 0.0272,
         "tokens_compiled": 1.0,
         "tokens_input": 7.75,
         "tokens_retrieved": 1.0
@@ -128,9 +128,9 @@
     },
     "raw_context": {
       "cost_per_case": {
-        "ms_compile": 0.0373,
-        "ms_ingest": 0.0063,
-        "ms_query": 0.0373,
+        "ms_compile": 0.0352,
+        "ms_ingest": 0.006,
+        "ms_query": 0.0352,
         "tokens_compiled": 20.5,
         "tokens_input": 7.75,
         "tokens_retrieved": 20.5
@@ -160,56 +160,56 @@
   },
   "efficiency": {
     "bm25": {
-      "compile_p50_ms": 0.096,
-      "compile_p95_ms": 0.185,
+      "compile_p50_ms": 0.094,
+      "compile_p95_ms": 0.207,
       "ingest_p50_ms": 0.013,
-      "ingest_p95_ms": 0.015,
-      "query_p50_ms": 0.096,
-      "query_p95_ms": 0.185,
+      "ingest_p95_ms": 0.014,
+      "query_p50_ms": 0.094,
+      "query_p95_ms": 0.207,
       "tokens_compiled_mean": 0.0,
       "tokens_input_mean": 7.75,
       "tokens_retrieved_mean": 20.5
     },
     "cortex": {
-      "compile_p50_ms": 3.724,
-      "compile_p95_ms": 172.915,
-      "ingest_p50_ms": 23.744,
-      "ingest_p95_ms": 24.722,
-      "query_p50_ms": 121.716,
-      "query_p95_ms": 249.414,
-      "tokens_compiled_mean": 84.25,
+      "compile_p50_ms": 3.92,
+      "compile_p95_ms": 236.318,
+      "ingest_p50_ms": 4.905,
+      "ingest_p95_ms": 5.431,
+      "query_p50_ms": 78.961,
+      "query_p95_ms": 310.046,
+      "tokens_compiled_mean": 84.75,
       "tokens_input_mean": 11.0,
-      "tokens_retrieved_mean": 18.75
+      "tokens_retrieved_mean": 19.25
     },
     "no_memory": {
-      "compile_p50_ms": 0.019,
-      "compile_p95_ms": 0.026,
+      "compile_p50_ms": 0.053,
+      "compile_p95_ms": 0.055,
       "ingest_p50_ms": 0.001,
-      "ingest_p95_ms": 0.001,
-      "query_p50_ms": 0.019,
-      "query_p95_ms": 0.026,
+      "ingest_p95_ms": 0.002,
+      "query_p50_ms": 0.053,
+      "query_p95_ms": 0.055,
       "tokens_compiled_mean": 0.0,
       "tokens_input_mean": 7.75,
       "tokens_retrieved_mean": 0.0
     },
     "oracle": {
-      "compile_p50_ms": 0.019,
-      "compile_p95_ms": 0.031,
+      "compile_p50_ms": 0.034,
+      "compile_p95_ms": 0.042,
       "ingest_p50_ms": 0.001,
       "ingest_p95_ms": 0.001,
-      "query_p50_ms": 0.019,
-      "query_p95_ms": 0.031,
+      "query_p50_ms": 0.034,
+      "query_p95_ms": 0.042,
       "tokens_compiled_mean": 1.0,
       "tokens_input_mean": 7.75,
       "tokens_retrieved_mean": 1.0
     },
     "raw_context": {
-      "compile_p50_ms": 0.039,
-      "compile_p95_ms": 0.044,
+      "compile_p50_ms": 0.04,
+      "compile_p95_ms": 0.043,
       "ingest_p50_ms": 0.006,
       "ingest_p95_ms": 0.009,
-      "query_p50_ms": 0.039,
-      "query_p95_ms": 0.044,
+      "query_p50_ms": 0.04,
+      "query_p95_ms": 0.043,
       "tokens_compiled_mean": 20.5,
       "tokens_input_mean": 7.75,
       "tokens_retrieved_mean": 20.5
@@ -217,10 +217,10 @@
   },
   "gates": {
     "G4_operational_cost": {
-      "compile_p95_ms": 172.915,
+      "compile_p95_ms": 236.318,
       "compile_p95_within_reference": true,
-      "compiled_tokens_mean": 84.25,
-      "query_p95_ms": 249.414,
+      "compiled_tokens_mean": 84.75,
+      "query_p95_ms": 310.046,
       "query_p95_within_reference": false,
       "token_budget_respected": true
     }

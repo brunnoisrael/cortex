@@ -89,20 +89,39 @@ def test_cascade_lineage_reaches_the_dependent_knowledge():
     assert set(instance.gold.gold_evidence) & set(result.trace["hop2_ids"])
 
 
-def test_known_gap_dedup_absorbs_a_state_update():
-    """Documented gap: near-identical phrasing is merged by dedup.
+def test_dedup_no_longer_absorbs_a_state_update():
+    """Regression test for the gap documented in docs/adr/2026-09-13-memory-
+    benchmark-waves.md (case ``adv-dedup-absorbs-update``).
 
-    The merge collapses the two observations into one entity, so the update is
-    absorbed instead of superseded.  The benchmark must surface this, never
-    hide it behind a mean.
+    Root cause (traced, see cortex/distillation/extractors.py
+    ``short_identifier_tokens``): ``statement_tokens`` drops <=2-char tokens,
+    so "s3-artifacts" and "s3-artifacts-v2" tokenized to the same set and
+    ``_find_duplicate`` merged them at similarity 1.0 — absorbing the state
+    update into one entity instead of letting ``_apply_temporal_policy``
+    (which runs after ``distill_all`` and already has its own
+    ``_same_subject`` check at ``SUPERSESSION_SIMILARITY = 0.5``) supersede
+    the old one.
+
+    NOTE: these expected values were derived by tracing the code path, not by
+    running this test — pydantic could not be installed in the environment
+    that authored this patch (network egress disabled), so
+    ``cortex.knowledge.models`` could not be imported. Run this test before
+    merging. If it fails, the actual entity count / metric values printed by
+    the failure tell you exactly where the traced prediction and the real
+    pipeline diverge — likely either scope propagation into ``Entity.scope``
+    or an interaction with another ablation flag.
     """
     instance, result = _run("adv-dedup-absorbs-update")
     metrics = case_metrics(result, instance)
-    assert result.trace["extraction"]["entities"] == 1
-    # The invalidated observation survives inside the merged entity, so the
-    # deletion gate fails visibly instead of being averaged away.
-    assert metrics["deletion_compliance"] == 0.0
-    assert metrics["stale_leak_rate"] == 1.0
+    assert result.trace["extraction"]["entities"] == 2, (
+        "dedup should no longer merge the two near-identical statements into one entity"
+    )
+    assert metrics["deletion_compliance"] == 1.0, (
+        "the superseded s3-artifacts entity must now be excluded from the gold-current set"
+    )
+    assert metrics["stale_leak_rate"] == 0.0, (
+        "the old bucket name must no longer leak into the answer once supersession runs"
+    )
 
 
 @pytest.mark.parametrize("flag", CortexAdapter.ABLATION_FLAGS)

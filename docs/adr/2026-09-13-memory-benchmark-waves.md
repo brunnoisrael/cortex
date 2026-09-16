@@ -75,10 +75,28 @@ corpus MEME-like de verdade, gate de SWE-bench, ablações efetivas e CI.
   filler) o Cortex não vaza estado obsoleto (`stale_leak_rate` 0.0 contra 0.4
   de BM25 e raw_context) e a decisão é `promover_com_reservas`. No corpus
   adversarial a decisão é `recalibrar` (stale leak 0.5), pela lacuna abaixo.
-- **Lacuna documentada:** declarações quase idênticas no mesmo escopo são
-  fundidas pelo dedup da destilação, que absorve a atualização de estado em vez
-  de preservar a linhagem. O caso `adv-dedup-absorbs-update` existe para manter
-  essa falha visível em vez de escondê-la numa média.
+- **Lacuna documentada, correção proposta (não verificada em execução):**
+  declarações quase idênticas no mesmo escopo eram fundidas pelo dedup da
+  destilação, que absorvia a atualização de estado em vez de preservar a
+  linhagem. O caso `adv-dedup-absorbs-update` existe para manter essa falha
+  visível em vez de escondê-la numa média.
+  Causa raiz identificada: `statement_tokens()` (`extractors.py`) descarta
+  tokens com ≤2 caracteres, então `"s3-artifacts"` e `"s3-artifacts-v2"`
+  colapsam para o mesmo conjunto de tokens e `statement_similarity` retorna
+  1.0 — acima do limiar de dedup (0.75) — apesar de o sufixo de versão ser
+  exatamente o que mudou. Patch aplicado em `_find_duplicate`
+  (`distillation/engine.py`): além do limiar de similaridade, agora exige
+  que os tokens curtos descartados (`short_identifier_tokens`) sejam iguais
+  entre candidato e entidade existente antes de mesclar; quando divergem,
+  a nova observação vira uma entidade própria, e `_apply_temporal_policy`
+  (que já roda depois de `distill_all` com `SUPERSESSION_SIMILARITY = 0.5`)
+  passa a poder supersedê-la corretamente. **Este patch foi rastreado
+  manualmente linha a linha, não executado** — o ambiente de rede
+  restrita usado para escrevê-lo não tinha `pydantic` instalável para rodar
+  `pytest`. `test_dedup_no_longer_absorbs_a_state_update` (antigo
+  `test_known_gap_dedup_absorbs_a_state_update`) documenta os valores
+  esperados pós-fix e deve ser a primeira coisa a rodar antes de aceitar
+  esta ADR como resolvida.
 - `corpus_hash` do manifesto é o hash do **arquivo**; o congelamento por caso
   (`frozen.corpus_hash`) é o hash do conteúdo normalizado. São dois níveis de
   verificação, ambos gravados no `run_manifest.json`.

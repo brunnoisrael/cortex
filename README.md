@@ -8,16 +8,16 @@
 
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Tests](https://img.shields.io/badge/tests-142%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-235%20passing-brightgreen)
 ![Package](https://img.shields.io/badge/package-0.1.0-orange)
 ![Local first](https://img.shields.io/badge/default-local--first-lightgrey)
 
 </div>
 
-> **Estado real:** o ciclo principal está implementado e coberto por testes, mas o
-> Cortex ainda é um MVP técnico. A extração heurística é limitada, a validação
-> comparativa é incompleta e o projeto não deve ser tratado como produto de produção
-> ou como uma nova categoria de memória para agentes.
+> **Estado real:** o ciclo completo de memória e uma suíte rigorosa de benchmark
+> comparativo offline (250 casos gerados, 6 task types, 6 adapters e ablações)
+> estão implementados e cobertos por 235 testes automatizados. O Cortex opera de
+> forma local-first e determinística, com governança explícita e auditoria estatística.
 
 ## O problema
 
@@ -75,11 +75,11 @@ O código atual oferece:
   nDCG, latência e tokens injetados.
 
 O fluxo completo está distribuído principalmente entre
-[capture](C:/Users/Sergio/Documents/GitHub/cortex/cortex/capture),
-[distillation](C:/Users/Sergio/Documents/GitHub/cortex/cortex/distillation),
-[knowledge](C:/Users/Sergio/Documents/GitHub/cortex/cortex/knowledge),
-[storage](C:/Users/Sergio/Documents/GitHub/cortex/cortex/storage) e
-[compiler](C:/Users/Sergio/Documents/GitHub/cortex/cortex/compiler).
+[capture](cortex/capture),
+[distillation](cortex/distillation),
+[knowledge](cortex/knowledge),
+[storage](cortex/storage) e
+[compiler](cortex/compiler).
 
 ## O que ele não é
 
@@ -213,7 +213,10 @@ cortex context --task "alterar o acesso ao banco" --files src/db
 cortex context --profile architecture_review --trace --task "revisar persistência"
 cortex retrieval-debug "persistência" --json
 cortex verify-diff --base HEAD~1 --json
-cortex benchmark --corpus cortex/benchmarks/corpus/engineering_v1.jsonl
+python -m cortex.benchmarks.runner \
+  --manifest cortex/benchmarks/corpora/manifests/memory_v1.json \
+  --adapter cortex bm25 raw_context no_memory oracle \
+  --report-out artifacts/benchmark-memory-v1
 ```
 
 Por padrão, o store fica em `.cortex/cortex.db`. A configuração padrão é local-only:
@@ -280,6 +283,7 @@ cortex/
 ├── storage/        SQLite, WAL, FTS5, relações e migrações
 ├── git/            branch e commits usados como contexto/evidência
 ├── privacy/        redação de credenciais e dados sensíveis
+├── benchmarks/     runner determinístico, corpora normalizados, baselines, estatística pareada e relatórios
 ├── verification.py verificação contra AST/tree-sitter
 ├── commons.py      export/import opt-in de padrões
 └── visualizer.py   grafo HTML standalone
@@ -288,6 +292,60 @@ cortex/
 O banco é SQLite local. A instalação mínima não requer servidor, vector database, modelo
 ou serviço externo. As integrações enriquecidas são opt-in e não substituem o caminho
 local de fallback.
+
+## Benchmark de memória de engenharia
+
+O projeto conta com uma infraestrutura rigorosa e determinística de avaliação comparativa offline, documentada em [docs/benchmark.md](docs/benchmark.md).
+
+### Características da Avaliação
+- **Offline e Determinística:** Garante `network_enabled=false`. Duas execuções sobre o mesmo manifesto produzem arquivos `metrics.jsonl` byte-a-byte idênticos (Gate G0). Latência e tokens residem em artefato separado.
+- **Corpora Normalizados:**
+  - `engineering_memory_v1.nofiller.jsonl`: Corpus principal com **250 casos sintéticos e autorais** cobrindo 6 task types (`exact_recall`, `aggregation`, `tracking`, `deletion`, `cascade`, `absence`).
+  - `engineering_memory_v1.filler32k.jsonl`: Variante com carga realista de ruído de engenharia (~32k tokens por caso).
+  - `engineering_memory_v1.regression.jsonl`: Subconjunto de regressão — os casos que o Cortex acertou e as baselines erraram, usados como gate de não-regressão.
+  - `superseded_abstention.jsonl`: Corpus adversarial para sondas de fronteira (supersessão, abstenção e resolução temporal).
+- **Baselines e Ablações:** Comparação pareada contra `bm25`, `bm25_temporal`, `raw_context`, `no_memory` e `oracle`, além de ablações flag-a-flag (`disable_supersession`, `disable_contradiction_penalty`, `disable_authority`, `disable_dense`, `disable_graph_density`, `disable_evidence_ledger`).
+- **Estatística Pareada:** Intervalos de confiança por bootstrap pareado, p-valor bicaudal sob $H_0$ e controle de taxa de falso positivo por família com **Holm-Bonferroni**.
+
+### Comandos de Execução
+
+```bash
+# Execução confirmatória principal (250 casos, 6 adapters)
+python -m cortex.benchmarks.runner \
+  --manifest cortex/benchmarks/corpora/manifests/memory_v1.json \
+  --adapter cortex bm25 bm25_temporal raw_context no_memory oracle \
+  --report-out artifacts/benchmark-memory-v1
+
+# Bateria com ablações do Cortex (uma por bandeira)
+python -m cortex.benchmarks.runner \
+  --manifest cortex/benchmarks/corpora/manifests/memory_v1.json \
+  --adapter cortex bm25 raw_context --ablation \
+  --report-out artifacts/benchmark-memory-v1-ablations
+
+# Corpus adversarial (diagnóstico)
+python -m cortex.benchmarks.runner \
+  --manifest cortex/benchmarks/corpora/manifests/memory_v1_adversarial.json \
+  --adapter cortex bm25 raw_context no_memory oracle \
+  --report-out artifacts/benchmark-memory-adversarial
+
+# Gate de não-regressão (casos que o Cortex deve dominar)
+python -m cortex.benchmarks.runner \
+  --manifest cortex/benchmarks/corpora/manifests/memory_v1_regression.json \
+  --adapter cortex oracle \
+  --report-out artifacts/benchmark-memory-v1-regression
+
+# Regenerar corpora e manifestos com validação de invariantes
+python -m cortex.benchmarks.corpora.build_internal
+```
+
+### Resultados Empíricos Consolidados
+
+| Execução | Casos | Decisão (§17) | `stale_leak_rate` (Cortex vs BM25) | G0 / Erros |
+|---|---|---|---|---|
+| `benchmark-memory-v1` (nofiller) | 250 | `promover_com_reservas` | **0.0%** vs **49.6%** | Clean / 0 erros / 0 leakage |
+| `benchmark-memory-v1-ablations` | 250 | `promover_com_reservas` | **0.0%** vs **49.6%** | Clean / 0 erros / 0 leakage |
+| `benchmark-memory-v1-filler32k` | 10 | `reduzir_claim` (amostra de ruído) | **0.0%** vs **40.0%** | Clean / 0 erros / 0 leakage |
+| `benchmark-memory-adversarial` | 4 | `recalibrar` | **25.0%** vs **75.0%** | Clean / 0 erros / 0 leakage |
 
 ## Limitações conhecidas
 
@@ -336,43 +394,35 @@ reais.
 ## Testes e qualidade
 
 ```bash
-python -m pytest tests/ -q
-python -m pytest tests/ -q --cov=cortex --cov-report=term-missing
-ruff check .
-mypy
-pip-audit . --skip-editable
+# Executar a suíte completa (235 testes: geral + benchmarks)
+pytest -q
+
+# Executar apenas a suíte de benchmarks (79 testes)
+pytest tests/benchmarks -v
+
+# Linter e formatação
+ruff check cortex tests
 ```
 
-No estado atual, a suíte local passa com 142 testes. O CI executa testes, Ruff, mypy,
-coverage e pip-audit em Windows e Ubuntu, em múltiplas versões de Python. As integrações
-enhanced possuem contratos próprios, mas o dogfooding contra repositórios externos ainda não
-é uma etapa obrigatória do CI.
+A suíte completa conta com **235 testes automatizados** passando com 100% de sucesso (79 testes dedicados a contratos de benchmarks, determinismo de runner, integridade de corpora e ablações, mais 156 testes do núcleo, MCP, store e governança). O CI executa testes, Ruff, mypy, coverage e pip-audit em múltiplos ambientes.
 
 ## Roadmap atual
 
 ### Implementado
 
-- ciclo captura → destilação → store → recall → contexto;
-- artefatos tipados, proveniência, confiança, autoridade e frescor;
-- Correnda proposta e governança por confirmação/rejeição;
-- deduplicação e matriz de contradições;
-- verificação AST/tree-sitter opcional;
-- busca híbrida com fallback local;
-- limites de contexto e de listagem MCP;
-- hooks Claude Code/Cursor com falha best effort;
-- grafo de proveniência, Commons e federação read-only;
-- integrações opcionais maduras com fallbacks.
+- **Benchmark de Engenharia:** runner determinístico (G0–G4), 250 casos normalizados em 6 eixos, baselines (BM25, BM25 temporal, raw-context, no-memory, oracle), 6 ablações, bootstrap pareado sob $H_0$, Holm-Bonferroni e exportação de Pareto e relatórios em Markdown;
+- **Ciclo de Memória:** captura → destilação heurística → store SQLite → ranking e compilação de contexto;
+- **Deduplicação Refinada:** mitigação de absorção indevida de atualizações de estado em identificadores curtos com `short_identifier_tokens()`;
+- **Governança & Ledger:** artefatos tipados, proveniência detalhada, Evidence Ledger independente com fingerprints e status de verificação, filas de revisão e recibos idempotentes de transição;
+- **Verificação Estrutural:** validação de símbolos e referências via AST Python e tree-sitter opcional;
+- **Busca e Ranking:** SQLite FTS5, ranking temporal/autoridade, limites de contexto e busca híbrida opcional;
+- **Integrações de Agentes:** hooks para Claude Code e Cursor, servidor MCP stdio completo com 19 ferramentas expostas.
 
 ### Próximas prioridades
 
-O plano detalhado está em [PLANO_MELHORIA_DIFERENCIACAO.md](C:/Users/Sergio/Documents/GitHub/cortex/PLANO_MELHORIA_DIFERENCIACAO.md). Em resumo:
-
-1. medir Cortex contra soluções próximas, usando o mesmo corpus e métricas;
-2. fortalecer evidência verificável por commit, teste, símbolo e revisão;
-3. tornar contradição, supersessão e stale state operacionalmente confiáveis;
-4. provar se `authority != confidence` melhora decisões recuperadas;
-5. integrar o ciclo de conhecimento a branch, diff, review e mudança arquitetural;
-6. só depois considerar memória de equipe, permissões e sincronização.
+1. Expansão de corpora externos adicionais (anotação cega com juiz em SWE-bench e LongMemEval quando houver infraestrutura de LLM ativa);
+2. Fortalecer evidência verificável por commit, teste, símbolo e revisão contínua;
+3. Sincronização multiusuário, resolução distribuída de conflitos e governança de equipe.
 
 ## Licença
 

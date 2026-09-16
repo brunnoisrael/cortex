@@ -282,6 +282,10 @@ _SIM_STOP = {
     "the", "and", "for", "with", "que", "por", "para", "com", "uma", "não",
     "nao", "usar", "usamos", "vamos", "decisão", "decisao", "em", "vez",
     "porque", "pois", "de", "da", "do", "no", "na",
+    # 1-2 char stop words (PT + EN) to keep short_identifier_tokens clean:
+    "a", "o", "as", "os", "um", "se", "ao", "e", "ou",
+    "an", "at", "by", "in", "is", "it", "of", "on", "or", "to", "up",
+    "be", "do", "if", "so", "we", "my", "us",
 }
 
 
@@ -295,6 +299,27 @@ def statement_similarity(a: str, b: str) -> float:
     if not sa or not sb:
         return 0.0
     return len(sa & sb) / min(len(sa), len(sb))
+
+
+def short_identifier_tokens(text: str) -> frozenset[str]:
+    """Tokens ``statement_tokens`` drops for being <=2 chars long (``v1``,
+    ``v2``, ``s3``, port numbers, ...).
+
+    Root cause of the documented dedup gap (docs/adr/2026-09-13-memory-
+    benchmark-waves.md, case ``adv-dedup-absorbs-update``): ``s3-artifacts``
+    and ``s3-artifacts-v2`` tokenize to the *same* set once the 2-char ``v2``
+    suffix is filtered out, so ``statement_similarity`` reports 1.0 and a
+    genuine state update looks like a repeated observation. This helper
+    recovers exactly the short tokens the main tokenizer discards, so a
+    caller that needs to tell "same value repeated" from "value changed to
+    a short/versioned identifier" can check them separately — without
+    changing ``statement_tokens`` itself, since that function's threshold is
+    also relied on by contradiction detection, VARIANT_OF/DUPLICATES edges,
+    and the corpus's supersession-window invariants, none of which this
+    fix should perturb.
+    """
+    tokens = re.split(r"[^a-z0-9á-úà-ùâ-ûã-õç]+", text.lower())
+    return frozenset(t for t in tokens if t and t not in _SIM_STOP and len(t) <= 2)
 
 
 @functools.lru_cache(maxsize=1)

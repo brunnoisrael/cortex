@@ -105,3 +105,34 @@ def test_metrics_lines_are_sorted_and_never_report_a_single_mean(tmp_path):
     report = (out / "report.md").read_text(encoding="utf-8")
     assert "por task type" in report
     assert raw_case  # helper still used by the suite; keeps imports meaningful
+
+
+def test_stratification_counts_unique_cases_not_metric_rows(tmp_path):
+    """plan §9.1: the sample must be reported per hop/history size/filler, not
+    only as a flat mean. A case with several metric rows must still count
+    once per axis bucket."""
+    rows = [
+        {**_row("c1", "cortex", "recall_at_k", 1.0, "tracking", "eval"), "hop": 1, "history_size": 4, "filler": "nofiller"},
+        {**_row("c1", "cortex", "stale_leak_rate", 0.0, "tracking", "eval"), "hop": 1, "history_size": 4, "filler": "nofiller"},
+        {**_row("c2", "cortex", "recall_at_k", 1.0, "cascade", "regression"), "hop": 2, "history_size": 60, "filler": "filler32k"},
+    ]
+    summary = json.loads((_write(tmp_path, rows) / "summary.json").read_text(encoding="utf-8"))
+    strat = summary["stratification"]
+    assert strat["task_type"] == {"tracking": 1, "cascade": 1}
+    assert strat["hop"] == {"1": 1, "2": 1}
+    assert strat["history_size"] == {"s": 1, "l": 1}
+    assert strat["filler"] == {"nofiller": 1, "filler32k": 1}
+    report = (tmp_path / "report" / "report.md").read_text(encoding="utf-8")
+    assert "Estratificação da amostra" in report
+
+
+def test_stratification_defaults_when_axes_are_absent(tmp_path):
+    """Rows from a corpus that doesn't populate hop/history_size/filler (e.g.
+    an external loader) must not crash the report; they fall into the
+    documented defaults instead."""
+    rows = [_row("c1", "cortex", "recall_at_k", 1.0)]
+    summary = json.loads((_write(tmp_path, rows) / "summary.json").read_text(encoding="utf-8"))
+    strat = summary["stratification"]
+    assert strat["hop"] == {"0": 1}
+    assert strat["filler"] == {"nofiller": 1}
+    assert strat["history_size"] == {"unknown": 1}

@@ -21,6 +21,7 @@ from cortex.distillation.extractors import (
     extract_fixes,
     extract_intentions,
     extract_negative_knowledge,
+    short_identifier_tokens,
     statement_similarity,
 )
 from cortex.knowledge.models import (
@@ -245,8 +246,21 @@ class DistillationEngine:
                 similarity = statement_similarity(cand.statement, ent.statement)
                 self._similarity_cache[cache_key] = similarity
             
-            if similarity >= threshold:
-                return ent
+            if similarity < threshold:
+                continue
+            # Known gap (docs/adr/2026-09-13-memory-benchmark-waves.md,
+            # adv-dedup-absorbs-update): statement_similarity's tokenizer
+            # drops <=2-char tokens, so a value that only changes in a short
+            # or versioned identifier ("s3-artifacts" -> "s3-artifacts-v2")
+            # scores 1.0 and would be silently absorbed into the old entity
+            # instead of triggering a state update. When the short tokens
+            # the main similarity ignored actually differ, this is a new
+            # observation, not a repeated one — let it become its own
+            # candidate so the contradiction/supersession pass downstream
+            # can see both and record the transition instead of losing it.
+            if short_identifier_tokens(cand.statement) != short_identifier_tokens(ent.statement):
+                continue
+            return ent
         return None
 
     def _strengthen(self, existing: Entity, cand) -> None:

@@ -2,42 +2,9 @@
   "adapters": {
     "bm25": {
       "cost_per_case": {
-        "ms_compile": 0.0771,
-        "ms_ingest": 0.009,
-        "ms_query": 0.0771,
-        "tokens_compiled": 0.0,
-        "tokens_input": 2.7,
-        "tokens_retrieved": 6.4
-      },
-      "quality": {
-        "abstention_recall": 0.7,
-        "answer_support_recall": 0.7,
-        "cascade_correctness_hop1": 0.0,
-        "cascade_correctness_hop2": 0.0,
-        "contradiction_exposure_rate": 0.0,
-        "current_state_accuracy": 1.0,
-        "deletion_compliance": 0.6,
-        "evidence_resolution_rate": 1.0,
-        "false_certainty_rate": 0.0,
-        "lineage_completeness": 1.0,
-        "mrr": 0.6,
-        "ndcg_at_k": 0.62618595,
-        "precision_at_k": 0.55,
-        "provenance_coverage": 1.0,
-        "recall_at_k": 0.7,
-        "scope_accuracy": 0.4,
-        "set_f1": 0.600000001,
-        "stale_leak_rate": 0.4,
-        "supersession_accuracy": 0.6,
-        "unsupported_claim_rate": 0.0
-      },
-      "quality_per_compiled_token": 700000000.0
-    },
-    "bm25_temporal": {
-      "cost_per_case": {
-        "ms_compile": 0.053,
-        "ms_ingest": 0.0051,
-        "ms_query": 0.053,
+        "ms_compile": 0.0822,
+        "ms_ingest": 0.0097,
+        "ms_query": 0.0822,
         "tokens_compiled": 0.0,
         "tokens_input": 2.7,
         "tokens_retrieved": 6.4
@@ -68,9 +35,9 @@
     },
     "cortex": {
       "cost_per_case": {
-        "ms_compile": 18.7457,
-        "ms_ingest": 6.9448,
-        "ms_query": 45.0512,
+        "ms_compile": 19.4882,
+        "ms_ingest": 3.8638,
+        "ms_query": 34.7709,
         "tokens_compiled": 45.5,
         "tokens_input": 2.8,
         "tokens_retrieved": 0.7
@@ -101,44 +68,11 @@
       },
       "quality_per_compiled_token": 0.002198
     },
-    "no_memory": {
-      "cost_per_case": {
-        "ms_compile": 0.017,
-        "ms_ingest": 0.0009,
-        "ms_query": 0.017,
-        "tokens_compiled": 0.0,
-        "tokens_input": 2.7,
-        "tokens_retrieved": 0.0
-      },
-      "quality": {
-        "abstention_recall": 0.3,
-        "answer_support_recall": 0.0,
-        "cascade_correctness_hop1": 0.0,
-        "cascade_correctness_hop2": 0.0,
-        "contradiction_exposure_rate": 0.0,
-        "current_state_accuracy": 0.3,
-        "deletion_compliance": 1.0,
-        "evidence_resolution_rate": 1.0,
-        "false_certainty_rate": 0.0,
-        "lineage_completeness": 0.7,
-        "mrr": 0.0,
-        "ndcg_at_k": 0.0,
-        "precision_at_k": 0.0,
-        "provenance_coverage": 0.3,
-        "recall_at_k": 0.0,
-        "scope_accuracy": 0.3,
-        "set_f1": 0.3,
-        "stale_leak_rate": 0.0,
-        "supersession_accuracy": 1.0,
-        "unsupported_claim_rate": 0.0
-      },
-      "quality_per_compiled_token": 0.0
-    },
     "oracle": {
       "cost_per_case": {
-        "ms_compile": 0.0198,
-        "ms_ingest": 0.0006,
-        "ms_query": 0.0198,
+        "ms_compile": 0.03,
+        "ms_ingest": 0.0008,
+        "ms_query": 0.03,
         "tokens_compiled": 0.7,
         "tokens_input": 2.7,
         "tokens_retrieved": 0.7
@@ -166,115 +100,49 @@
         "unsupported_claim_rate": 0.0
       },
       "quality_per_compiled_token": 1.0
-    },
-    "raw_context": {
-      "cost_per_case": {
-        "ms_compile": 0.0253,
-        "ms_ingest": 0.0044,
-        "ms_query": 0.0253,
-        "tokens_compiled": 6.4,
-        "tokens_input": 2.7,
-        "tokens_retrieved": 6.4
-      },
-      "quality": {
-        "abstention_recall": 0.7,
-        "answer_support_recall": 0.7,
-        "cascade_correctness_hop1": 0.0,
-        "cascade_correctness_hop2": 0.0,
-        "contradiction_exposure_rate": 0.0,
-        "current_state_accuracy": 1.0,
-        "deletion_compliance": 0.6,
-        "evidence_resolution_rate": 1.0,
-        "false_certainty_rate": 0.0,
-        "lineage_completeness": 1.0,
-        "mrr": 0.55,
-        "ndcg_at_k": 0.589278925,
-        "precision_at_k": 0.55,
-        "provenance_coverage": 1.0,
-        "recall_at_k": 0.7,
-        "scope_accuracy": 0.4,
-        "set_f1": 0.600000001,
-        "stale_leak_rate": 0.4,
-        "supersession_accuracy": 0.6,
-        "unsupported_claim_rate": 0.0
-      },
-      "quality_per_compiled_token": 0.109375
     }
   },
   "efficiency": {
     "bm25": {
-      "compile_p50_ms": 0.059,
-      "compile_p95_ms": 0.212,
-      "ingest_p50_ms": 0.008,
-      "ingest_p95_ms": 0.015,
-      "query_p50_ms": 0.059,
-      "query_p95_ms": 0.212,
-      "tokens_compiled_mean": 0.0,
-      "tokens_input_mean": 2.7,
-      "tokens_retrieved_mean": 6.4
-    },
-    "bm25_temporal": {
-      "compile_p50_ms": 0.047,
-      "compile_p95_ms": 0.082,
-      "ingest_p50_ms": 0.004,
-      "ingest_p95_ms": 0.009,
-      "query_p50_ms": 0.047,
-      "query_p95_ms": 0.082,
+      "compile_p50_ms": 0.074,
+      "compile_p95_ms": 0.179,
+      "ingest_p50_ms": 0.01,
+      "ingest_p95_ms": 0.014,
+      "query_p50_ms": 0.074,
+      "query_p95_ms": 0.179,
       "tokens_compiled_mean": 0.0,
       "tokens_input_mean": 2.7,
       "tokens_retrieved_mean": 6.4
     },
     "cortex": {
-      "compile_p50_ms": 0.405,
-      "compile_p95_ms": 182.225,
-      "ingest_p50_ms": 4.437,
-      "ingest_p95_ms": 19.199,
-      "query_p50_ms": 30.166,
-      "query_p95_ms": 199.201,
+      "compile_p50_ms": 0.438,
+      "compile_p95_ms": 190.043,
+      "ingest_p50_ms": 3.226,
+      "ingest_p95_ms": 5.756,
+      "query_p50_ms": 14.562,
+      "query_p95_ms": 205.079,
       "tokens_compiled_mean": 45.5,
       "tokens_input_mean": 2.8,
       "tokens_retrieved_mean": 0.7
     },
-    "no_memory": {
-      "compile_p50_ms": 0.015,
-      "compile_p95_ms": 0.024,
-      "ingest_p50_ms": 0.001,
-      "ingest_p95_ms": 0.001,
-      "query_p50_ms": 0.015,
-      "query_p95_ms": 0.024,
-      "tokens_compiled_mean": 0.0,
-      "tokens_input_mean": 2.7,
-      "tokens_retrieved_mean": 0.0
-    },
     "oracle": {
-      "compile_p50_ms": 0.016,
-      "compile_p95_ms": 0.027,
+      "compile_p50_ms": 0.028,
+      "compile_p95_ms": 0.041,
       "ingest_p50_ms": 0.001,
       "ingest_p95_ms": 0.001,
-      "query_p50_ms": 0.016,
-      "query_p95_ms": 0.027,
+      "query_p50_ms": 0.028,
+      "query_p95_ms": 0.041,
       "tokens_compiled_mean": 0.7,
       "tokens_input_mean": 2.7,
       "tokens_retrieved_mean": 0.7
-    },
-    "raw_context": {
-      "compile_p50_ms": 0.022,
-      "compile_p95_ms": 0.046,
-      "ingest_p50_ms": 0.004,
-      "ingest_p95_ms": 0.008,
-      "query_p50_ms": 0.022,
-      "query_p95_ms": 0.046,
-      "tokens_compiled_mean": 6.4,
-      "tokens_input_mean": 2.7,
-      "tokens_retrieved_mean": 6.4
     }
   },
   "gates": {
     "G4_operational_cost": {
-      "compile_p95_ms": 182.225,
+      "compile_p95_ms": 190.043,
       "compile_p95_within_reference": true,
       "compiled_tokens_mean": 45.5,
-      "query_p95_ms": 199.201,
+      "query_p95_ms": 205.079,
       "query_p95_within_reference": false,
       "token_budget_respected": true
     }

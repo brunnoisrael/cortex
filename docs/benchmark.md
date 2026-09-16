@@ -94,10 +94,11 @@ pinam). Mudar um endpoint sem ADR derruba a execução.
 
 | Execução | Decisão | `stale_leak_rate` cortex / bm25 |
 |---|---|---|
-| `benchmark-memory-v1` (nofiller) | `promover_com_reservas` | 0.0 / 0.4 |
-| `benchmark-memory-v1-filler32k` | `promover_com_reservas` | 0.0 / 0.4 |
-| `benchmark-memory-adversarial` | `recalibrar` | 0.5 / 0.75 |
+| `benchmark-memory-v1` (nofiller, 250 casos) | `promover_com_reservas` | 0.0 / 0.50 |
+| `benchmark-memory-v1-filler32k` (10 casos) | `reduzir_claim` | 0.0 / 0.40 |
+| `benchmark-memory-adversarial` (4 casos) | `recalibrar` | 0.25 / 0.75 |
 
-A lacuna que motiva `recalibrar` no corpus adversarial está no ADR de
-2026-09-13: o dedup da destilação absorve atualizações de estado quando as
-declarações são quase idênticas.
+A lacuna do ADR de 2026-09-13 (dedup absorve atualização de estado com identificadores
+curtos como v1/v2) foi sanada com `short_identifier_tokens()`, reduzindo o
+`stale_leak_rate` no corpus adversarial de 0.50 para 0.25 (o caso remanescente
+trata de abstenção em supersessão sem evidência direta).

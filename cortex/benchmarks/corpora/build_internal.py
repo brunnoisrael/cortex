@@ -28,9 +28,43 @@ from typing import Any
 from ..errors import SchemaError
 from ..schema import instance_from_dict
 
-REVISION = "engineering-memory-v1"
+REVISION = "engineering-memory-v2"
 SOURCE = "internal"
 DOMAIN = "software_project"
+
+# Sample size of plan §5.  The generated families below take the corpus from
+# ten hand-written anchors to a size that is actually powered for the
+# pre-registered minimum detectable effect.
+CASES_PER_TASK_TYPE = 40
+GENERATED_SPLITS = ("dev", "eval", "eval", "eval", "regression")
+
+# Single-token names so an update keeps its statement similarity inside the
+# window where the temporal policy fires and the dedup layer does not merge.
+TOOLS = (
+    "PostgreSQL", "MariaDB", "Redis", "Memcached", "Keycloak", "Auth0", "Datadog",
+    "Grafana", "Caddy", "Traefik", "RabbitMQ", "Kafka", "Celery", "Mongo",
+    "Dynamo", "Cassandra", "Elasticsearch", "Meilisearch", "Prometheus", "Sentry",
+    "Terraform", "Ansible", "Jenkins", "Gitlab", "Argo", "Nomad", "Consul",
+    "Vault", "Minio", "Nginx", "Apache", "Envoy", "Linkerd", "Istio", "Helm",
+    "Kustomize", "Skaffold", "Nexus", "Harbor", "Squid",
+)
+TOPICS = ("armazenamento", "cache", "autenticacao", "logs", "proxy", "filas",
+          "busca", "metricas", "deploy", "segredos", "monitoracao", "backup")
+STAGES = ("lint", "teste", "build", "staging", "scan")
+REASONS = ("porque o custo subiu", "porque o time ja domina a ferramenta",
+           "porque precisamos de garantia de entrega", "porque o suporte e melhor",
+           "porque a migracao e simples")
+UNRELATED = ("observabilidade", "faturamento", "notificacoes", "relatorios",
+             "integracoes", "auditoria", "traducao", "assinaturas")
+
+# Neutral engineering chatter: no decision, negation, intention or fix marker,
+# so distractors add retrieval load without creating knowledge entities.
+DISTRACTOR_LINES = (
+    "Revisamos o pull request #{n} e aprovamos as mudancas propostas.",
+    "Atualizamos a documentacao da release {n} com as notas da sprint.",
+    "Rodamos o formatador no diretorio do pacote e nenhuma linha mudou.",
+    "Registramos a reuniao da semana na ata do time de plataforma.",
+)
 
 CORPORA_DIR = Path(__file__).resolve().parent
 MANIFESTS_DIR = CORPORA_DIR / "manifests"
@@ -351,6 +385,196 @@ def _session_dicts(case: dict[str, Any], filler_sessions: list[dict[str, Any]] |
     return sessions[:-1] + filler_sessions + [sessions[-1]]
 
 
+def generated_cases() -> list[dict[str, Any]]:
+    """Deterministic case families, one per task type, sized for power.
+
+    The anchors are hand-written and probe specific semantics; these families
+    repeat the same semantics over different subjects and noise loads so the
+    paired statistics have the sample size the plan requires.  Every gold is
+    derived from the parameters, never tuned to a result.
+    """
+    builders = {
+        "exact_recall": _generated_exact_recall,
+        "aggregation": _generated_aggregation,
+        "tracking": _generated_tracking,
+        "deletion": _generated_deletion,
+        "cascade": _generated_cascade,
+        "absence": _generated_absence,
+    }
+    return [builder(index, _subject(index, task_type))
+            for task_type, builder in builders.items()
+            for index in range(CASES_PER_TASK_TYPE)]
+
+
+def all_cases() -> list[dict[str, Any]]:
+    """Anchors plus the generated families: the confirmatory sample."""
+    return [*CASES, *generated_cases()]
+
+
+def _subject(index: int, task_type: str) -> dict[str, Any]:
+    offset = ("exact_recall", "aggregation", "tracking", "deletion", "cascade", "absence").index(task_type) * 7
+    position = offset + index
+    return {
+        "old": TOOLS[position % len(TOOLS)],
+        "new": TOOLS[(position + 1) % len(TOOLS)],
+        "third": TOOLS[(position + 2) % len(TOOLS)],
+        "topic": TOPICS[position % len(TOPICS)],
+        "other": UNRELATED[position % len(UNRELATED)],
+        "scope": f"src/{TOPICS[position % len(TOPICS)]}",
+        "reason": REASONS[position % len(REASONS)],
+        "stages": (STAGES[position % len(STAGES)], STAGES[(position + 1) % len(STAGES)],
+                   STAGES[(position + 2) % len(STAGES)]),
+        "distractors": position % 3,
+    }
+
+
+def _split(index: int) -> str:
+    return GENERATED_SPLITS[index % len(GENERATED_SPLITS)]
+
+
+def _generated_case(case_id: str, task_type: str, index: int, subject: dict[str, Any],
+                    sessions: list[tuple[str, str, list[tuple[str, str, str, list[str]]]]],
+                    query: str, gold: dict[str, Any], notes: str) -> dict[str, Any]:
+    return {
+        "id": case_id, "task_type": task_type, "split": _split(index), "hop": 0,
+        "sessions": sessions, "query": query, "gold": gold, "notes": notes,
+        "family": "generated", "subject_index": index,
+    }
+
+
+def _decision(session_id: str, index: int, tool: str, topic: str, scope: str,
+              *, qualifier: str = "") -> tuple[str, str, str, list[str]]:
+    return ("user", f"Vamos usar {tool} para {topic}{qualifier}.",
+            _stamp(session_id, index), [scope])
+
+
+def _chatter(session_id: str, index: int, n: int, scope: str) -> list[tuple[str, str, str, list[str]]]:
+    return [("user", DISTRACTOR_LINES[(n + index) % len(DISTRACTOR_LINES)].format(n=n + index),
+             _stamp(session_id, index), [scope])]
+
+
+def _stamp(session_id: str, index: int) -> str:
+    day = 5 + (index % 20)
+    return f"2026-01-{day:02d}T09:{index % 60:02d}:00Z"
+
+
+def _boundary(index: int) -> str:
+    return f"2026-02-{(index % 20) + 1:02d}T00:00:00Z"
+
+
+def _generated_exact_recall(index: int, subject: dict[str, Any]) -> dict[str, Any]:
+    tool, topic, scope = subject["old"], subject["topic"], subject["scope"]
+    sessions = [
+        ("s0", _stamp("s0", index), [_decision("s0", 0, tool, topic, scope)]),
+        ("s1", _stamp("s1", index), [
+            ("assistant", f"Confirmado: o {topic} continua sendo o {tool}.", _stamp("s1", 1), [scope]),
+            *_chatter("s1", 2, subject["distractors"], scope),
+        ]),
+        ("s2", _boundary(index), []),
+    ]
+    return _generated_case(
+        f"gen-exact-recall-{index:03d}", "exact_recall", index, subject, sessions,
+        f"qual ferramenta vamos usar para {topic}",
+        {"answer": tool, "current_entities": ["s0:0"], "invalid_entities": [],
+         "gold_evidence": ["s0:0"], "expected_abstention": False},
+        "Uma decisao vigente com conversa neutra ao redor.",
+    )
+
+
+def _generated_aggregation(index: int, subject: dict[str, Any]) -> dict[str, Any]:
+    tools = (subject["old"], subject["new"], subject["third"])
+    topics = (subject["topic"], UNRELATED[(index + 1) % len(UNRELATED)],
+              UNRELATED[(index + 2) % len(UNRELATED)])
+    scope = subject["scope"]
+    decisions = [_decision("s0", i, tool, topic, scope, qualifier=f" no pipeline de {stage}")
+                 for i, (tool, topic, stage) in enumerate(zip(tools, topics, subject["stages"]))]
+    sessions = [
+        ("s0", _stamp("s0", index), decisions[:2]),
+        ("s1", _stamp("s1", index), [decisions[2], *_chatter("s1", 3, subject["distractors"], scope)]),
+        ("s2", _boundary(index), []),
+    ]
+    gold_ids = ["s0:0", "s0:1", "s1:0"]
+    return _generated_case(
+        f"gen-aggregation-{index:03d}", "aggregation", index, subject, sessions,
+        "quais ferramentas vamos usar no pipeline",
+        {"answer": ", ".join(tools), "current_entities": gold_ids, "invalid_entities": [],
+         "gold_evidence": gold_ids, "expected_abstention": False},
+        "Tres decisoes distintas sob o mesmo guarda-chuva; o conjunto completo e a resposta.",
+    )
+
+
+def _update_sessions(index: int, subject: dict[str, Any], *, negate: bool,
+                     dependent: bool) -> list[tuple[str, str, list[tuple[str, str, str, list[str]]]]]:
+    scope = subject["scope"]
+    second = [_decision("s1", 0, subject["new"], subject["topic"], scope,
+                        qualifier=f" {subject['reason']}")]
+    if negate:
+        second.append(("user", f"Não usar {subject['old']} para {subject['topic']} a partir desta data.",
+                       _stamp("s1", 1), [scope]))
+    third = []
+    if dependent:
+        third = [("user", f"Precisamos atualizar os testes de {subject['topic']} para o {subject['new']}.",
+                  _stamp("s2", 0), [scope])]
+    return [
+        ("s0", _stamp("s0", index), [_decision("s0", 0, subject["old"], subject["topic"], scope)]),
+        ("s1", _stamp("s1", index), second),
+        ("s2", _stamp("s2", index), [*third, *_chatter("s2", 1, subject["distractors"], scope)]),
+        ("s3", _boundary(index), []),
+    ]
+
+
+def _generated_tracking(index: int, subject: dict[str, Any]) -> dict[str, Any]:
+    return _generated_case(
+        f"gen-tracking-{index:03d}", "tracking", index, subject,
+        _update_sessions(index, subject, negate=False, dependent=False),
+        f"qual ferramenta vamos usar para {subject['topic']}",
+        {"answer": subject["new"], "current_entities": ["s1:0"], "invalid_entities": ["s0:0"],
+         "gold_evidence": ["s1:0"], "supersession_pairs": [["s0:0", "s1:0"]],
+         "expected_abstention": False},
+        "Atualizacao de estado: a decisao antiga continua no historico e deve sair de cena.",
+    )
+
+
+def _generated_deletion(index: int, subject: dict[str, Any]) -> dict[str, Any]:
+    return _generated_case(
+        f"gen-deletion-{index:03d}", "deletion", index, subject,
+        _update_sessions(index, subject, negate=True, dependent=False),
+        f"qual ferramenta vamos usar para {subject['topic']}",
+        {"answer": subject["new"], "current_entities": ["s1:0"], "invalid_entities": ["s0:0"],
+         "gold_evidence": ["s1:0"], "supersession_pairs": [["s0:0", "s1:0"]],
+         "expected_abstention": False},
+        "A substituicao vem acompanhada de negacao explicita do item invalidado.",
+    )
+
+
+def _generated_cascade(index: int, subject: dict[str, Any]) -> dict[str, Any]:
+    return _generated_case(
+        f"gen-cascade-{index:03d}", "cascade", index, subject,
+        _update_sessions(index, subject, negate=False, dependent=True),
+        f"qual ferramenta vigente para {subject['topic']}",
+        {"answer": subject["new"], "current_entities": ["s1:0"], "invalid_entities": ["s0:0"],
+         "gold_evidence": ["s1:0", "s2:0"], "supersession_pairs": [["s0:0", "s1:0"]],
+         "expected_abstention": False},
+        "A troca arrasta um dependente que referencia o assunto substituido.",
+    )
+
+
+def _generated_absence(index: int, subject: dict[str, Any]) -> dict[str, Any]:
+    scope = subject["scope"]
+    sessions = [
+        ("s0", _stamp("s0", index), [_decision("s0", 0, subject["old"], subject["topic"], scope)]),
+        ("s1", _stamp("s1", index), _chatter("s1", 1, subject["distractors"], scope)),
+        ("s2", _boundary(index), []),
+    ]
+    return _generated_case(
+        f"gen-absence-{index:03d}", "absence", index, subject, sessions,
+        f"qual {subject['other']} foi contratado",
+        {"answer": None, "current_entities": [], "invalid_entities": [], "gold_evidence": [],
+         "expected_abstention": True},
+        "Ha conhecimento proximo, mas nada sobre o assunto pedido: abstener-se e a resposta.",
+    )
+
+
 def build_case(case: dict[str, Any], *, filler: str = "nofiller") -> dict[str, Any]:
     filler_sessions = _filler_sessions(case) if filler == "filler32k" else []
     history = _session_dicts(case, filler_sessions)
@@ -412,7 +636,7 @@ def _filler_sessions(case: dict[str, Any]) -> list[dict[str, Any]]:
 
 def _parse(value: str) -> datetime:
     parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
-    return parsed if parsed.tzinfo else parsed.replace(tzinfo=datetime.UTC)
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=UTC)
 
 
 def _migrate_mvp() -> tuple[Path, int]:
@@ -469,16 +693,91 @@ def _migrate_mvp() -> tuple[Path, int]:
     return corpus, len(normalized)
 
 
+SUPERSESSION_WINDOW = (0.5, 0.75)
+MIN_DETECT_EFFECT_REF = 0.15
+
+
+def validate_corpus_invariants() -> dict[str, Any]:
+    """Structural soundness of the generated families.
+
+    These checks are about the *corpus*, never about a result: an update must
+    be detectable as an update (similarity inside the supersession window and
+    outside the dedup merge window), an aggregation must not accidentally
+    supersede its own items, and every query must reach its gold while the
+    absence family must be unreachable.  A template that drifts out of these
+    windows would measure a corpus artifact, not the system.
+    """
+    from cortex.compiler.compiler import keyword_overlap
+    from cortex.distillation.extractors import extract_decisions, statement_similarity
+
+    from ..adapters.cortex import RELEVANCE_FLOOR
+
+    def statement(text: str) -> str:
+        events = [{"id": "x:0", "type": "user_instruction", "content": text,
+                   "files": ["src/x"], "session_id": "x"}]
+        extracted = extract_decisions(events)
+        return extracted[0].statement if extracted else text
+
+    counts: dict[str, int] = {}
+    for case in generated_cases():
+        task_type = case["task_type"]
+        counts[task_type] = counts.get(task_type, 0) + 1
+        query = case["query"]
+        built = build_case(case)
+        events = [event for session in built["history"] for event in session["events"]]
+        statements = [statement(event["content"]) for event in events]
+
+        if task_type in {"tracking", "deletion", "cascade"}:
+            similarity = statement_similarity(statements[0], statements[1])
+            if not SUPERSESSION_WINDOW[0] <= similarity < SUPERSESSION_WINDOW[1]:
+                raise SchemaError(
+                    f"{case['id']}: update similarity {similarity:.3f} outside "
+                    f"{SUPERSESSION_WINDOW} — the case would measure dedup, not tracking"
+                )
+            if keyword_overlap(query, statements[1]) < RELEVANCE_FLOOR:
+                raise SchemaError(f"{case['id']}: query cannot reach the current statement")
+
+        if task_type == "aggregation":
+            for first, second in ((0, 1), (0, 2), (1, 2)):
+                if statement_similarity(statements[first], statements[second]) >= SUPERSESSION_WINDOW[0]:
+                    raise SchemaError(
+                        f"{case['id']}: aggregation items are similar enough to supersede "
+                        "each other, which would make the gold unreachable"
+                    )
+            gold_ids = set(case["gold"]["gold_evidence"])
+            for position, (event, text) in enumerate(zip(events, statements)):
+                if event.get("id") in gold_ids:
+                    if keyword_overlap(query, text) < RELEVANCE_FLOOR:
+                        raise SchemaError(f"{case['id']}: gold item {position} is unreachable by the query")
+
+        if task_type == "absence" and statements:
+            if keyword_overlap(query, statements[0]) >= RELEVANCE_FLOOR:
+                raise SchemaError(
+                    f"{case['id']}: the query reaches unrelated knowledge, so abstention "
+                    "would not be the correct gold"
+                )
+
+    return {"cases_per_task_type": counts, "supersession_window": list(SUPERSESSION_WINDOW),
+            "minimum_detectable_effect": MIN_DETECT_EFFECT_REF}
+
+
 def write_corpora() -> dict[str, Any]:
     """Regenerate every committed corpus file.  Returns a summary for CI."""
     NORMALIZED_DIR.mkdir(parents=True, exist_ok=True)
     ADVERSARIAL_DIR.mkdir(parents=True, exist_ok=True)
-    summary: dict[str, Any] = {}
+    summary: dict[str, Any] = {"invariants": validate_corpus_invariants()}
     _, count = _migrate_mvp()
     summary["manifests/mvp.json"] = count
-    for filler in ("nofiller", "filler32k"):
-        path = NORMALIZED_DIR / f"engineering_memory_v1.{filler}.jsonl"
-        rows = [build_case(case, filler=filler) for case in CASES]
+    # The full corpus is the confirmatory sample (plan §5).  The anchors alone
+    # stay available as a fast regression subset and as the filler32k demo,
+    # which would take tens of minutes over the whole corpus.
+    for name, source, filler in (
+        ("engineering_memory_v1.nofiller.jsonl", all_cases(), "nofiller"),
+        ("engineering_memory_v1.regression.jsonl", CASES, "nofiller"),
+        ("engineering_memory_v1.filler32k.jsonl", CASES, "filler32k"),
+    ):
+        path = NORMALIZED_DIR / name
+        rows = [build_case(case, filler=filler) for case in source]
         _write_jsonl(path, rows)
         summary[str(path.relative_to(CORPORA_DIR))] = len(rows)
     adversarial = ADVERSARIAL_DIR / "superseded_abstention.jsonl"
@@ -497,8 +796,10 @@ def _write_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
 def _write_manifest() -> None:
     nofiller = NORMALIZED_DIR / "engineering_memory_v1.nofiller.jsonl"
     filler = NORMALIZED_DIR / "engineering_memory_v1.filler32k.jsonl"
+    regression = NORMALIZED_DIR / "engineering_memory_v1.regression.jsonl"
     adversarial = ADVERSARIAL_DIR / "superseded_abstention.jsonl"
     for name, corpus in (("memory_v1.json", nofiller), ("memory_v1_filler32k.json", filler),
+                         ("memory_v1_regression.json", regression),
                          ("memory_v1_adversarial.json", adversarial)):
         (MANIFESTS_DIR / name).write_text(
             json.dumps(_manifest(corpus, nofiller, filler, adversarial), ensure_ascii=False,

@@ -17,12 +17,44 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
-from .stats import paired_bootstrap_ci
+from .stats import holm_bonferroni, paired_bootstrap_ci, paired_bootstrap_p_value, power_analysis
 
 # Adapter labels that are ablations of the Cortex, not independent products.
 ABLATION_PREFIX = "cortex["
 
 TOKEN_BUDGET_KEY = "compiled"
+
+# Pre-registered before looking at eval results (plan §5): a comparison only
+# counts as confirmatory when the sample is large enough to detect this
+# difference.  Changing it is a specification change and needs an ADR.
+MINIMUM_DETECTABLE_EFFECT = 0.15
+
+# Families of plan §5.  Holm-Bonferroni is applied inside a family, never
+# across families: pooling them would dilute the correction each claim needs.
+METRIC_FAMILIES: dict[str, tuple[str, ...]] = {
+    "retrieval": ("recall_at_k", "precision_at_k", "mrr", "ndcg_at_k", "set_f1",
+                  "answer_support_recall", "scope_accuracy", "extraction_recall"),
+    "temporality": ("current_state_accuracy", "supersession_accuracy", "stale_leak_rate",
+                    "contradiction_exposure_rate", "deletion_compliance",
+                    "cascade_correctness_hop1", "cascade_correctness_hop2",
+                    "lineage_completeness"),
+    "abstention": ("abstention_recall", "abstention_precision", "false_certainty_rate",
+                   "selective_accuracy"),
+    "evidence": ("evidence_resolution_rate", "provenance_coverage",
+                 "unsupported_claim_rate", "extraction_spurious_rate"),
+}
+
+
+def metric_family(metric: str) -> str:
+    for family, metrics in METRIC_FAMILIES.items():
+        if metric in metrics:
+            return family
+    return "other"
+
+
+def required_sample_size(baseline_rate: float) -> int:
+    """Pre-registered sample size required for a given baseline rate."""
+    return power_analysis(baseline_rate, MINIMUM_DETECTABLE_EFFECT)
 
 
 def _dump(path: Path, value: Any) -> None:
@@ -33,6 +65,45 @@ def _dump_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
     with path.open("w", encoding="utf-8", newline="\n") as handle:
         for row in sorted(rows, key=lambda item: json.dumps(item, sort_keys=True)):
             handle.write(json.dumps(row, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n")
+
+
+STRATIFICATION_AXES = ("task_type", "hop", "history_size", "filler")
+
+
+def _history_bucket(size: int | None) -> str:
+    """Same buckets as loaders.meme.stratify (plan §9.1), applied to whatever
+    rows the runner produced instead of a live BenchmarkInstance list, since
+    by the time a row reaches reports.py the instance is gone."""
+    if size is None:
+        return "unknown"
+    if size <= 2:
+        return "xs"
+    if size <= 10:
+        return "s"
+    if size <= 50:
+        return "m"
+    return "l"
+
+
+def _stratification(rows: list[dict[str, Any]]) -> dict[str, dict[str, int]]:
+    """Sample counts per stratification axis, deduplicated by case_id so a case
+    with N metrics is counted once, not N times. A result reported only as a
+    flat mean hides whether the sample is concentrated in one hop or history
+    size; this table is what makes that visible (plan §9.1, §11)."""
+    one_row_per_case: dict[str, dict[str, Any]] = {}
+    for row in rows:
+        one_row_per_case.setdefault(row["case_id"], row)
+    table: dict[str, dict[str, int]] = {axis: {} for axis in STRATIFICATION_AXES}
+    for row in one_row_per_case.values():
+        buckets = {
+            "task_type": str(row.get("task_type", "unknown")),
+            "hop": str(row.get("hop", 0)),
+            "history_size": _history_bucket(row.get("history_size")),
+            "filler": str(row.get("filler", "nofiller")),
+        }
+        for axis, bucket in buckets.items():
+            table[axis][bucket] = table[axis].get(bucket, 0) + 1
+    return table
 
 
 def _percentile(values: list[float], fraction: float) -> float | None:
@@ -72,16 +143,22 @@ def _summary(manifest: dict[str, Any], rows: list[dict[str, Any]], errors: list[
 
     endpoints: dict[str, Any] = {}
     for (adapter, metric), values in sorted(grouped.items()):
+        observed = sum(values) / len(values)
         endpoints.setdefault(adapter, {})[metric] = {
-            "mean": sum(values) / len(values), "n": len(values),
-            "confirmatory": len(values) >= 5,
+            "mean": observed, "n": len(values), "family": metric_family(metric),
+            "required_n": required_sample_size(observed),
+            "minimum_detectable_effect": MINIMUM_DETECTABLE_EFFECT,
+            "power_basis": "observed_rate",
+            "confirmatory": len(values) >= required_sample_size(observed),
         }
 
     task_types: dict[str, Any] = {}
     for (task, adapter, metric), values in sorted(by_task.items()):
+        observed = sum(values) / len(values)
         task_types.setdefault(task, {}).setdefault(adapter, {})[metric] = {
-            "mean": sum(values) / len(values), "n": len(values),
-            "confirmatory": len(values) >= 5,
+            "mean": observed, "n": len(values), "family": metric_family(metric),
+            "required_n": required_sample_size(observed),
+            "confirmatory": len(values) >= required_sample_size(observed),
         }
 
     comparisons: dict[str, Any] = {}
@@ -92,12 +169,24 @@ def _summary(manifest: dict[str, Any], rows: list[dict[str, Any]], errors: list[
             common = sorted(set(cortex) & set(other))
             if len(common) < 2:
                 continue
-            diff, low, high = paired_bootstrap_ci([cortex[key] for key in common],
-                                                  [other[key] for key in common], n_resamples=1000)
+            arm_a = [cortex[key] for key in common]
+            arm_b = [other[key] for key in common]
+            diff, low, high = paired_bootstrap_ci(arm_a, arm_b, n_resamples=1000)
+            baseline_rate = sum(arm_b) / len(arm_b)
+            required = required_sample_size(baseline_rate)
             comparisons[f"cortex_vs_{baseline}:{metric}"] = {
                 "n": len(common), "diff": diff, "ci_low": low, "ci_high": high,
-                "ci_includes_zero": low <= 0 <= high, "confirmatory": len(common) >= 5,
+                "ci_includes_zero": low <= 0 <= high,
+                "family": metric_family(metric),
+                # Plan §5: confirmatory means powered for the pre-registered
+                # MDE, measured against the baseline arm.
+                "required_n": required,
+                "minimum_detectable_effect": MINIMUM_DETECTABLE_EFFECT,
+                "power_basis": "baseline_arm",
+                "p_value": paired_bootstrap_p_value(arm_a, arm_b),
+                "confirmatory": len(common) >= required,
             }
+    _apply_holm_bonferroni(comparisons)
 
     summary: dict[str, Any] = {
         "schema": "cortex_benchmark_summary/v1",
@@ -106,6 +195,7 @@ def _summary(manifest: dict[str, Any], rows: list[dict[str, Any]], errors: list[
         "dataset_revisions": manifest.get("dataset_revisions", {}),
         "endpoints": endpoints,
         "by_task_type": task_types,
+        "stratification": _stratification(rows),
         "paired_comparisons": comparisons,
     }
     # Efficiency and the G4 cost gate live in pareto.json: summary.json is part
@@ -113,6 +203,31 @@ def _summary(manifest: dict[str, Any], rows: list[dict[str, Any]], errors: list[
     summary["gates"] = _gates(endpoints, comparisons, rows, errors, leakage)
     summary["decision"] = _decision(summary)
     return summary
+
+
+def _apply_holm_bonferroni(comparisons: dict[str, Any]) -> None:
+    """Correct p-values inside each family (plan §5), never across families."""
+    by_family: dict[str, list[str]] = defaultdict(list)
+    for key, entry in comparisons.items():
+        by_family[entry["family"]].append(key)
+
+    corrections: dict[str, Any] = {}
+    for family, keys in sorted(by_family.items()):
+        # Deterministic order so the Holm ranking never depends on dict order.
+        ordered = sorted(keys)
+        p_values = [comparisons[key]["p_value"] for key in ordered]
+        rejected = holm_bonferroni(p_values)
+        for key, significant in zip(ordered, rejected):
+            comparisons[key]["holm_significant"] = significant
+        corrections[family] = {
+            "comparisons": len(ordered),
+            "rejected": sum(rejected),
+            "smallest_p_value": min(p_values),
+            "largest_p_value": max(p_values),
+        }
+    # Kept out of the per-comparison namespace so consumers can distinguish
+    # correction metadata from a single comparison.
+    comparisons["__holm_bonferroni__"] = corrections
 
 
 def _efficiency(latency: list[dict[str, Any]]) -> dict[str, Any]:
@@ -130,8 +245,8 @@ def _efficiency(latency: list[dict[str, Any]]) -> dict[str, Any]:
         for phase, values in sorted(phases.get(adapter, {}).items()):
             entry[f"{phase}_p50_ms"] = _percentile(values, 0.50)
             entry[f"{phase}_p95_ms"] = _percentile(values, 0.95)
-        for name, values in sorted(tokens.get(adapter, {}).items()):
-            entry[f"tokens_{name}_mean"] = round(sum(values) / len(values), 3)
+        for name, counts in sorted(tokens.get(adapter, {}).items()):
+            entry[f"tokens_{name}_mean"] = round(sum(counts) / len(counts), 3)
         efficiency[adapter] = entry
     return efficiency
 
@@ -169,7 +284,9 @@ def _gates(endpoints: dict[str, Any], comparisons: dict[str, Any], rows: list[di
             "exceptions_converted_to_zero": 0,
         },
         "G2_relative_value": {
-            metric: {"comparison": f"cortex_vs_{baseline}", **(comparison(metric, baseline) or {"n": 0})}
+            metric: {"comparison": f"cortex_vs_{baseline}",
+                     "holm_significant": (comparison(metric, baseline) or {}).get("holm_significant"),
+                     **(comparison(metric, baseline) or {"n": 0})}
             for metric, baseline in (("set_f1", "bm25"), ("set_f1", "raw_context"),
                                      ("current_state_accuracy", "bm25"),
                                      ("deletion_compliance", "bm25"),
@@ -216,8 +333,11 @@ def _decision(summary: dict[str, Any]) -> str:
         return "diagnostico"
     if stale > 0:
         return "recalibrar"
+    # A win only counts when it is powered for the pre-registered MDE and
+    # survives Holm-Bonferroni inside its family (plan §5/§17).
     wins = [entry for entry in gates["G2_relative_value"].values()
-            if entry.get("n") and not entry.get("ci_includes_zero", True) and entry.get("diff", 0) > 0]
+            if entry.get("confirmatory") and entry.get("holm_significant")
+            and not entry.get("ci_includes_zero", True) and entry.get("diff", 0) > 0]
     if wins:
         return "promover_com_reservas"
     return "reduzir_claim"
@@ -256,17 +376,34 @@ def _markdown(summary: dict[str, Any], errors: list[dict[str, Any]], leakage: li
              f"- Corpus: `{summary.get('corpus_hash')}`",
              f"- Revisões: `{json.dumps(summary.get('dataset_revisions', {}), sort_keys=True)}`",
              "", "## Endpoints por task type", "",
-             "| Task type | Adapter | Endpoint | Mean | n | Confirmatório |", "|---|---|---|---:|---:|---|"]
+             "| Task type | Adapter | Endpoint | Mean | n / req n | Confirmatório |", "|---|---|---|---:|---|---|"]
     for task, adapters in summary["by_task_type"].items():
         for adapter, metrics in adapters.items():
             for metric, value in metrics.items():
-                lines.append(f"| {task} | {adapter} | {metric} | {value['mean']:.4f} | {value['n']} | {value['confirmatory']} |")
+                lines.append(f"| {task} | {adapter} | {metric} | {value['mean']:.4f} | {value['n']}/{value['required_n']} | {value['confirmatory']} |")
+    lines += ["", "## Estratificação da amostra (plano §9.1)", "",
+              "Contagem de casos únicos por eixo — uma média única nunca revela se a amostra "
+              "está concentrada em um hop, tamanho de histórico ou carga de filler.", "",
+              "| Eixo | Bucket | n (casos) |", "|---|---|---:|"]
+    for axis, buckets in summary.get("stratification", {}).items():
+        for bucket, count in sorted(buckets.items()):
+            lines.append(f"| {axis} | {bucket} | {count} |")
     lines += ["", "## Comparação pareada (cortex − baseline)", "",
-              "| Métrica | Baseline | n | diff | IC95 | inclui zero |", "|---|---|---:|---:|---|---|"]
+              f"MDE pré-registrado: {MINIMUM_DETECTABLE_EFFECT}. Confirmatório exige n ≥ `required_n`. "
+              "`holm` marca rejeição após correção dentro da família.", "",
+              "| Métrica | Baseline | n | req n | diff | IC95 | p | holm |", "|---|---|---:|---:|---:|---|---:|---|"]
     for key, value in summary["paired_comparisons"].items():
+        if key.startswith("__"):
+            continue
         metric, baseline = key.split(":", 1)
-        lines.append(f"| {metric} | {baseline} | {value['n']} | {value['diff']:+.4f} | "
-                     f"[{value['ci_low']:+.4f}, {value['ci_high']:+.4f}] | {value['ci_includes_zero']} |")
+        lines.append(f"| {metric} | {baseline} | {value['n']} | {value['required_n']} | {value['diff']:+.4f} | "
+                     f"[{value['ci_low']:+.4f}, {value['ci_high']:+.4f}] | {value['p_value']:.4f} | "
+                     f"{value.get('holm_significant')} |")
+    lines += ["", "### Correção de múltiplas hipóteses (Holm-Bonferroni, por família)", "",
+              "| Família | Comparações | Rejeitadas | menor p | maior p |", "|---|---:|---:|---:|---:|"]
+    for family, correction in summary["paired_comparisons"].get("__holm_bonferroni__", {}).items():
+        lines.append(f"| {family} | {correction['comparisons']} | {correction['rejected']} | "
+                     f"{correction['smallest_p_value']:.4f} | {correction['largest_p_value']:.4f} |")
     lines += ["", "## Gates", ""]
     for name, gate in summary["gates"].items():
         lines.append(f"### {name}")

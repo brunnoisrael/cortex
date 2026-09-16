@@ -133,10 +133,16 @@ def run_benchmark(manifest_path: Path, adapters: list[str], report_out: Path,
                 source = instance if adapter.name == "oracle" else _safe_instance(instance)
                 result = adapter.run(source)
                 metrics = case_metrics(result, instance)
+                # Stratification axes of plan §9.1 (hop, history size, filler
+                # load) travel with every row so reports.py can break the
+                # aggregate down instead of publishing a single mean.
                 for metric, value in sorted(metrics.items()):
                     rows.append({"case_id": instance.id, "adapter": label, "metric": metric,
                                  "value": round(value, 8), "task_type": instance.task_type,
-                                 "split": instance.split})
+                                 "split": instance.split,
+                                 "hop": instance.metadata.get("hop", 0),
+                                 "history_size": len(instance.history),
+                                 "filler": instance.metadata.get("filler", "nofiller")})
                 latency.append({"case_id": instance.id, "adapter": label,
                                 "phase_ms": {key: round(value, 3) for key, value in sorted(result.latency_ms.items())},
                                 "tokens": dict(sorted(result.tokens.items()))})

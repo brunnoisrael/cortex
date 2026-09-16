@@ -1,6 +1,6 @@
 {
-  "corpus": "../adversarial/superseded_abstention.jsonl",
-  "corpus_hash": "sha256:53b4b35d5eedd299274149269199fa04bf87725e122ca1a689536d3e2a40002f",
+  "corpus": "../normalized/engineering_memory_v1.regression.jsonl",
+  "corpus_hash": "sha256:525d828442a2433b644a5d23b29b947110f513f6df8315f70176777da4c98eda",
   "cortex_version": "0.1.0",
   "dataset_revisions": {
     "internal": "engineering-memory-v2"
