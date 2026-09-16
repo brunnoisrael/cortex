@@ -67,7 +67,7 @@ class SessionCapture:
         """Salva a sessão atual em um arquivo JSON."""
         self.current_session["end_time"] = datetime.now().isoformat()
         session_file = self.output_dir / f"{self.current_session['session_id']}.json"
-        session_file.write_text(json.dumps(self.current_session, indent=2, ensure_ascii=False))
+        session_file.write_text(json.dumps(self.current_session, indent=2, ensure_ascii=False), encoding="utf-8")
         return session_file
     
     def reset_session(self) -> None:

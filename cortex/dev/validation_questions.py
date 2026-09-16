@@ -88,7 +88,7 @@ def generate_validation_questions(session: dict[str, Any]) -> list[dict[str, Any
 def save_questions(questions: list[dict[str, Any]], output_file: Path) -> None:
     """Salva perguntas de validação em um arquivo JSON."""
     output_file.parent.mkdir(parents=True, exist_ok=True)
-    output_file.write_text(json.dumps(questions, indent=2, ensure_ascii=False))
+    output_file.write_text(json.dumps(questions, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
 def load_session(session_file: Path) -> dict[str, Any]:
