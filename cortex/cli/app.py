@@ -108,9 +108,16 @@ def init() -> None:
         ("context compiler ready", True),
         ("privacy mode: local-only", True),
     ]
+    checkmark = "✓"
+    try:
+        checkmark.encode(sys.stdout.encoding or "utf-8")
+    except (UnicodeEncodeError, LookupError):
+        checkmark = "[OK]"
+
     for label, ok in steps:
-        mark = typer.style("✓", fg=typer.colors.GREEN) if ok else typer.style("!", fg=typer.colors.YELLOW)
+        mark = typer.style(checkmark, fg=typer.colors.GREEN) if ok else typer.style("!", fg=typer.colors.YELLOW)
         typer.echo(f"{mark} {label}")
+
     typer.echo("")
     typer.secho("Cortex is ready.", fg=typer.colors.GREEN, bold=True)
     typer.echo("Open your coding agent. Then run `cortex hook --install claude-code` to wire capture.")

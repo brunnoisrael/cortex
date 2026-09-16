@@ -1,0 +1,26 @@
+{
+  "corpus": "../normalized/dogfooding_v1.jsonl",
+  "corpus_hash": "sha256:5c8291ad096ad2ea1d7c3cf63c2037b347ea105a643a0f004be30c0aa15dcdf5",
+  "cortex_version": "0.1.0",
+  "dataset_revisions": {
+    "internal": "dogfooding-v1"
+  },
+  "description": "Dogfooding corpus: sessao real do Cortex convertida em instancias BenchmarkInstance v1. Cobre 6 question_types (exact_recall, aggregation, tracking, cascade, absence, deletion) com 20 instancias anotadas manualmente a partir da sessao 20260915_evidence_integrity_dogfooding.",
+  "embedding_cache_dir": "outside-repository",
+  "embedding_model": "none",
+  "embedding_version": "none",
+  "expected_endpoint_digest": null,
+  "hardware": "portable",
+  "license": "internal dogfooding corpus; real dev session, no third-party transcripts",
+  "network_enabled": false,
+  "os": "portable",
+  "python_version": "3.11+",
+  "retry_policy": "deterministic",
+  "schema": "cortex_memory_benchmark_manifest/v1",
+  "seed": 0,
+  "splits": [
+    "dev"
+  ],
+  "tokenizer": "cortex.compiler.token_estimate/cl100k_base",
+  "sha256": "sha256:5c8291ad096ad2ea1d7c3cf63c2037b347ea105a643a0f004be30c0aa15dcdf5"
+}

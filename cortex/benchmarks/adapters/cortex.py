@@ -136,7 +136,7 @@ class CortexAdapter(Adapter):
                 if timestamp > cutoff:
                     raise LeakageError(f"future event at {session.session_id}:{index} in {instance.id}")
                 self._store.add_event({
-                    "id": event_id(session.session_id, index),
+                    "id": event.id or event_id(session.session_id, index),
                     "type": ROLE_TO_EVENT_TYPE[event.role],
                     "session_id": session.session_id,
                     "ts": (event.timestamp or session.timestamp),
@@ -172,11 +172,32 @@ class CortexAdapter(Adapter):
         selected = [eid for item in ranked if item.entity.id in selected_ids for eid in _event_ids(item.entity)]
         selected = _dedupe(selected)
 
+        # Fallback para o ledger de eventos brutos do KnowledgeStore quando
+        # a destilação de alto nível não gerou entidades compiláveis para a query,
+        # aplicando limiar calibrado de abstention (0.15). Se nenhum evento atingir
+        # o limiar, o adapter se abstém legitimamente (evitando falso-positivo).
+        evidence = _dedupe([eid for item in ranked if item.entity.id in selected_ids
+                            for eid in _evidence_ids(item.entity)])
+        if not selected and not self.flags.get("disable_evidence_ledger"):
+            from cortex.compiler.compiler import scope_match
+            ev_candidates: list[tuple[float, str]] = []
+            for ev in self._store.all_events():
+                text = ev.get("content", "") + " " + " ".join(ev.get("files") or [])
+                rel = keyword_overlap(instance.query.text, text)
+                if instance.query.files:
+                    rel = max(rel, 0.5 * scope_match(ev.get("files") or [], list(instance.query.files)))
+                if rel >= 0.15:
+                    ev_candidates.append((rel, str(ev["id"])))
+            ev_candidates.sort(key=lambda x: -x[0])
+            if ev_candidates:
+                top_evs = _dedupe([x[1] for x in ev_candidates[:5]])
+                retrieved = top_evs
+                selected = top_evs
+                evidence = top_evs
+
         abstained = not selected
         if abstained:
             selected = []
-        evidence = _dedupe([eid for item in ranked if item.entity.id in selected_ids
-                            for eid in _evidence_ids(item.entity)])
         if self.flags["disable_evidence_ledger"]:
             evidence = []
 

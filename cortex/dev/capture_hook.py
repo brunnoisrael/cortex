@@ -34,34 +34,57 @@ class SessionCapture:
             "events": [],
         }
     
-    def capture_event(self, role: str, content: str, files: list[str] | None = None) -> None:
-        """Captura um evento (user/assistant/tool/commit/etc) da sessão atual."""
+    def capture_event(
+        self,
+        role: str,
+        content: str,
+        files: list[str] | None = None,
+        event_id: str | None = None,
+    ) -> str:
+        """Captura um evento (user/assistant/tool/commit/etc) da sessão atual.
+
+        Gera um ID explícito persistido no formato '{session_id}:{index}'
+        (ou utiliza o event_id informado), assegurando proveniência determinística.
+        Retorna o ID gerado para rastreamento.
+        """
+        idx = len(self.current_session["events"])
+        ev_id = event_id or f"{self.session_id}:{idx}"
         self.current_session["events"].append({
+            "id": ev_id,
             "role": role,
             "content": content,
             "timestamp": datetime.now().isoformat(),
-            "files": files or []
+            "files": files or [],
         })
         if self.auto_save:
             self.save_session()
+        return ev_id
     
-    def capture_user_instruction(self, instruction: str, files: list[str] | None = None) -> None:
+    def capture_user_instruction(
+        self, instruction: str, files: list[str] | None = None, event_id: str | None = None
+    ) -> str:
         """Captura uma instrução do usuário."""
-        self.capture_event("user", instruction, files)
+        return self.capture_event("user", instruction, files, event_id=event_id)
     
-    def capture_assistant_response(self, response: str, files: list[str] | None = None) -> None:
+    def capture_assistant_response(
+        self, response: str, files: list[str] | None = None, event_id: str | None = None
+    ) -> str:
         """Captura uma resposta do assistente."""
-        self.capture_event("assistant", response, files)
+        return self.capture_event("assistant", response, files, event_id=event_id)
     
-    def capture_tool_result(self, tool_name: str, result: str, files: list[str] | None = None) -> None:
+    def capture_tool_result(
+        self, tool_name: str, result: str, files: list[str] | None = None, event_id: str | None = None
+    ) -> str:
         """Captura um resultado de ferramenta."""
         content = f"[{tool_name}] {result}"
-        self.capture_event("tool", content, files)
+        return self.capture_event("tool", content, files, event_id=event_id)
     
-    def capture_commit(self, commit_hash: str, message: str, files: list[str]) -> None:
+    def capture_commit(
+        self, commit_hash: str, message: str, files: list[str], event_id: str | None = None
+    ) -> str:
         """Captura um commit git."""
         content = f"commit {commit_hash}: {message}"
-        self.capture_event("commit", content, files)
+        return self.capture_event("commit", content, files, event_id=event_id)
     
     def save_session(self) -> Path:
         """Salva a sessão atual em um arquivo JSON."""

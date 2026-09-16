@@ -1,0 +1,35 @@
+# Cortex configuration
+# Docs: local-first, provenance-first, engineering-first
+
+[project]
+name = "cortex"
+phase = "develop"
+
+[workspace]
+strategy = "git"
+
+[capture]
+enabled = true
+raw_retention_days = 30
+
+[distillation]
+mode = "offline"
+llm = "heuristic"            # heuristic | auto | ollama
+ollama_url = "http://localhost:11434"
+llm_model = "qwen2.5:7b"
+llm_timeout_s = 30.0         # capped to 10s inside the Stop hook
+min_confidence_for_persistence = 0.60
+correnda_min_evidence = 2
+
+[context]
+max_tokens = 2000
+max_adrs = 5
+max_intentions = 5
+max_correndas = 7
+include_recent_fixes = true
+include_last_review = true
+
+[privacy]
+telemetry = false
+network_calls = false        # local-only by default: non-loopback ollama_url
+                              # is refused unless this is true (PLANO item 3.4)

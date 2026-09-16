@@ -24,6 +24,7 @@ from cortex.config import CortexConfig, CortexConfigError
 from cortex.distillation.review import build_session_review
 from cortex.governance import review_queue
 from cortex.knowledge.models import (
+    RELATIONS,
     ArtifactType,
     Authority,
     Entity,
@@ -78,6 +79,7 @@ def _ws() -> tuple[Workspace, CortexConfig]:
 # stray close() would still be harmless (KnowledgeStore.close() is
 # idempotent per Onda 5.1) but nothing calls it anymore in the normal path.
 _stores: dict[str, KnowledgeStore] = {}
+_active_sessions: dict[str, str] = {}
 
 
 def _store() -> tuple[Workspace, CortexConfig, KnowledgeStore]:
@@ -87,6 +89,30 @@ def _store() -> tuple[Workspace, CortexConfig, KnowledgeStore]:
         ensure_cortex_dir(ws)
         _stores[key] = KnowledgeStore(ws.db_path)
     return ws, cfg, _stores[key]
+
+
+def _git_head(ws: Workspace) -> tuple[str | None, str | None]:
+    try:
+        from cortex.git.context import _git
+        branch = _git(ws.root, "rev-parse", "--abbrev-ref", "HEAD")
+        commit = _git(ws.root, "rev-parse", "HEAD")
+        return branch, commit
+    except Exception:
+        return None, None
+
+
+def _active_session(store: KnowledgeStore, ws: Workspace, cfg: CortexConfig, branch: str | None = None) -> str:
+    key = str(ws.db_path)
+    if key not in _active_sessions:
+        sid = session_id_for("mcp")
+        git_branch, _ = _git_head(ws)
+        active_branch = branch or git_branch
+        store.ensure_session(sid, host="mcp", branch=active_branch, phase=cfg.phase)
+        _active_sessions[key] = sid
+    elif branch:
+        store.conn.execute("UPDATE sessions SET branch = ? WHERE id = ?", (branch, _active_sessions[key]))
+        store.conn.commit()
+    return _active_sessions[key]
 
 
 def _invalid_kind_error(kind: str, extra: tuple[str, ...] = ()) -> str:
@@ -102,9 +128,15 @@ def _invalid_kind_error(kind: str, extra: tuple[str, ...] = ()) -> str:
 def cortex_init(branch: str = "", task: str = "") -> str:
     """Session bootstrap: returns the compiled CORTEX CONTEXT block for the
     current branch/task within the configured token budget."""
-    _ws, cfg, store = _store()
-    session_id = session_id_for("mcp")
-    store.ensure_session(session_id, host="mcp", branch=branch or None)
+    ws, cfg, store = _store()
+    session_id = _active_session(store, ws, cfg, branch=branch or None)
+    capture_event(store, {
+        "type": "session_start",
+        "session_id": session_id,
+        "content": f"Session bootstrap. Task: {task or 'general'}",
+        "branch": branch or None,
+        "host": "mcp",
+    })
     return compile_context(
         store,
         CompileInput(query=task, branch=branch or None, phase=cfg.phase),
@@ -147,7 +179,7 @@ def cortex_remember(statement: str, kind: str = "intention", motivation: str = "
     was in the loop — recorded knowledge is agent_inferred and PROPOSED,
     exactly like cortex_emit. Human confirmation stays a CLI governance
     action (`cortex correnda confirm` / `cortex adrs accept`)."""
-    _, _, store = _store()
+    ws, cfg, store = _store()
     try:
         etype = ArtifactType(kind)
     except ValueError:
@@ -163,13 +195,36 @@ def cortex_remember(statement: str, kind: str = "intention", motivation: str = "
         "adr": {"context": motivation, "decision": statement, "alternatives_rejected": []},
         "correnda": {"rule": statement, "origin": [], "confirmed_by_human": False},
     }
+
+    sid = _active_session(store, ws, cfg)
+    branch, commit = _git_head(ws)
+    store.ensure_session(sid, host="mcp", branch=branch, phase=cfg.phase)
+
+    # Capture raw event (unified pipeline: PRD §7)
+    raw_content = f"[{kind}] {statement}" + (f" (motivation: {motivation})" if motivation else "")
+    raw_eid = capture_event(store, {
+        "type": "agent_response",
+        "session_id": sid,
+        "content": raw_content,
+        "files": scope or [],
+        "branch": branch,
+        "meta": {"kind": kind, "source": "cortex_remember", "commit": commit} if commit else {"kind": kind, "source": "cortex_remember"},
+        "host": "mcp",
+    })
+
     ent = Entity(
         id=eid, type=etype, statement=statement,
         status=Status.PROPOSED, authority=Authority.AGENT_INFERRED, confidence=0.85,
-        scope=scope or [], session_id=session_id_for("mcp"),
+        scope=scope or [], session_id=sid, branch=branch,
         risk_level=risk, review_policy=policy,
         details=ent_type_map.get(kind, {}),
-        provenance=Provenance(extraction_source="explicit_agent_statement"),
+        provenance=Provenance(
+            source_session=sid,
+            source_events=[raw_eid] if raw_eid else [],
+            source_files=scope or [],
+            source_commits=[commit] if commit else [],
+            extraction_source="explicit_agent_statement",
+        ),
     )
     ent.details["extraction_method"] = "cortex_remember"
     store.upsert(ent)
@@ -186,6 +241,7 @@ def cortex_emit(
     confidence_self_reported: float = 0.95,
     risk_level: str = "medium",
     review_policy: str = "multiple_evidence",
+    related_to: list[str] | None = None,
 ) -> str:
     """Agent native knowledge emission (Onda 6).
 
@@ -193,8 +249,9 @@ def cortex_emit(
     or negative knowledge (correnda) with high confidence as the agent works.
 
     kind: 'adr' | 'intention' | 'fix' | 'correnda' | 'negative_knowledge'
+    related_to: optional list of target entity IDs to establish relationship edges with
     """
-    _, _, store = _store()
+    ws, cfg, store = _store()
     type_str = "correnda" if kind == "negative_knowledge" else kind
     try:
         etype = ArtifactType(type_str)
@@ -206,6 +263,22 @@ def cortex_emit(
     except ValueError:
         return json.dumps({"ok": False, "error": "invalid risk_level or review_policy"})
     eid = store.reserve_entity_id(etype)
+
+    sid = _active_session(store, ws, cfg)
+    branch, commit = _git_head(ws)
+    store.ensure_session(sid, host="mcp", branch=branch, phase=cfg.phase)
+
+    # Capture raw event (PRD §7 / unified pipeline) so provenance and audit are intact
+    raw_content = f"[{kind}] {statement}" + (f" (rationale: {rationale})" if rationale else "")
+    raw_eid = capture_event(store, {
+        "type": "agent_response",
+        "session_id": sid,
+        "content": raw_content,
+        "files": scope or [],
+        "branch": branch,
+        "meta": {"kind": kind, "source": "cortex_emit", "commit": commit} if commit else {"kind": kind, "source": "cortex_emit"},
+        "host": "mcp",
+    })
 
     details: dict = {}
     if kind == "adr":
@@ -231,6 +304,15 @@ def cortex_emit(
     status = Status.ACTIVE if kind == "fix" and risk != RiskLevel.HIGH else Status.PROPOSED
     authority = Authority.AGENT_INFERRED
 
+    prov = Provenance(
+        source_session=sid,
+        source_events=[raw_eid] if raw_eid else [],
+        source_files=scope or [],
+        source_commits=[commit] if commit else [],
+        source_entities=related_to or [],
+        extraction_source="cortex_emit_mcp_tool",
+    )
+
     ent = Entity(
         id=eid,
         type=etype,
@@ -243,11 +325,32 @@ def cortex_emit(
         observed_at=_utcnow(),
         valid_from=_utcnow()
         if status == Status.ACTIVE else None,
-        session_id=session_id_for("mcp"),
+        session_id=sid,
+        branch=branch,
         details=details,
-        provenance=Provenance(extraction_source="cortex_emit_mcp_tool"),
+        provenance=prov,
     )
     store.upsert(ent)
+
+    # Establish relational edges
+    if related_to:
+        for target in related_to:
+            if kind == "fix":
+                rel = "RESOLVES"
+            elif kind == "adr":
+                rel = "DECIDED_BASED_ON"
+            elif kind in ("correnda", "negative_knowledge"):
+                rel = "AFFECTS"
+            else:
+                rel = "REFERENCED_IN"
+            store.add_edge(eid, rel, target)
+    elif scope:
+        for other in store.entities_by_session(sid):
+            if other.id != eid and other.scope and set(other.scope) & set(scope):
+                rel = "IMPLEMENTS" if (kind == "fix" and other.type == ArtifactType.ADR) else "DECIDED_BASED_ON" if other.type == ArtifactType.ADR else "REFERENCED_IN"
+                store.add_edge(eid, rel, other.id)
+                break
+
     return f"emitted {eid} ({kind}, status={status.value}, confidence={conf})"
 
 
@@ -256,12 +359,14 @@ def cortex_capture(event_type: str, content: str, session_id: str = "",
                    files: list[str] | None = None) -> str:
     """Capture a raw session event (user_instruction, agent_response, error,
     test_failure, commit, tool_result). Redaction runs before persistence."""
-    _, _, store = _store()
-    session_id = session_id or session_id_for("mcp")
-    store.ensure_session(session_id, host="mcp")
+    ws, cfg, store = _store()
+    sid = session_id or _active_session(store, ws, cfg)
+    branch, commit = _git_head(ws)
+    store.ensure_session(sid, host="mcp", branch=branch, phase=cfg.phase)
+    meta = {"commit": commit} if commit else {}
     eid = capture_event(store, {
-        "type": event_type, "session_id": session_id, "content": content,
-        "files": files or [],
+        "type": event_type, "session_id": sid, "content": content,
+        "files": files or [], "branch": branch, "meta": meta, "host": "mcp",
     })
     return f"captured {eid}"
 
@@ -491,8 +596,33 @@ def cortex_review_summary(review_id: str) -> str:
 
 
 @mcp.tool()
+def cortex_link(src: str, rel: str, dst: str) -> str:
+    """Create a directional relationship edge between two entities or artifacts in the knowledge graph.
+
+    rel must be one of: DECIDED_BASED_ON, IMPLEMENTS, GENERATED, CONFIRMS,
+    CONTRADICTS, SUPERSEDES, REFERENCED_IN, SCOPED_TO, EVIDENCED_BY,
+    OCCURRED_IN, AFFECTS, BLOCKS, RESOLVES, DUPLICATES, VARIANT_OF.
+    """
+    _, _, store = _store()
+    rel_upper = rel.upper()
+    if rel_upper not in RELATIONS:
+        valid = ", ".join(RELATIONS)
+        return json.dumps({"ok": False, "error": f"invalid relation {rel!r}; use one of: {valid}"})
+    try:
+        store.add_edge(src, rel_upper, dst)
+        return f"linked {src} -[{rel_upper}]-> {dst}"
+    except ValueError as exc:
+        return json.dumps({"ok": False, "error": str(exc)})
+
+
+@mcp.tool()
 def cortex_store_export() -> str:
     """Return the complete versioned portable store package."""
     from cortex.portable import export_store
     _, _, store = _store()
     return json.dumps(export_store(store), ensure_ascii=False, indent=2, sort_keys=True)
+
+
+if __name__ == "__main__":
+    mcp.run(transport="stdio")
+

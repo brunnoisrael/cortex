@@ -65,3 +65,6 @@ DOGFOODING_PLAN.md
 
 # Benchmark artifacts (results should be regenerated)
 artifacts/
+*.tmp
+*.log
+.gemini/
