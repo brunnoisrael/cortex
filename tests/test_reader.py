@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import random
+
 import pytest
 
 from cortex.reader import ReaderResponse, read_compiled_context
@@ -111,3 +113,28 @@ def test_reader_response_rejects_resurrecting_obsolete_citation():
                 "obsolete_evidence_ids": ["ev-old"],
             },
         )
+
+
+def test_reader_invariants_hold_for_generated_context_histories():
+    generator = random.Random(20260917)
+    query = "database transactions"
+    for case_number in range(64):
+        lines = [
+            f"- [ev-current-{case_number}] Database transactions use PostgreSQL.",
+            f"- [ev-old-{case_number}] Database transactions used Redis (status: superseded).",
+        ]
+        lines.extend(
+            f"- [ev-filler-{case_number}-{item}] Unrelated deployment note {item}."
+            for item in range(generator.randrange(0, 5))
+        )
+        generator.shuffle(lines)
+        context = "<!-- CORTEX CONTEXT -->\n" + "\n".join(lines) + "\n"
+
+        first = read_compiled_context(query, context)
+        second = read_compiled_context(query, context)
+        eligible = set(first.trace["context_evidence_ids"]) - set(
+            first.trace["obsolete_evidence_ids"]
+        )
+        assert set(first.cited_evidence_ids) <= eligible
+        assert all(set(claim.evidence_ids) <= eligible for claim in first.claims)
+        assert first.model_dump_json() == second.model_dump_json()
