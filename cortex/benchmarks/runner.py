@@ -10,7 +10,15 @@ from datetime import UTC
 from pathlib import Path
 from typing import Any
 
-from .adapters import BM25Adapter, BM25TemporalAdapter, CortexAdapter, NoMemoryAdapter, OracleAdapter, RawContextAdapter
+from .adapters import (
+    BM25Adapter,
+    BM25TemporalAdapter,
+    CortexAdapter,
+    NoMemoryAdapter,
+    OracleAdapter,
+    RawContextAdapter,
+    VectorRAGAdapter,
+)
 from .adapters.base import Adapter
 from .errors import LeakageError
 from .manifest import (
@@ -26,8 +34,15 @@ from .metrics import case_metrics
 from .reports import write_reports
 from .schema import BenchmarkInstance, Gold, instance_from_dict, validate_checksums
 
-ADAPTERS = {"cortex": CortexAdapter, "bm25": BM25Adapter, "bm25_temporal": BM25TemporalAdapter,
-            "raw_context": RawContextAdapter, "no_memory": NoMemoryAdapter, "oracle": OracleAdapter}
+ADAPTERS = {
+    "cortex": CortexAdapter,
+    "bm25": BM25Adapter,
+    "bm25_temporal": BM25TemporalAdapter,
+    "raw_context": RawContextAdapter,
+    "vector_rag": VectorRAGAdapter,
+    "no_memory": NoMemoryAdapter,
+    "oracle": OracleAdapter,
+}
 
 
 def corpus_path(manifest: RunManifest, manifest_path: Path) -> Path | None:

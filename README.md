@@ -15,8 +15,8 @@
 </div>
 
 > **Estado real:** o ciclo completo de memória e uma suíte rigorosa de benchmark
-> comparativo offline (250 casos sintéticos, 6 task types, 6 adapters e ablações)
-> estão implementados e cobertos por **249 testes automatizados**. O Cortex opera de
+> comparativo offline (250 casos sintéticos, 6 task types, 7 adapters e ablações)
+> estão implementados e cobertos por **256 testes automatizados**. O Cortex opera de
 > forma local-first e determinística, com governança explícita, Evidence Ledger auditável
 > e dogfooding contínuo com benchmark comparativo real.
 
@@ -316,10 +316,10 @@ Detalhes completos em [docs/DOGFOODING_EVALUATION.md](docs/DOGFOODING_EVALUATION
 ### Comandos de execução
 
 ```bash
-# Benchmark principal (250 casos, 6 adapters)
+# Benchmark principal (250 casos, 7 adapters)
 python -m cortex.benchmarks.runner \
   --manifest cortex/benchmarks/corpora/manifests/memory_v1.json \
-  --adapter cortex bm25 bm25_temporal raw_context no_memory oracle \
+  --adapter cortex bm25 bm25_temporal raw_context vector_rag no_memory oracle \
   --report-out artifacts/benchmark-memory-v1
 
 # Corpus de dogfooding (sessão real, 20 casos)
@@ -353,7 +353,7 @@ python -m cortex.dev.session_to_benchmark
 ## Testes e qualidade
 
 ```bash
-# Suíte completa (249 testes)
+# Suíte completa (256 testes)
 pytest -q
 
 # Apenas benchmarks (83 testes)
@@ -369,7 +369,7 @@ pytest tests/test_evidence_integrity.py -v
 ruff check cortex tests
 ```
 
-A suíte tem **249 testes automatizados** passando com 100% de sucesso:
+A suíte tem **256 testes automatizados** passando com 100% de sucesso:
 
 | Módulo | Testes | O que cobre |
 |---|---|---|
@@ -422,7 +422,7 @@ Essa hipótese está sendo investigada por benchmarks comparativos contínuos (i
 
 ### Implementado
 
-- **Benchmark de Engenharia:** runner determinístico (G0–G4), 250 casos normalizados em 6 eixos, baselines (BM25, BM25 temporal, raw-context, no-memory, oracle), 6 ablações, bootstrap pareado sob H₀, Holm-Bonferroni e exportação de Pareto e relatórios Markdown.
+- **Benchmark de Engenharia:** runner determinístico (G0–G4), 250 casos normalizados em 6 eixos, baselines (BM25, BM25 temporal, raw-context, vector-RAG, no-memory, oracle), 6 ablações, bootstrap pareado sob H₀, Holm-Bonferroni e exportação de Pareto e relatórios Markdown.
 - **Dogfooding com benchmark real:** harness de captura de sessões reais (`cortex/dev/`), gerador de perguntas estrutural (6 task types, ≥10/sessão), conversor para `BenchmarkInstance v1`, corpus `dogfooding_v1.jsonl` com 20 instâncias, runner comparativo executado e resultados documentados.
 - **Calibração de Abstention:** elevação do `abstention_recall` do `CortexAdapter` para 0.85 (superando as baselines de 0.80).
 - **LLM Judge & Rubricas:** protocolo de avaliação offline para Code Agent atuar como LLM Judge (`cortex/benchmarks/llm_judge.py` e Skill `.agents/skills/cortex-judge`).

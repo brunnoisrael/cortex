@@ -13,6 +13,7 @@ from .cortex import CortexAdapter
 from .no_memory import NoMemoryAdapter
 from .oracle import OracleAdapter
 from .raw_context import RawContextAdapter
+from .vector_rag import VectorRAGAdapter
 
 
 @dataclass
@@ -54,7 +55,7 @@ class ExternalMemoryAdapter(EvaluationAdapter):
 
 
 def default_adapters(store: Any) -> dict[str, EvaluationAdapter]:
-    """Legacy registry; new runs use the six v1 adapters directly."""
+    """Legacy registry; new runs use the seven v1 adapters directly."""
     from .cortex import LegacyCortexAdapter
 
     return {
@@ -67,4 +68,4 @@ def default_adapters(store: Any) -> dict[str, EvaluationAdapter]:
 
 
 __all__ = ["Adapter", "AdapterResult", "BM25Adapter", "BM25TemporalAdapter", "CortexAdapter",
-           "NoMemoryAdapter", "OracleAdapter", "RawContextAdapter", "default_adapters"]
+           "NoMemoryAdapter", "OracleAdapter", "RawContextAdapter", "VectorRAGAdapter", "default_adapters"]

@@ -10,7 +10,7 @@ heurística.
 # Onda 1 — corpus interno, sem filler (rápido; é o que roda em PR)
 python -m cortex.benchmarks.runner \
   --manifest cortex/benchmarks/corpora/manifests/memory_v1.json \
-  --adapter cortex bm25 bm25_temporal raw_context no_memory oracle \
+  --adapter cortex bm25 bm25_temporal raw_context vector_rag no_memory oracle \
   --report-out artifacts/benchmark-memory-v1
 
 # Onda 3 — com ablações do Cortex, uma execução por bandeira
@@ -114,3 +114,26 @@ A lacuna do ADR de 2026-09-13 (dedup absorve atualização de estado com identif
 curtos como v1/v2) foi sanada com `short_identifier_tokens()`, reduzindo o
 `stale_leak_rate` no corpus adversarial de 0.50 para 0.25 (o caso remanescente
 trata de abstenção em supersessão sem evidência direta).
+
+## Baseline `vector_rag`
+
+O adapter `vector_rag` é uma baseline densa e determinística para comparação
+com uma implementação RAG convencional. Ele calcula similaridade semântica
+entre a consulta e cada chunk de sessão, ordena os resultados e retorna os
+cinco primeiros. Por padrão usa o fallback local de n-gramas; embeddings
+`model2vec` só são usados quando `CORTEX_ENABLE_DENSE_EMBEDDINGS=1`, mantendo
+as execuções do benchmark offline por padrão.
+
+Essa baseline é deliberadamente ingênua: não aplica autoridade, supersessão,
+invalidação, Evidence Ledger ou abstenção epistemológica. Assim, ela mede o
+ganho da governança do Cortex contra recuperação densa sem interpretação de
+estado, e não representa uma integração com um banco vetorial externo.
+
+Para executá-la isoladamente:
+
+```bash
+python -m cortex.benchmarks.runner \
+  --manifest cortex/benchmarks/corpora/manifests/memory_v1.json \
+  --adapter vector_rag \
+  --report-out artifacts/benchmark-memory-v1-vector-rag
+```
