@@ -2,6 +2,12 @@
 
 Este documento foi preparado para orientar outro modelo de IA ou avaliador técnico na inspeção do comportamento do **Cortex** durante seu processo de auto-dogfooding, fornecendo instruções acionáveis, esclarecimentos arquiteturais e comandos prontos para execução autônoma.
 
+> **Aviso de autoridade:** este arquivo contém um snapshot histórico e exploratório.
+> Ele não é a fonte de verdade para claims atuais. Para novas implementações e
+> resultados, siga [`AGENTS.md`](../AGENTS.md) e
+> [`docs/RESEARCH_ROADMAP.md`](RESEARCH_ROADMAP.md); números só devem ser usados
+> quando reproduzidos por um artefato congelado.
+
 ---
 
 ## 1. Resposta Direta: O Dogfooding é o Mesmo da Instalação do GitHub?
@@ -260,4 +266,3 @@ print('MCP Handshake:', out.strip()[:100])
 3. ✅ **Adicionar IDs explícitos nos eventos do `capture_hook.py`**: Concluído! Cada evento gerado possui ID imutável rastreado ponta a ponta desde a captura no MCP até a validação no benchmark.
 4. ✅ **Validar e ativar o servidor MCP**: Concluído! Servidor `FastMCP` com entrypoint stdio ativo com 22 ferramentas nativas e tolerância a codepage Windows.
 5. 🚀 **Expandir o corpus de dogfooding com mais sessões reais**: Próximo passo habilitado pela infraestrutura live síncrona via MCP.
-

@@ -8,7 +8,7 @@
 
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Tests](https://img.shields.io/badge/tests-249%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-256%20passing-brightgreen)
 ![Package](https://img.shields.io/badge/package-0.1.0-orange)
 ![Local first](https://img.shields.io/badge/default-local--first-lightgrey)
 
@@ -19,6 +19,10 @@
 > estão implementados e cobertos por **256 testes automatizados**. O Cortex opera de
 > forma local-first e determinística, com governança explícita, Evidence Ledger auditável
 > e dogfooding contínuo com benchmark comparativo real.
+
+> **Autoridade de pesquisa:** agentes devem seguir [`AGENTS.md`](AGENTS.md) e o
+> [`roadmap de pesquisa`](docs/RESEARCH_ROADMAP.md). Os números publicados só são
+> válidos quando rastreáveis a um artefato de execução congelado.
 
 ---
 
@@ -296,7 +300,11 @@ O projeto conta com uma infraestrutura rigorosa e determinística de avaliação
 | `memory_v1` (filler32k) | 10 | **0.0%** vs **40.0%** | `reduzir_claim` (amostra) |
 | `memory_v1_adversarial` | 4 | **25.0%** vs **75.0%** | `recalibrar` |
 
-### Dogfooding com sessão real (Cortex vs BM25 vs raw\_context)
+### Dogfooding com sessão real (snapshot histórico)
+
+Os números abaixo são um snapshot exploratório anterior. Não são a fonte de
+verdade atual nem sustentam claim confirmatório; consulte
+[`docs/RESEARCH_ROADMAP.md`](docs/RESEARCH_ROADMAP.md) antes de reutilizá-los.
 
 Em setembro de 2026, uma sessão real de desenvolvimento do próprio Cortex foi capturada, anotada com 20 perguntas (6 question types, gold-standard manual) e convertida em instâncias `BenchmarkInstance v1`. O runner comparativo produziu:
 
