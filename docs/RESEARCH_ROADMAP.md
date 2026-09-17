@@ -7,6 +7,9 @@ Ele deve ser lido junto com [`AGENTS.md`](../AGENTS.md),
 [`docs/benchmark.md`](benchmark.md) e a rubrica
 `.agents/skills/cortex-judge/SKILL.md`.
 
+Execução operacional, comandos de MCP e trilha de datasets/testes:
+[`docs/NEXT_STEPS_AND_TESTS.md`](NEXT_STEPS_AND_TESTS.md).
+
 ## 1. Diagnóstico honesto
 
 O Cortex já possui uma base de engenharia incomum: captura via MCP, memória
