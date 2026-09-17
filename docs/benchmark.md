@@ -71,6 +71,30 @@ ruff check cortex tests && mypy
 G0 exige que duas execuções limpas produzam `metrics.jsonl` byte-idêntico; por
 isso latência vive em arquivo separado (plano §7).
 
+### Registro versionável de experimentos
+
+Para um resultado que será citado, forneça um registro JSONL versionado pelo
+repositório ou pelo estudo. O runner acrescenta **uma linha por execução** com
+o commit e estado dirty, manifesto e seus hashes, corpus congelado, adapters,
+modelo de embedding/leitor, orçamento de contexto, ambiente, classificação de
+evidência e hashes dos artefatos. Ele fica fora dos artefatos determinísticos,
+pois hora e hardware variam entre execuções.
+
+```bash
+python -m cortex.benchmarks.runner \
+  --manifest cortex/benchmarks/corpora/manifests/memory_v1.json \
+  --adapter cortex bm25 bm25_temporal raw_context vector_rag no_memory oracle \
+  --report-out artifacts/benchmark-memory-v1 \
+  --experiment-registry benchmarks/experiment_registry.jsonl
+```
+
+O arquivo só é alterado quando `--experiment-registry` é fornecido; assim os
+testes e execuções exploratórias locais não modificam silenciosamente um
+registro publicado. `evidence_classification` no manifesto é obrigatório como
+metadado semântico do estudo: `confirmatory` vale apenas para a hipótese e o
+corpus explicitamente delimitados; controles externos, dogfooding e diagnósticos
+adversariais permanecem `exploratory`.
+
 ## Corpora
 
 | Arquivo | Uso |

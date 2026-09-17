@@ -21,6 +21,7 @@ from .adapters import (
 )
 from .adapters.base import Adapter
 from .errors import LeakageError
+from .experiment_registry import append_experiment_record, build_experiment_record
 from .manifest import (
     RunManifest,
     assert_declared_revisions,
@@ -109,7 +110,8 @@ def _adapter_suite(adapters: list[str], ablations: bool) -> list[tuple[str, Adap
 
 
 def run_benchmark(manifest_path: Path, adapters: list[str], report_out: Path,
-                  splits: list[str] | None = None, ablations: bool = False) -> dict[str, Any]:
+                  splits: list[str] | None = None, ablations: bool = False,
+                  experiment_registry: Path | None = None) -> dict[str, Any]:
     manifest = load_manifest(manifest_path)
     if manifest.network_enabled:
         raise LeakageError("benchmark gate requires network_enabled=false")
@@ -168,9 +170,19 @@ def run_benchmark(manifest_path: Path, adapters: list[str], report_out: Path,
             except Exception as exc:  # explicit case failure; never a zero
                 errors.append({"case_id": instance.id, "adapter": label, "error": type(exc).__name__, "message": str(exc),
                                "elapsed_ms": round((time.perf_counter() - started) * 1000, 3)})
-    write_reports(report_out, manifest.model_dump(by_alias=True, mode="json"), rows, errors, leakage, latency)
-    return {"cases": len(instances), "rows": len(rows), "errors": len(errors), "leakage": len(leakage),
+    serialized_manifest = manifest.model_dump(by_alias=True, mode="json")
+    write_reports(report_out, serialized_manifest, rows, errors, leakage, latency)
+    result = {"cases": len(instances), "rows": len(rows), "errors": len(errors), "leakage": len(leakage),
             "corpus_hash": frozen.corpus_hash, "report_out": str(report_out)}
+    if experiment_registry is not None:
+        labels = [label for label, _adapter in _adapter_suite(adapters, ablations)]
+        record = build_experiment_record(
+            manifest_path=manifest_path, manifest=serialized_manifest, adapters=labels,
+            instances=instances, report_out=report_out, errors=len(errors), leakage=len(leakage),
+        )
+        append_experiment_record(experiment_registry, record)
+        result["experiment_registry"] = str(experiment_registry)
+    return result
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -181,9 +193,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--split", nargs="+", choices=["dev", "eval", "regression"], default=None)
     parser.add_argument("--ablation", action="store_true",
                         help="also run the Cortex once per ablation flag (plan §6/§Onda 3)")
+    parser.add_argument("--experiment-registry", type=Path,
+                        help="append execution provenance to this versionable JSONL registry")
     args = parser.parse_args(argv)
     summary = run_benchmark(args.manifest, args.adapter, args.report_out, splits=args.split,
-                            ablations=args.ablation)
+                            ablations=args.ablation, experiment_registry=args.experiment_registry)
     print(json.dumps(summary, sort_keys=True))
     return 0
 

@@ -15,6 +15,7 @@
   "dataset_revisions": {
     "longmemeval": "longmemeval_s_cleaned"
   },
+  "evidence_classification": "exploratory",
   "corpus": "../external/longmemeval_s.jsonl",
 
   "_comment": [

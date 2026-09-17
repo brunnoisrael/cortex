@@ -1,6 +1,10 @@
+import json
 from pathlib import Path
 
+import pytest
+
 from cortex.benchmarks.corpora.build_internal import REVISION
+from cortex.benchmarks.manifest import load_manifest
 from cortex.benchmarks.runner import run_benchmark
 
 ARTIFACTS = {"run_manifest.json", "metrics.jsonl", "summary.json", "errors.jsonl",
@@ -55,3 +59,36 @@ def test_adversarial_corpus_runs_without_silent_failures(tmp_path):
     summary = run_benchmark(manifest, ["cortex", "bm25", "raw_context", "no_memory", "oracle"], out)
     assert summary["errors"] == 0 and summary["leakage"] == 0
     assert "adv-dedup-absorbs-update" in (out / "metrics.jsonl").read_text(encoding="utf-8")
+
+
+def test_opt_in_registry_records_complete_execution_provenance(tmp_path):
+    """Operational metadata is append-only and separate from G0 artifacts."""
+    manifest = Path("cortex/benchmarks/corpora/manifests/mvp.json")
+    registry = tmp_path / "published" / "experiments.jsonl"
+    result = run_benchmark(manifest, ["bm25"], tmp_path / "run", experiment_registry=registry)
+
+    assert result["experiment_registry"] == str(registry)
+    records = [json.loads(line) for line in registry.read_text(encoding="utf-8").splitlines()]
+    assert len(records) == 1
+    record = records[0]
+    assert record["schema"] == "cortex_benchmark_experiment/v1"
+    assert record["classification"] == "exploratory"
+    assert record["adapters"] == ["bm25"]
+    assert record["corpus"]["frozen_hash"]
+    assert record["context_budget"]["minimum"] > 0
+    assert record["models"]["reader"] == "none (retrieval-only benchmark)"
+    assert set(record["artifacts"]) == {
+        "run_manifest.json", "metrics.jsonl", "summary.json", "errors.jsonl",
+        "leakage.jsonl", "pareto.json", "report.md",
+    }
+
+
+def test_manifest_requires_evidence_classification(tmp_path):
+    source = Path("cortex/benchmarks/corpora/manifests/mvp.json")
+    raw = json.loads(source.read_text(encoding="utf-8"))
+    raw.pop("evidence_classification")
+    manifest = tmp_path / "missing-classification.json"
+    manifest.write_text(json.dumps(raw), encoding="utf-8")
+
+    with pytest.raises(Exception, match="evidence_classification"):
+        load_manifest(manifest)

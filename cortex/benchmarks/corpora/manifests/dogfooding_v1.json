@@ -5,6 +5,7 @@
   "dataset_revisions": {
     "internal": "dogfooding-v1"
   },
+  "evidence_classification": "exploratory",
   "description": "Dogfooding corpus: sessao real do Cortex convertida em instancias BenchmarkInstance v1. Cobre 6 question_types (exact_recall, aggregation, tracking, cascade, absence, deletion) com 20 instancias anotadas manualmente a partir da sessao 20260915_evidence_integrity_dogfooding.",
   "embedding_cache_dir": "outside-repository",
   "embedding_model": "none",

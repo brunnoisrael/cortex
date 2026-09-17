@@ -5,6 +5,7 @@
   "dataset_revisions": {
     "internal": "engineering-memory-v2"
   },
+  "evidence_classification": "exploratory",
   "embedding_cache_dir": "outside-repository",
   "embedding_model": "none",
   "embedding_version": "none",

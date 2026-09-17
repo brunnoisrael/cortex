@@ -5,6 +5,7 @@
   "dataset_revisions": {
     "meme": "mvp"
   },
+  "evidence_classification": "exploratory",
   "embedding_cache_dir": "outside-repository",
   "embedding_model": "none",
   "embedding_version": "none",

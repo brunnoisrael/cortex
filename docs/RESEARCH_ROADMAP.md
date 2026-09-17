@@ -60,7 +60,13 @@ avaliação temporal downstream”.
 
 ### Fase A — congelar a medição
 
-- Criar um registro de experimentos versionado com uma linha por execução:
+**Estado em 2026-09-16:** o registro de execução foi implementado no runner
+com `--experiment-registry`; ele mantém hora/host fora do payload determinístico
+e associa cada linha a commit, manifesto, corpus congelado, adapters, modelos,
+orçamento, classificação e hashes dos artefatos. Os itens abaixo continuam
+abertos até que os documentos publicados sejam derivados desses registros.
+
+- [Concluído] Criar um registro de experimentos versionado com uma linha por execução:
   commit, manifesto, hash do corpus, adapter, modelo, budget, hardware e
   classificação `confirmatory`/`exploratory`.
 - Gerar README e `DOGFOODING_EVALUATION.md` a partir dos artefatos, evitando

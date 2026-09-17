@@ -57,6 +57,7 @@ class RunManifest(_BenchmarkModel):
     embedding_model: str
     embedding_version: str
     embedding_cache_dir: str
+    evidence_classification: Literal["confirmatory", "exploratory"]
     seed: int
     retry_policy: Literal["deterministic", "off"] = "off"
     network_enabled: Literal[False] = False
@@ -172,6 +173,7 @@ def environment_manifest(*, corpus: Path, seed: int = 0, corpus_file: str | None
         cortex_version=__version__, python_version=sys.version.split()[0], os=platform.platform(),
         hardware=platform.machine(), tokenizer="whitespace/v1", embedding_model="none",
         embedding_version="none", embedding_cache_dir="outside-repository", seed=seed,
-        retry_policy="off", network_enabled=False, corpus_hash=corpus_hash(corpus),
+        retry_policy="off", network_enabled=False, evidence_classification="exploratory",
+        corpus_hash=corpus_hash(corpus),
         dataset_revisions={"internal": "engineering_v1"}, corpus=corpus_file or str(corpus),
     )
