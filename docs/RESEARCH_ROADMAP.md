@@ -60,7 +60,7 @@ avaliação temporal downstream”.
 
 ### Fase A — congelar a medição
 
-**Estado em 2026-09-16:** o registro de execução foi implementado no runner
+**Estado em 2026-09-17:** o registro de execução foi implementado no runner
 com `--experiment-registry`; ele mantém hora/host fora do payload determinístico
 e associa cada linha a commit, manifesto, corpus congelado, adapters, modelos,
 orçamento, classificação e hashes dos artefatos. Os itens abaixo continuam
@@ -69,11 +69,12 @@ abertos até que os documentos publicados sejam derivados desses registros.
 - [Concluído] Criar um registro de experimentos versionado com uma linha por execução:
   commit, manifesto, hash do corpus, adapter, modelo, budget, hardware e
   classificação `confirmatory`/`exploratory`.
-- Gerar README e `DOGFOODING_EVALUATION.md` a partir dos artefatos, evitando
+- [Concluído] Gerar o snapshot do README e `DOGFOODING_EVALUATION.md` a partir
+  de uma execução rastreada em `docs/experiments.jsonl`, evitando
   números copiados manualmente.
-- Corrigir o badge de testes, a contagem de task types e a divergência entre
+- [Concluído] Corrigir o badge de testes, a contagem de task types e a divergência entre
   os relatórios atuais.
-- Fazer o `vector_rag` usar um encoder local fixado e identificável quando
+- [Concluído] Fazer o `vector_rag` usar um encoder local fixado e identificável quando
   comparado como baseline; o fallback n-grama deve ser nomeado como tal.
 
 **Aceitação:** duas execuções reproduzem `summary.json` e a documentação não

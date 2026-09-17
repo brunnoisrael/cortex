@@ -431,7 +431,7 @@ Essa hipótese está sendo investigada por benchmarks comparativos contínuos (i
 ### Implementado
 
 - **Benchmark de Engenharia:** runner determinístico (G0–G4), 250 casos normalizados em 6 eixos, baselines (BM25, BM25 temporal, raw-context, vector-RAG, no-memory, oracle), 6 ablações, bootstrap pareado sob H₀, Holm-Bonferroni e exportação de Pareto e relatórios Markdown.
-- **Dogfooding com benchmark real:** harness de captura de sessões reais (`cortex/dev/`), gerador de perguntas estrutural (6 task types, ≥10/sessão), conversor para `BenchmarkInstance v1`, corpus `dogfooding_v1.jsonl` com 20 instâncias, runner comparativo executado e resultados documentados.
+- **Dogfooding com benchmark real:** harness de captura de sessões reais (`cortex/dev/`), gerador de perguntas estrutural, conversor para `BenchmarkInstance v1`, corpus `dogfooding_v1.jsonl` com 20 instâncias e quatro task types observados (`exact_recall`, `aggregation`, `tracking`, `cascade`). O resultado comparativo é exploratório e deve ser reproduzido pelo runner.
 - **Calibração de Abstention:** elevação do `abstention_recall` do `CortexAdapter` para 0.85 (superando as baselines de 0.80).
 - **LLM Judge & Rubricas:** protocolo de avaliação offline para Code Agent atuar como LLM Judge (`cortex/benchmarks/llm_judge.py` e Skill `.agents/skills/cortex-judge`).
 - **Rastreabilidade e Proveniência Real:** IDs determinísticos em `capture_hook.py` e extração de evidências ancoradas em eventos reais.

@@ -87,6 +87,15 @@ Nos benchmarks de conversas longas (como LongMemEval), eventos sucessivos eram d
 Corpus: `dogfooding_v1` — 20 instâncias, 4 task types cobertos
 (`exact_recall`, `aggregation`, `tracking`, `cascade`), classe `exploratory`.
 
+### Registro rastreável desta execução
+
+Os números acima foram regenerados pelo runner em `artifacts/benchmark-dogfooding-v1`
+e registrados em [`docs/experiments.jsonl`](experiments.jsonl). O registro contém
+o hash do manifesto, o hash congelado do corpus, o commit, a configuração da
+baseline (`hash-ngrams/v1`), o orçamento e os hashes dos artefatos. A execução
+continua exploratória: `n=20` não atende o tamanho pré-registrado para claims
+confirmatórios.
+
 ### Métricas Agregadas Pós-Calibração
 
 | Métrica | **Cortex (Calibrado)** | BM25 | raw_context | Veredito |

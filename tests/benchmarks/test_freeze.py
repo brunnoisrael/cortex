@@ -27,7 +27,8 @@ def _manifest(**overrides):
         "cortex_version": "0.1.0", "python_version": "3.11", "os": "portable", "hardware": "portable",
         "tokenizer": "whitespace/v1", "embedding_model": "none", "embedding_version": "none",
         "embedding_cache_dir": "outside-repo", "seed": 0, "retry_policy": "off",
-        "network_enabled": False, "corpus_hash": "sha256:" + "0" * 64,
+        "network_enabled": False, "evidence_classification": "exploratory",
+        "corpus_hash": "sha256:" + "0" * 64,
         "dataset_revisions": {"internal": "test"},
     }
     payload.update(overrides)
@@ -114,7 +115,7 @@ def _manifest_document(corpus: Path) -> str:
         "python_version": "3.11", "os": "portable", "hardware": "portable",
         "tokenizer": "whitespace/v1", "embedding_model": "none", "embedding_version": "none",
         "embedding_cache_dir": "outside-repo", "seed": 0, "retry_policy": "off",
-        "network_enabled": False,
+        "network_enabled": False, "evidence_classification": "exploratory",
         "corpus_hash": "sha256:" + hashlib.sha256(corpus.read_bytes()).hexdigest(),
         "dataset_revisions": {"internal": "test"}, "corpus": corpus.name,
     }

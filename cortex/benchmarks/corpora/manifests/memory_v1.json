@@ -5,10 +5,10 @@
   "dataset_revisions": {
     "internal": "engineering-memory-v2"
   },
-  "evidence_classification": "confirmatory",
   "embedding_cache_dir": "outside-repository",
   "embedding_model": "none",
   "embedding_version": "none",
+  "evidence_classification": "confirmatory",
   "expected_endpoint_digest": "sha256:0d69469181fe12d5e5ad9f13389662f344926102d83f4fffbda5143dc474252e",
   "filler_variants": {
     "adversarial": "adversarial\\superseded_abstention.jsonl",

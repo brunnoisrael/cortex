@@ -57,7 +57,9 @@ class RunManifest(_BenchmarkModel):
     embedding_model: str
     embedding_version: str
     embedding_cache_dir: str
-    evidence_classification: Literal["confirmatory", "exploratory"]
+    # Direct construction remains backwards-compatible for unit-test helpers;
+    # versioned manifest files are checked explicitly by load_manifest below.
+    evidence_classification: Literal["confirmatory", "exploratory"] = "exploratory"
     seed: int
     retry_policy: Literal["deterministic", "off"] = "off"
     network_enabled: Literal[False] = False
@@ -161,6 +163,8 @@ def corpus_hash(path: Path) -> str:
 
 def load_manifest(path: Path) -> RunManifest:
     raw = json.loads(path.read_text(encoding="utf-8"))
+    if "evidence_classification" not in raw:
+        raise SchemaError("manifest requires evidence_classification")
     if "corpus" in raw and not Path(raw["corpus"]).is_absolute():
         raw["corpus"] = str((path.parent / raw["corpus"]).resolve())
     return RunManifest.model_validate(raw)
