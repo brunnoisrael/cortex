@@ -142,11 +142,14 @@ trata de abstenção em supersessão sem evidência direta).
 ## Baseline `vector_rag`
 
 O adapter `vector_rag` é uma baseline densa e determinística para comparação
-com uma implementação RAG convencional. Ele calcula similaridade semântica
-entre a consulta e cada chunk de sessão, ordena os resultados e retorna os
-cinco primeiros. Por padrão usa o fallback local de n-gramas; embeddings
-`model2vec` só são usados quando `CORTEX_ENABLE_DENSE_EMBEDDINGS=1`, mantendo
-as execuções do benchmark offline por padrão.
+com uma implementação RAG convencional. Usa o encoder local fixo
+`hash-ngrams/v1`, calcula similaridade cosseno entre a consulta e cada chunk
+de sessão e retorna os cinco primeiros. O encoder não baixa pesos e seu nome
+é registrado no trace e no registro de experimentos.
+
+O fallback n-grama de `dense_semantic_similarity` continua disponível para
+componentes de produção, mas não é usado silenciosamente como baseline
+vetorial e não deve ser descrito como embedding denso.
 
 Essa baseline é deliberadamente ingênua: não aplica autoridade, supersessão,
 invalidação, Evidence Ledger ou abstenção epistemológica. Assim, ela mede o

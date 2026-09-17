@@ -77,13 +77,15 @@ Nos benchmarks de conversas longas (como LongMemEval), eventos sucessivos eram d
 3. **Corpus BenchmarkInstance v1**: `cortex/benchmarks/corpora/normalized/dogfooding_v1.jsonl` (20 instâncias)
 4. **Testes Específicos**: [tests/test_evidence_integrity.py](file:///c:/Users/Sergio/Documents/GitHub/cortex/tests/test_evidence_integrity.py) (5 testes cobrindo todas as variantes de colisão).
 5. **Testes do Conversor**: [tests/dev/test_session_to_benchmark.py](file:///c:/Users/Sergio/Documents/GitHub/cortex/tests/dev/test_session_to_benchmark.py) (6 testes cobrindo gerador, conversor e cobertura de task types).
-6. **Suite Completa**: 249+ testes passando sem falhas (`pytest`).
+6. **Suite Completa**: 258 testes coletados; o resultado de cada execução deve
+   ser regenerado pelo comando de validação (`pytest`).
 
 ---
 
 ## 3. Resultados do Benchmark Comparativo (Cortex vs BM25 vs raw_context)
 
-Corpus: `dogfooding_v1` — 20 instâncias, 4 task_types cobertos, classe `exploratory`.
+Corpus: `dogfooding_v1` — 20 instâncias, 4 task types cobertos
+(`exact_recall`, `aggregation`, `tracking`, `cascade`), classe `exploratory`.
 
 ### Métricas Agregadas Pós-Calibração
 
@@ -181,7 +183,10 @@ Por padrão, o Cortex opera 100% offline via heurísticas regex/AST. Ele suporta
   ```
 
 ### F. Embeddings Densos Opcionais (HuggingFace / model2vec)
-- **Modelos integrados**: `minishlab/potion-base-8M` (modelo estático de 8MB de alta velocidade) ou `sentence-transformers/all-MiniLM-L6-v2`.
+- **Modelo da baseline publicada**: `hash-ngrams/v1`, encoder local fixo e
+  offline, identificado no trace do runner. O fallback n-grama de
+  `dense_semantic_similarity` é uma implementação diferente e não deve ser
+  chamado de embedding denso.
 - **Como ativar**:
   ```bash
   export CORTEX_ENABLE_DENSE_EMBEDDINGS=1

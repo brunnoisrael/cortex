@@ -8,7 +8,7 @@
 
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Tests](https://img.shields.io/badge/tests-256%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-258%20collected-brightgreen)
 ![Package](https://img.shields.io/badge/package-0.1.0-orange)
 ![Local first](https://img.shields.io/badge/default-local--first-lightgrey)
 

@@ -57,7 +57,8 @@ def test_vector_rag_ranks_dense_matches_and_exposes_baseline_limits():
 
     assert result.retrieved == result.selected == result.evidence
     assert result.retrieved[0] == "s0:0"
-    assert result.trace["pipeline"] == ["dense_similarity", "top_k"]
+    assert result.trace["pipeline"] == ["fixed_local_encoder", "cosine_similarity", "top_k"]
+    assert result.trace["encoder"] == "hash-ngrams/v1"
     assert result.trace["authority_filter"] is False
     assert result.trace["supersession_filter"] is False
     assert result.trace["evidence_ledger"] is False
