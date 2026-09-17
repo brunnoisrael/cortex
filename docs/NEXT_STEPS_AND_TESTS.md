@@ -71,6 +71,14 @@ usar JSON-RPC escrito manualmente como evidência de integração.
 Aceitação: `cortex_init` e `cortex_status` respondem pelo mesmo transporte,
 sem chamar funções Python diretamente como substituto.
 
+Diagnóstico reproduzido em 2026-09-17: com `mcp` 1.29.1, o servidor completou
+`cortex_init` e enviou JSON-RPC válido, mas o cliente stdio deixou o leitor de
+stdout bloqueado na primeira chamada após `initialize`. O harness reproduzível
+deve disparar `list_tools()` concorrente durante a chamada e manter
+`stdio_client` em `async with`, garantindo que o processo filho seja encerrado.
+Isso é uma limitação observada do SDK/harness; não deve ser apresentada como
+registro do servidor no Codex Desktop.
+
 ### P1 — Fase B: contexto para resposta
 
 Implementar um leitor determinístico que receba exclusivamente o contexto
@@ -82,6 +90,9 @@ deve produzir uma saída estruturada com:
 - suporte `supported`, `partial` ou `unsupported`;
 - motivo da abstenção;
 - trace do conjunto de evidências recebido.
+
+Implementado em `cortex/reader.py`; a resposta final e as métricas do leitor
+ficam no trace do `CortexAdapter`, sem contaminar as métricas de recuperação.
 
 Testes obrigatórios:
 

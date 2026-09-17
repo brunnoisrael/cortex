@@ -167,6 +167,8 @@ class CortexAdapter(Adapter):
                                               max_tokens=instance.constraints.max_context_tokens)
         compile_ms = (time.perf_counter() - compile_started) * 1000
         selected_ids = set(compiled["trace"]["selected_ids"])
+        from cortex.reader import read_compiled_context
+        reader_response = read_compiled_context(instance.query.text, compiled["context"])
 
         retrieved = _event_ids_for_many(ranked)
         selected = [eid for item in ranked if item.entity.id in selected_ids for eid in _event_ids(item.entity)]
@@ -221,17 +223,22 @@ class CortexAdapter(Adapter):
             "compile": {"selected_ids": sorted(selected_ids),
                         "estimated_context_tokens": compiled["trace"].get("estimated_context_tokens"),
                         "budget": instance.constraints.max_context_tokens},
+            "context": compiled["context"],
+            "reader": reader_response.model_dump(mode="json", by_alias=True),
         }
         result = result_for(
             instance, self.name,
-            status="abstained" if abstained else "ok",
+            status="abstained" if reader_response.abstained else "ok",
             retrieved=retrieved,
             selected=selected,
-            answer_state="current" if selected else "unknown",
-            abstained=abstained,
-            abstention_reason="no_evidence_above_threshold" if abstained else None,
-            missing_evidence=[instance.query.text] if abstained else [],
+            answer_state="current" if selected and not reader_response.abstained else "unknown",
+            abstained=reader_response.abstained,
+            abstention_reason=reader_response.abstention_reason,
+            missing_evidence=reader_response.missing_evidence,
             evidence=evidence,
+            answer=reader_response.answer,
+            claims=[claim.model_dump(mode="json") for claim in reader_response.claims],
+            citations=reader_response.cited_evidence_ids,
             trace=trace,
             tokens={"input": token_estimate(instance.query.text),
                     "retrieved": sum(token_estimate(item.entity.statement) for item in ranked),

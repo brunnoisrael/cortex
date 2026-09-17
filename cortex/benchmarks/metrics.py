@@ -229,4 +229,8 @@ def case_metrics(result: AdapterResult, instance: BenchmarkInstance, k: int = 5)
     if instance.task_type == "cascade":
         values["cascade_correctness_hop1"] = cascade_correctness(result, instance, 1)
         values["cascade_correctness_hop2"] = cascade_correctness(result, instance, 2)
+    reader = result.trace.get("reader")
+    if reader is not None:
+        from cortex.reader import reader_metrics
+        values.update(reader_metrics(reader, instance))
     return values

@@ -164,3 +164,37 @@ python -m cortex.benchmarks.runner \
   --adapter vector_rag \
   --report-out artifacts/benchmark-memory-v1-vector-rag
 ```
+
+## Leitor fixo da Fase B
+
+O adapter `cortex` compila o contexto e o entrega exclusivamente ao leitor
+determinístico `cortex.reader/v1`. O leitor só pode citar IDs presentes no
+bloco compilado; afirmações sem suporte lexical suficiente tornam-se
+abstenções e evidências marcadas como superseded, stale ou deleted não são
+respondidas como estado atual. `summary.json` registra separadamente
+`reader_support_factual`, `reader_fidelity`, `reader_abstention_accuracy`,
+`reader_final_response_accuracy` e `reader_citation_validity`, sem misturá-las
+às métricas de recuperação.
+
+Na execução `benchmark-memory-v1-phase-b-reader` (250 casos, corpus congelado
+`sha256:7736bdcacccffc20ffdb5b520aee45fda302b813a2aecb94ab9dd006e720e73e`,
+budget 4096), as médias do adapter Cortex foram: suporte factual 1.000,
+fidelidade 1.000, validade de citação 1.000, acurácia de abstenção 0.828 e
+acurácia da resposta final 0.824. A execução foi classificada como
+`confirmatory` apenas para as invariantes deste corpus interno; não é claim
+geral sobre agentes ou datasets externos.
+
+## Leitor fixo da Fase B
+
+O adapter `cortex` compila o contexto e o entrega exclusivamente ao leitor
+determinístico `cortex.reader/v1`. O leitor só pode citar IDs presentes no
+bloco compilado; afirmações sem suporte lexical suficiente tornam-se
+abstenções e evidências marcadas como superseded, stale ou deleted não são
+respondidas como estado atual. `summary.json` registra separadamente
+`reader_support_factual`, `reader_fidelity`, `reader_abstention_accuracy`,
+`reader_final_response_accuracy` e `reader_citation_validity`, sem misturá-las
+às métricas de recuperação.
+
+Esses resultados internos validam apenas as invariantes do corpus congelado e
+continuam confirmatórios para esse corpus, não constituindo claim geral sobre
+agentes ou datasets externos.

@@ -79,7 +79,11 @@ def build_experiment_record(
         "adapters": adapters,
         "models": {
             "embedding": {"name": manifest["embedding_model"], "version": manifest["embedding_version"]},
-            "reader": "none (retrieval-only benchmark)",
+            "reader": (
+                "cortex.reader/v1 (deterministic compiled-context reader)"
+                if "cortex" in adapters
+                else "none (retrieval-only benchmark)"
+            ),
         },
         "tokenizer": manifest["tokenizer"],
         "context_budget": _context_budget(instances),

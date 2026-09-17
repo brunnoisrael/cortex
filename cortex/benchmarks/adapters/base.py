@@ -26,6 +26,9 @@ class AdapterResult(BaseModel):
     abstention_reason: str | None = None
     missing_evidence: list[str] = Field(default_factory=list)
     evidence: list[str] = Field(default_factory=list)
+    answer: str | None = None
+    claims: list[dict[str, Any]] = Field(default_factory=list)
+    citations: list[str] = Field(default_factory=list)
     trace: dict[str, Any] = Field(default_factory=dict)
     latency_ms: dict[str, float] = Field(default_factory=dict)
     tokens: dict[str, int] = Field(default_factory=dict)

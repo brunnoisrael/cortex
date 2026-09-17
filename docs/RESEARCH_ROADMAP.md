@@ -85,16 +85,20 @@ contém nenhum número que não possa ser rastreado a um artefato.
 
 ### Fase B — fechar o ciclo evidência → resposta
 
-- Implementar um leitor fixo que receba apenas o contexto compilado.
-- Exigir citações de IDs de evidência para afirmações verificáveis.
-- Fazer a resposta abster-se quando não há suporte suficiente.
-- Avaliar separadamente: recuperação, suporte factual, fidelidade, decisão de
-  abstenção e resposta final.
+- [Concluído neste ciclo] Implementar um leitor fixo que receba apenas o
+  contexto compilado (`cortex.reader`).
+- [Concluído neste ciclo] Exigir citações de IDs presentes no contexto para
+  afirmações verificáveis.
+- [Concluído neste ciclo] Fazer a resposta abster-se quando não há suporte
+  suficiente ou quando só há evidência obsoleta.
+- [Concluído neste ciclo] Avaliar separadamente recuperação, suporte factual,
+  fidelidade, decisão de abstenção, validade das citações e resposta final.
 - Rodar a rubrica `cortex-judge` com anotação cega e, para uma amostra,
   verificação humana independente.
 
-**Aceitação:** nenhuma resposta pode citar evento que não foi recuperado; toda
-afirmação apoiada, parcialmente apoiada ou não apoiada é mensurável por caso.
+**Aceitação:** nenhuma resposta pode citar ID que não foi recebido no contexto;
+afirmações apoiadas, parcialmente apoiadas ou não apoiadas são mensuráveis por
+caso. O leitor fixo não substitui a anotação cega do judge.
 
 ### Fase C — tornar a teoria testável
 
